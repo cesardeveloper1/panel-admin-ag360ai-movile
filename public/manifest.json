@@ -1,0 +1,26 @@
+{
+  "short_name": "Agiliza360",
+  "name": "Agiliza360",
+  "icons": [
+    {
+      "src": "assets/icon/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "assets/icon/icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#8746FF",
+  "background_color": "#141A32"
+}
