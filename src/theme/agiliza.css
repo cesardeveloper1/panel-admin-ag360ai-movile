@@ -1573,6 +1573,8 @@ ion-page {
   box-shadow: 20px 0 48px rgba(15, 23, 42, 0.2);
   transform: translateX(-102%);
   transition: transform 220ms ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .ag-mobile-nav-layer.is-open .ag-mobile-side-nav {
@@ -1639,6 +1641,40 @@ ion-page {
   color: var(--ion-color-primary, #2774ae);
 }
 
+.ag-mobile-side-nav__profile {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: auto;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+}
+
+.ag-mobile-side-nav__profile.active {
+  color: var(--ion-color-primary, #2774ae);
+}
+
+.ag-mobile-side-nav__avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ion-color-primary, #2774ae);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
 body.ag-mobile-nav-open {
   overflow: hidden;
 }
@@ -1646,6 +1682,12 @@ body.ag-mobile-nav-open {
 @media (min-width: 768px) {
   .ag-mobile-menu-trigger,
   .ag-mobile-nav-layer {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .agilito-top-avatar {
     display: none;
   }
 }

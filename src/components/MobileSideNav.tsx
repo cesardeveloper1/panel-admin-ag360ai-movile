@@ -11,8 +11,9 @@ import {
 } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { AGILITO_PATH, CHATS_PATH, PAYMENTS_PATH } from '../navigation/navConfig';
+import { AGILITO_PATH, CHATS_PATH, PAYMENTS_PATH, PROFILE_PATH } from '../navigation/navConfig';
 
 const mobileModules = [
   { path: AGILITO_PATH, icon: sparklesOutline, labelKey: 'nav.agilito' },
@@ -25,6 +26,7 @@ const mobileModules = [
 export function MobileSideNav() {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
+  const { session } = useApp();
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -86,6 +88,18 @@ export function MobileSideNav() {
               );
             })}
           </nav>
+          {session ? (
+            <button
+              type="button"
+              className={`ag-mobile-side-nav__profile${location.pathname.startsWith(PROFILE_PATH) ? ' active' : ''}`}
+              onClick={() => selectModule(PROFILE_PATH)}
+              aria-current={location.pathname.startsWith(PROFILE_PATH) ? 'page' : undefined}
+              tabIndex={open ? 0 : -1}
+            >
+              <span className="ag-mobile-side-nav__avatar">{session.initials}</span>
+              <span>{t('nav.profile')}</span>
+            </button>
+          ) : null}
         </aside>
       </div>
     </>
