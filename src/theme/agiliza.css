@@ -4172,7 +4172,7 @@ html.ag-native.ion-palette-dark .ag-header {
 .agilito-screen {
   --background: var(--ag-mist);
   --agilito-composer-height: 68px;
-  --agilito-composer-lift: 2.35rem;
+  --agilito-composer-lift: 0.25rem;
 }
 
 .agilito-screen ion-content {
@@ -4280,7 +4280,7 @@ html.ag-native.ion-palette-dark .ag-header {
   display: flex;
   flex-direction: column;
   padding: 0 0.75rem;
-  padding-bottom: calc(var(--agilito-composer-height) + var(--ag-nav-height) + env(safe-area-inset-bottom) + var(--agilito-composer-lift) + 10px);
+  padding-bottom: calc(var(--agilito-composer-height) + env(safe-area-inset-bottom) + var(--agilito-composer-lift) + 10px);
 }
 
 .agilito-messages {
@@ -4405,7 +4405,7 @@ html.ag-native.ion-palette-dark .ag-header {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--ag-nav-height) + env(safe-area-inset-bottom, 0px) + var(--agilito-composer-lift));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--agilito-composer-lift));
   z-index: 25;
   padding: 0.35rem 0.75rem 0.45rem;
   background: linear-gradient(180deg, rgba(238, 241, 248, 0) 0%, var(--ag-mist) 28%);

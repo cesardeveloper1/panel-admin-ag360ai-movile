@@ -190,7 +190,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setBrandLoading(false);
           });
 
-          showToast('toast.brandSelected');
           return true;
         } catch {
           if (requestId === ordersRequestId.current) {
@@ -214,7 +213,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         brandSelectPromise.current = null;
       }
     },
-    [session, showToast],
+    [session],
   );
 
   const setDarkMode = useCallback((value: boolean) => {
