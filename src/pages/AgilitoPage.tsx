@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
   businessOutline,
-  chevronBackOutline,
   colorPaletteOutline,
   megaphoneOutline,
   micOutline,
@@ -11,6 +10,7 @@ import {
   sendOutline,
   sparklesOutline,
   stopCircleOutline,
+  storefrontOutline,
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
@@ -164,7 +164,7 @@ const AgilitoPage: React.FC = () => {
                   onClick={handleBackToBrands}
                   aria-label={t('agilito.backBrand')}
                 >
-                  <IonIcon icon={chevronBackOutline} aria-hidden="true" />
+                  <IonIcon icon={storefrontOutline} aria-hidden="true" />
                 </button>
 
                 <div className="agilito-top-trailing">
