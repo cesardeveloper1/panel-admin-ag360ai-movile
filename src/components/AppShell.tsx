@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
+import { MobileSideNav } from './MobileSideNav';
 import { useViewport } from '../hooks/useViewport';
 
 interface AppShellProps {
@@ -15,7 +15,7 @@ export function AppShell({ children, hideNav = false }: AppShellProps) {
     <div className={`ag-app-shell${isTablet ? ' ag-app-shell--tablet' : ''}`}>
       {!hideNav ? <SideNav /> : null}
       <div className="ag-app-shell-main">{children}</div>
-      {!hideNav && !isTablet ? <BottomNav /> : null}
+      {!hideNav && !isTablet ? <MobileSideNav /> : null}
     </div>
   );
 }

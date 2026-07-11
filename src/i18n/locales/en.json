@@ -361,6 +361,7 @@
   "common": {
     "back": "Back",
     "cancel": "Cancel",
+    "close": "Close",
     "home": "Home"
   },
   "business": {
