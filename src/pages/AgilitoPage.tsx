@@ -167,22 +167,6 @@ const AgilitoPage: React.FC = () => {
                   <IonIcon icon={chevronBackOutline} aria-hidden="true" />
                 </button>
 
-                <div className="agilito-modules-card" aria-label={t('agilito.modulesTitle')}>
-                  <div className="agilito-modules-track">
-                    {modules.map((mod) => (
-                      <button
-                        key={mod.path}
-                        type="button"
-                        className="agilito-modules-item"
-                        onClick={() => go(mod.path)}
-                      >
-                        <IonIcon icon={mod.icon} aria-hidden="true" />
-                        <span>{t(mod.labelKey)}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="agilito-top-trailing">
                   <button
                     type="button"
@@ -215,6 +199,21 @@ const AgilitoPage: React.FC = () => {
               <div ref={listRef} className="agilito-messages">
                 {messages.length === 0 && !thinking ? (
                   <div className="agilito-empty">
+                    <div className="agilito-modules-card" aria-label={t('agilito.modulesTitle')}>
+                      <div className="agilito-modules-track">
+                        {modules.map((mod) => (
+                          <button
+                            key={mod.path}
+                            type="button"
+                            className="agilito-modules-item"
+                            onClick={() => go(mod.path)}
+                          >
+                            <IonIcon icon={mod.icon} aria-hidden="true" />
+                            <span>{t(mod.labelKey)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <h2 className="agilito-empty-title">{t('agilito.heroHint')}</h2>
                   </div>
                 ) : null}

@@ -4188,61 +4188,49 @@ html.ag-native.ion-palette-dark .ag-header {
 .agilito-top {
   flex-shrink: 0;
   background: var(--ag-mist);
-  padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.75rem 0.5rem;
+  padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.75rem 0.5rem 4.5rem;
 }
 
 .agilito-top-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.4rem;
   min-width: 0;
 }
 
 .agilito-modules-card {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid var(--ag-line);
-  background: var(--ag-paper);
-  box-shadow: 0 1px 2px rgba(10, 17, 40, 0.04);
+  width: min(100%, 22rem);
 }
 
 .agilito-modules-track {
-  display: flex;
-  gap: 0.25rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  padding: 0.3rem 0.35rem;
-  scrollbar-width: none;
-}
-
-.agilito-modules-track::-webkit-scrollbar {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
 }
 
 .agilito-modules-item {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.28rem;
-  flex-shrink: 0;
-  scroll-snap-align: start;
-  padding: 0.28rem 0.45rem;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--ag-line);
+  border-radius: 12px;
+  background: var(--ag-paper);
   color: var(--ag-ink);
   font-family: var(--ag-font-body);
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   line-height: 1.15;
-  white-space: nowrap;
+  text-align: left;
   cursor: pointer;
 }
 
 .agilito-modules-item ion-icon {
-  font-size: 0.875rem;
+  flex: 0 0 auto;
+  font-size: 1.1rem;
   color: var(--ag-pulse);
 }
 
@@ -4311,9 +4299,9 @@ html.ag-native.ion-palette-dark .ag-header {
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  gap: 1rem;
+  gap: 1.25rem;
   flex: 1;
-  padding: clamp(10rem, 40vh, 18rem) 0.75rem 1rem;
+  padding: clamp(4rem, 18vh, 8rem) 0.25rem 1rem;
   color: var(--ag-text-secondary);
 }
 
