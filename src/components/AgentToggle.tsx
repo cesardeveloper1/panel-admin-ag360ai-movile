@@ -1,5 +1,3 @@
-import { IonIcon } from '@ionic/react';
-import { hardwareChipOutline, powerOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 
@@ -15,7 +13,16 @@ export function AgentToggle() {
       aria-pressed={agentEnabled}
       onClick={toggleAgent}
     >
-      <IonIcon icon={agentEnabled ? hardwareChipOutline : powerOutline} aria-hidden="true" />
+      <svg className="ag-agent-bot-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3v3" />
+        <circle cx="12" cy="2.5" r="1" />
+        <rect x="4" y="6" width="16" height="13" rx="3" />
+        <path d="M4 11H2M22 11h-2" />
+        <circle cx="9" cy="11" r="1" className="ag-agent-bot-icon__eye" />
+        <circle cx="15" cy="11" r="1" className="ag-agent-bot-icon__eye" />
+        <path d="M9 15h6" />
+        {!agentEnabled ? <path d="M3 3l18 18" className="ag-agent-bot-icon__off" /> : null}
+      </svg>
       <span>{t(agentEnabled ? 'agent.on' : 'agent.off')}</span>
     </button>
   );

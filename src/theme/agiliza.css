@@ -178,15 +178,30 @@ ion-page {
   cursor: pointer;
 }
 
-.ag-agent-toggle ion-icon {
+.ag-agent-bot-icon {
+  width: 18px;
+  height: 18px;
   flex: 0 0 auto;
-  font-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ag-agent-bot-icon__eye {
+  fill: currentColor;
+  stroke: none;
+}
+
+.ag-agent-bot-icon__off {
+  stroke-width: 2.2;
 }
 
 .ag-agent-toggle.is-on {
-  border-color: rgba(135, 70, 255, 0.32);
-  background: rgba(135, 70, 255, 0.08);
-  color: var(--ag-pulse);
+  border-color: rgba(22, 163, 74, 0.38);
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
 }
 
 .ag-agent-toggle:active {
