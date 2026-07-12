@@ -30,6 +30,15 @@ const OperationsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
   const [allStage, setAllStage] = useState<'starting' | 'ordering' | 'human' | 'orders'>('starting');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [visibleCards, setVisibleCards] = useState<Record<string, number>>({
+    new: 3,
+    processing: 3,
+    delivered: 3,
+    starting: 3,
+    ordering: 3,
+    human: 3,
+    orders: 3,
+  });
   const searchRef = useRef<HTMLIonSearchbarElement>(null);
   const newOrdersRef = useRef<HTMLElement>(null);
   const processingOrdersRef = useRef<HTMLElement>(null);
@@ -75,6 +84,11 @@ const OperationsPage: React.FC = () => {
   const allStageItems = allStage === 'orders'
     ? filtered
     : filtered.filter((order) => getKanbanSubState(order) === allStage);
+  const visibleAllStageItems = allStageItems.slice(0, visibleCards[allStage]);
+
+  const showThreeMore = (state: string) => {
+    setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 3) + 3 }));
+  };
 
   const openSearch = () => {
     setSearchOpen((current) => !current);
@@ -148,9 +162,10 @@ const OperationsPage: React.FC = () => {
                     <span className="kanban-count">{allStageItems.length}</span>
                   </header>
                   <div className="kanban-cards">
-                    {allStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} onChat={() => openOrderChat(order)} />)}
+                    {visibleAllStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} onChat={() => openOrderChat(order)} />)}
                   </div>
                   {allStageItems.length === 0 ? <p className="kanban-empty">{t('ops.emptyColumn')}</p> : null}
+                  {visibleAllStageItems.length < allStageItems.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore(allStage)}>{t('ops.showThreeMore')}</button> : null}
                 </section>
               </>
             ) : (
@@ -203,10 +218,11 @@ const OperationsPage: React.FC = () => {
                   <h2>{t('ops.kanbanNew')}</h2>
                   <span className="kanban-count">{groups.new.length}</span>
                 </header>
-                {NEW_SUBSTATES.map((sub) => renderSubSection(sub, groups.new))}
+                {NEW_SUBSTATES.map((sub) => renderSubSection(sub, groups.new.slice(0, visibleCards.new)))}
                 {groups.new.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
+                {visibleCards.new < groups.new.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore('new')}>{t('ops.showThreeMore')}</button> : null}
               </section>
 
               <section ref={processingOrdersRef} className="kanban-section kanban-section--processing">
@@ -214,10 +230,11 @@ const OperationsPage: React.FC = () => {
                   <h2>{t('ops.kanbanProcessing')}</h2>
                   <span className="kanban-count">{groups.processing.length}</span>
                 </header>
-                {PROCESSING_SUBSTATES.map((sub) => renderSubSection(sub, groups.processing))}
+                {PROCESSING_SUBSTATES.map((sub) => renderSubSection(sub, groups.processing.slice(0, visibleCards.processing)))}
                 {groups.processing.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
+                {visibleCards.processing < groups.processing.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore('processing')}>{t('ops.showThreeMore')}</button> : null}
               </section>
 
               <section ref={deliveredOrdersRef} className="kanban-section kanban-section--delivered">
@@ -226,7 +243,7 @@ const OperationsPage: React.FC = () => {
                   <span className="kanban-count">{groups.delivered.length}</span>
                 </header>
                 <div className="kanban-cards">
-                  {groups.delivered.map((order, idx) => (
+                  {groups.delivered.slice(0, visibleCards.delivered).map((order, idx) => (
                     <OrderCard
                       key={order.id}
                       order={order}
@@ -239,6 +256,7 @@ const OperationsPage: React.FC = () => {
                 {groups.delivered.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
+                {visibleCards.delivered < groups.delivered.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore('delivered')}>{t('ops.showThreeMore')}</button> : null}
               </section>
             </KanbanBoard>
               </>

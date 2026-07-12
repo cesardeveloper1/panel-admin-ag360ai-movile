@@ -1982,6 +1982,21 @@ body.ag-mobile-nav-open {
   font: 700 0.8125rem var(--ag-font-body);
 }
 
+.ops-load-more {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.5rem;
+  border: 1px solid rgba(135, 70, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(135, 70, 255, 0.07);
+  color: var(--ag-pulse);
+  font: 700 0.8125rem var(--ag-font-body);
+}
+
+.ops-load-more:active {
+  transform: scale(0.98);
+}
+
 .ops-view-switch button.active,
 .ops-all-stages button.active {
   background: var(--ag-paper);
