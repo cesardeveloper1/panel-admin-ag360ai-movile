@@ -2709,24 +2709,10 @@ ion-page.ion-page-hidden .agilito-composer-dock {
 .reports-range-picker {
   position: relative;
   min-height: 100%;
-  padding: 3.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
   background: var(--ag-paper);
   color: var(--ag-ink);
   overflow-y: auto;
-}
-
-.reports-range-picker__close {
-  position: absolute;
-  top: 0.75rem;
-  right: 1rem;
-  width: 44px;
-  height: 44px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--ag-mist);
-  color: var(--ag-ink);
-  font-size: 1.5rem;
-  z-index: 2;
 }
 
 .reports-range-picker__selection {
@@ -2747,7 +2733,7 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 0.35rem;
-  margin: 0 2.75rem 0.55rem 0;
+  margin: 0 0 0.55rem;
   text-align: center;
 }
 

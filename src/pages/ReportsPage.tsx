@@ -429,7 +429,6 @@ const ReportsPage: React.FC = () => {
         className="reports-range-modal"
       >
         <div className="reports-range-picker">
-          <button className="reports-range-picker__close" type="button" onClick={() => setRangeOpen(false)} aria-label={t('common.close')}>×</button>
           <div className="reports-range-picker__month">
             <button type="button" onClick={() => moveCalendar('previous')} aria-label="Mes anterior">‹</button>
             <strong>{calendarMonthTitle}</strong>
