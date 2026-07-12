@@ -125,6 +125,44 @@ const initialOrders: Order[] = [
   },
 ];
 
+const demoCustomers = ['customers.pedro', 'customers.lucia', 'customers.carlos', 'customers.ana'] as const;
+const demoItems = [
+  { nameKey: 'products.ceviche', price: 42 },
+  { nameKey: 'products.arrozMariscos', price: 42 },
+  { nameKey: 'products.comboFamiliar', price: 95 },
+] as const;
+
+const additionalPacificoOrders: Order[] = Array.from({ length: 38 }, (_, index) => {
+  const item = demoItems[index % demoItems.length];
+  const customerKey = demoCustomers[index % demoCustomers.length];
+  const isNew = index < 12;
+  const isProcessing = index >= 12 && index < 24;
+  const newStage = index % 3;
+  const processingStatuses: OrderStatus[] = ['in_kitchen', 'ready', 'on_the_way'];
+  const status: OrderStatus = isNew
+    ? newStage === 0 ? 'pre_order' : 'accepted'
+    : isProcessing ? processingStatuses[index % 3] : 'delivered';
+  const qty = (index % 3) + 1;
+
+  return {
+    id: `A-${3001 + index}`,
+    customerKey,
+    status,
+    channel: 'whatsapp',
+    deliveryType: index % 2 === 0 ? 'delivery' : 'pickup',
+    brandId: 'pacifico',
+    locationKey: 'locations.miraflores',
+    needsHuman: isNew && newStage === 2,
+    phone: ['+51955111222', '+51999888777', '+51912345678', '+51988777666'][index % 4],
+    paymentMethod: (['yape', 'card', 'cash', 'plin'] as const)[index % 4],
+    items: [{ qty, nameKey: item.nameKey, price: item.price }],
+    total: qty * item.price,
+    minutesInKitchen: status === 'in_kitchen' ? 5 + (index % 15) : undefined,
+  };
+});
+
+initialOrders.push(...additionalPacificoOrders);
+
 const initialProducts: CatalogProduct[] = [
   { id: 'p1', brandId: 'pacifico', nameKey: 'menu.items.ceviche', category: 'starters', price: 42, active: true, emoji: '🐟' },
   { id: 'p2', brandId: 'pacifico', nameKey: 'menu.items.arrozMariscos', category: 'mains', price: 35, active: true, emoji: '🍚' },
@@ -433,7 +471,17 @@ const notifications: NotificationItem[] = [
 function loadOrders(): Order[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Order[];
+    if (raw) {
+      const stored = JSON.parse(raw) as Order[];
+      const storedIds = new Set(stored.map((order) => order.id));
+      const missing = initialOrders.filter((order) => !storedIds.has(order.id));
+      if (missing.length > 0) {
+        const migrated = [...stored, ...structuredClone(missing)];
+        saveOrders(migrated);
+        return migrated;
+      }
+      return stored;
+    }
   } catch { /* ignore */ }
   return structuredClone(initialOrders);
 }
