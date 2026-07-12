@@ -1712,8 +1712,8 @@ ion-page {
   transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms ease;
 }
 
-body.ag-reports-header-hidden .ag-header,
-body.ag-reports-header-hidden .ag-mobile-menu-trigger {
+body.ag-module-header-hidden .ag-header,
+body.ag-module-header-hidden .ag-mobile-menu-trigger {
   transform: translateY(calc(-100% - env(safe-area-inset-top, 0px) - 16px));
   opacity: 0;
   pointer-events: none;

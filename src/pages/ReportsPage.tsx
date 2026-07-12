@@ -95,7 +95,6 @@ const ReportsPage: React.FC = () => {
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [calendarValue, setCalendarValue] = useState(() => toLocalIsoDate(new Date()));
   const datetimeRef = useRef<HTMLIonDatetimeElement>(null);
-  const lastReportScrollTop = useRef(0);
 
   const calendarMonthTitle = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric' })
     .format(calendarMonth);
@@ -149,21 +148,6 @@ const ReportsPage: React.FC = () => {
     }, 50);
     return () => window.clearTimeout(timer);
   }, [rangeOpen]);
-
-  useEffect(() => () => document.body.classList.remove('ag-reports-header-hidden'), []);
-
-  const handleReportScroll = (scrollTop: number) => {
-    const scrollingDown = scrollTop > lastReportScrollTop.current + 4;
-    const scrollingUp = scrollTop < lastReportScrollTop.current - 4;
-
-    if (scrollTop <= 24 || scrollingUp) {
-      document.body.classList.remove('ag-reports-header-hidden');
-    } else if (scrollingDown && scrollTop > 72) {
-      document.body.classList.add('ag-reports-header-hidden');
-    }
-
-    lastReportScrollTop.current = Math.max(0, scrollTop);
-  };
 
   const report = reports[period] ?? null;
 
@@ -276,11 +260,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonContent
-        className="ag-screen"
-        scrollEvents
-        onIonScroll={(event) => handleReportScroll(event.detail.scrollTop)}
-      >
+      <IonContent className="ag-screen">
         <AppShell>
           <AppHeader
             centeredCompact
