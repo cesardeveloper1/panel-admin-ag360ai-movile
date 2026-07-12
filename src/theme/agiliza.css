@@ -159,7 +159,14 @@ ion-page {
 
 @media (max-width: 767px) {
   .ag-header {
+    min-height: calc(68px + var(--ag-safe-top, env(safe-area-inset-top, 0px)));
+    padding-top: calc(12px + var(--ag-safe-top, env(safe-area-inset-top, 0px)));
+    padding-bottom: 12px;
     padding-left: 4.5rem;
+  }
+
+  .ag-header-row {
+    min-height: 44px;
   }
 
   .ag-header--centered-compact {
