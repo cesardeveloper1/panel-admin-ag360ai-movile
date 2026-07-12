@@ -54,11 +54,6 @@ function LineTrend({ data, valueKey }: { data: ChartPoint[]; valueKey: 'sales' |
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="reports-line-svg" aria-hidden="true">
         <polyline points={points} className="reports-line-path" />
       </svg>
-      <div className="reports-line-labels">
-        {data.map((d) => (
-          <span key={d.label}>{d.label}</span>
-        ))}
-      </div>
     </div>
   );
 }
@@ -392,31 +387,7 @@ const ReportsPage: React.FC = () => {
         className="reports-range-modal"
       >
         <div className="reports-range-picker">
-          <div className="reports-range-picker__head">
-            <div>
-              <span>{t('reports.rangeTitle')}</span>
-              <strong>{t(activeRangeField === 'start' ? 'reports.rangeStart' : 'reports.rangeEnd')}</strong>
-            </div>
-            <button type="button" onClick={() => setRangeOpen(false)} aria-label={t('common.close')}>×</button>
-          </div>
-          <div className="reports-range-picker__steps">
-            <button
-              type="button"
-              className={activeRangeField === 'start' ? 'active' : ''}
-              onClick={() => setActiveRangeField('start')}
-            >
-              <span>{t('reports.rangeStart')}</span>
-              <strong>{formatRangeDate(rangeStart)}</strong>
-            </button>
-            <button
-              type="button"
-              className={activeRangeField === 'end' ? 'active' : ''}
-              onClick={() => setActiveRangeField('end')}
-            >
-              <span>{t('reports.rangeEnd')}</span>
-              <strong>{formatRangeDate(rangeEnd)}</strong>
-            </button>
-          </div>
+          <button className="reports-range-picker__close" type="button" onClick={() => setRangeOpen(false)} aria-label={t('common.close')}>×</button>
           <IonDatetime
             key={activeRangeField}
             presentation="date"
@@ -426,9 +397,6 @@ const ReportsPage: React.FC = () => {
             max={toLocalIsoDate(new Date())}
             onIonChange={(event) => onRangeDateChange(event.detail.value)}
           />
-          <p className="reports-range-picker__hint">
-            {t(activeRangeField === 'start' ? 'reports.rangeStartHint' : 'reports.rangeEndHint')}
-          </p>
         </div>
       </IonModal>
     </IonPage>
