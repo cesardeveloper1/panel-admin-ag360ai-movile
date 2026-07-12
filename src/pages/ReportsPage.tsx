@@ -118,6 +118,7 @@ const ReportsPage: React.FC = () => {
   const [activeRangeField, setActiveRangeField] = useState<'start' | 'end'>('start');
   const [rangeStart, setRangeStart] = useState(defaultRangeStart);
   const [rangeEnd, setRangeEnd] = useState(() => toLocalIsoDate(new Date()));
+  const [rangeComplete, setRangeComplete] = useState(false);
 
   useEffect(() => {
     if (!brand) return;
@@ -161,11 +162,13 @@ const ReportsPage: React.FC = () => {
     if (activeRangeField === 'start') {
       setRangeStart(selected);
       if (rangeEnd < selected) setRangeEnd(selected);
+      setRangeComplete(false);
       setActiveRangeField('end');
       return;
     }
 
     setRangeEnd(selected);
+    setRangeComplete(true);
     const days = rangeDays(rangeStart, selected);
     void apiMock.getDashboard(brand.id, 'range', days).then((range) => {
       updateWithTransition(() => {
@@ -381,13 +384,15 @@ const ReportsPage: React.FC = () => {
       <IonModal
         isOpen={rangeOpen}
         onDidDismiss={() => setRangeOpen(false)}
-        initialBreakpoint={0.9}
-        breakpoints={[0, 0.9]}
-        handleBehavior="cycle"
         className="reports-range-modal"
       >
         <div className="reports-range-picker">
           <button className="reports-range-picker__close" type="button" onClick={() => setRangeOpen(false)} aria-label={t('common.close')}>×</button>
+          {rangeComplete ? (
+            <div className="reports-range-picker__selection" aria-live="polite">
+              {formatRangeDate(rangeStart)} — {formatRangeDate(rangeEnd)}
+            </div>
+          ) : null}
           <IonDatetime
             key={activeRangeField}
             presentation="date"
