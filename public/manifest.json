@@ -1,19 +1,19 @@
 {
-  "short_name": "Agiliza360",
-  "name": "Agiliza360",
+  "short_name": "Agiliza360 AI",
+  "name": "Agiliza360 AI",
   "icons": [
     {
-      "src": "assets/icon/favicon.png",
+      "src": "assets/icon/favicon.png?v=2",
       "sizes": "64x64",
       "type": "image/png"
     },
     {
-      "src": "assets/icon/icon-192.png",
+      "src": "assets/icon/icon-192.png?v=2",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "assets/icon/icon.png",
+      "src": "assets/icon/icon.png?v=2",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"

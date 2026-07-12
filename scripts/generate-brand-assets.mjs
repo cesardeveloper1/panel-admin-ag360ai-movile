@@ -6,9 +6,8 @@ import sharp from 'sharp';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const RES = path.join(ROOT, 'android/app/src/main/res');
-const LOGO_ICON = path.join(ROOT, 'src/assets/logo-icon.png');
 const LOGO_WHITE = path.join(ROOT, 'src/assets/logo-white.png');
-const BRAND_PURPLE = '#8746FF';
+const APP_ICON_SOURCE = path.join(ROOT, 'src/assets/app-icon-source.png');
 const BRAND_DARK = '#141A32';
 
 const SPLASHES = [
@@ -57,38 +56,27 @@ async function makeSplash(width, height, outPath) {
 }
 
 async function makeLauncher(size, outPath) {
-  const bg = await solidBg(size, size, BRAND_PURPLE);
-  const img = await composeCentered(bg, LOGO_ICON, size, size, 0.72);
   await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
-  await img.png().toFile(outPath);
+  await sharp(APP_ICON_SOURCE)
+    .resize({ width: size, height: size, fit: 'cover', position: 'centre' })
+    .png()
+    .toFile(outPath);
 }
 
 async function makeForeground(size, outPath) {
-  const logoW = Math.round(size * 0.62);
-  const logo = await sharp(LOGO_ICON).resize({ width: logoW }).png().toBuffer();
-  const meta = await sharp(logo).metadata();
-  const canvas = await sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    },
-  }).png().toBuffer();
-  const left = Math.round((size - meta.width) / 2);
-  const top = Math.round((size - meta.height) / 2);
   await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
-  await sharp(canvas)
-    .composite([{ input: logo, left, top }])
+  await sharp(APP_ICON_SOURCE)
+    .resize({ width: size, height: size, fit: 'cover', position: 'centre' })
     .png()
     .toFile(outPath);
 }
 
 async function makeWebIcon(size, outPath) {
-  const bg = await solidBg(size, size, BRAND_PURPLE);
-  const img = await composeCentered(bg, LOGO_ICON, size, size, 0.68);
   await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
-  await img.png().toFile(outPath);
+  await sharp(APP_ICON_SOURCE)
+    .resize({ width: size, height: size, fit: 'cover', position: 'centre' })
+    .png()
+    .toFile(outPath);
 }
 
 async function main() {
@@ -112,6 +100,7 @@ async function main() {
 
   await makeWebIcon(512, path.join(ROOT, 'public/assets/icon/icon.png'));
   await makeWebIcon(192, path.join(ROOT, 'public/assets/icon/icon-192.png'));
+  await makeWebIcon(180, path.join(ROOT, 'public/assets/icon/apple-touch-icon.png'));
   await makeWebIcon(64, path.join(ROOT, 'public/favicon.png'));
   await makeWebIcon(64, path.join(ROOT, 'public/assets/icon/favicon.png'));
   console.log('web icons ok');
