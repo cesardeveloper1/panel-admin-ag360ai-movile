@@ -141,6 +141,16 @@ ion-page {
   flex-shrink: 0;
 }
 
+@media (max-width: 767px) {
+  .ag-header {
+    padding-left: 4.5rem;
+  }
+
+  .ag-header-avatar {
+    display: none;
+  }
+}
+
 .ag-header-actions {
   display: flex;
   align-items: center;

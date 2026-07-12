@@ -5,7 +5,7 @@ import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
 import { apiMock } from '../services/apiMock';
-import type { ChartPoint, DashboardKpi, DashboardReport, PaymentMethodStat, RankItem } from '../types';
+import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../types';
 
 const CHART_HOURS = ['10', '12', '14', '16', '18', '20', '22'];
 
@@ -126,7 +126,6 @@ const ReportsPage: React.FC = () => {
             showAlerts
             title={t('reports.title')}
             subtitle={t('reports.subtitle', { brand: brand ? t(brand.nameKey) : '' })}
-            avatar={brand?.initials}
           />
           <div className="ag-body module-body reports-body">
             {loading || !report ? (

@@ -7,14 +7,11 @@ import {
   IonLabel,
   IonList,
   IonPage,
-  IonSegment,
-  IonSegmentButton,
   IonToggle,
 } from '@ionic/react';
 import {
   logOutOutline,
   moonOutline,
-  languageOutline,
   swapHorizontalOutline,
   notificationsOutline,
   storefrontOutline,
@@ -25,17 +22,15 @@ import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
 import { useModuleNav } from '../hooks/useModuleNav';
-import { setAppLanguage } from '../i18n';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
 
 const SettingsPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { goRoot, go } = useAppNavigation();
   const { session, brand, orders, notifications, darkMode, setDarkMode, startBrandSwitch, logout } =
     useApp();
   const { breadcrumbs, onBack } = useModuleNav();
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const lang = i18n.language.startsWith('en') ? 'en' : 'es';
 
   const unread = notifications.filter((n) => n.unread).length;
   const activeOrders = useMemo(
@@ -98,27 +93,6 @@ const SettingsPage: React.FC = () => {
                 </IonLabel>
                 <IonToggle slot="end" checked={darkMode} onIonChange={(e) => setDarkMode(e.detail.checked)} />
               </IonItem>
-            </IonList>
-
-            <p className="settings-section-label">{t('settings.language')}</p>
-            <IonList className="settings-list" lines="none">
-              <IonItem className="settings-item settings-item--segment">
-                <IonIcon icon={languageOutline} slot="start" className="settings-icon" />
-                <IonLabel>
-                  <h2>{t('settings.language')}</h2>
-                  <p>{t('settings.languageHint')}</p>
-                </IonLabel>
-              </IonItem>
-              <div className="settings-segment-wrap">
-                <IonSegment value={lang} onIonChange={(e) => setAppLanguage(e.detail.value as 'es' | 'en')}>
-                  <IonSegmentButton value="es">
-                    <IonLabel>{t('settings.spanish')}</IonLabel>
-                  </IonSegmentButton>
-                  <IonSegmentButton value="en">
-                    <IonLabel>{t('settings.english')}</IonLabel>
-                  </IonSegmentButton>
-                </IonSegment>
-              </div>
             </IonList>
 
             <p className="settings-section-label">{t('settings.account')}</p>
