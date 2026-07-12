@@ -33,25 +33,6 @@ function maxOf(values: number[]) {
   return Math.max(...values, 1);
 }
 
-function LineTrend({ data, valueKey }: { data: ChartPoint[]; valueKey: 'sales' | 'orders' }) {
-  const max = maxOf(data.map((d) => d[valueKey]));
-  const points = data
-    .map((d, i) => {
-      const x = (i / Math.max(data.length - 1, 1)) * 100;
-      const y = 100 - (d[valueKey] / max) * 88;
-      return `${x},${y}`;
-    })
-    .join(' ');
-
-  return (
-    <div className="reports-line-wrap">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="reports-line-svg" aria-hidden="true">
-        <polyline points={points} className="reports-line-path" />
-      </svg>
-    </div>
-  );
-}
-
 function VerticalBars({ data, valueKey, format }: { data: ChartPoint[]; valueKey: 'sales' | 'orders'; format?: (v: number) => string }) {
   const max = maxOf(data.map((d) => d[valueKey]));
   return (
@@ -247,20 +228,22 @@ const ReportsPage: React.FC = () => {
   }, [rangeStart, rangeEnd]);
 
   const sales = report?.kpis.find((k) => k.id === 'sales');
-  const others = report?.kpis.filter((k) => k.id !== 'sales') ?? [];
-  const TREND_KPI_ORDER = ['orders', 'cancelled', 'ticket'] as const;
-  const trendKpis = TREND_KPI_ORDER.map((id) => others.find((k) => k.id === id)).filter(Boolean) as DashboardKpi[];
+  const cancelled = report?.kpis.find((k) => k.id === 'cancelled');
+  const ticket = report?.kpis.find((k) => k.id === 'ticket');
+  const insights = [
+    { id: 'complaints', labelKey: 'reports.complaintsHuman', value: 8, delta: 7, down: true },
+    { id: 'cancelled', labelKey: 'reports.cancelled', value: cancelled?.value ?? 0, delta: 3, down: true },
+    { id: 'ticket', labelKey: 'reports.avgTicket', value: `S/ ${ticket?.value ?? 0}`, delta: 4 },
+    { id: 'scheduled', labelKey: 'reports.scheduledOrders', value: 23, delta: 12 },
+    { id: 'delivery', labelKey: 'reports.deliveryOrdersPct', value: '68%', delta: 8 },
+    { id: 'pickup', labelKey: 'reports.pickupOrdersPct', value: '32%', delta: 5 },
+  ];
   const maxBar = useMemo(() => maxOf(report?.hourlySales ?? [1]), [report]);
 
   const formatValue = (kpi: DashboardKpi) => {
     if (kpi.id === 'sales') return `S/ ${kpi.value.toLocaleString()}`;
     if (kpi.id === 'ticket') return `S/ ${kpi.value}`;
     return String(kpi.value);
-  };
-
-  const deltaValue = (kpi: DashboardKpi) => {
-    if (period === 'range') return kpi.id === 'orders' ? 21 : kpi.id === 'cancelled' ? 2 : kpi.id === 'ticket' ? 4 : 8;
-    return kpi.id === 'orders' ? 5 : kpi.id === 'cancelled' ? 1 : 12;
   };
 
   const chartLabels = period === 'range' ? CHART_DAYS : CHART_HOURS;
@@ -323,37 +306,42 @@ const ReportsPage: React.FC = () => {
                   <article className="reports-metric-card">
                     <span>{t('reports.conversations')}</span>
                     <strong>{report.channelMetrics.conversations}</strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: report.channelMetrics.deltas?.conversations ?? 0 })}</small> : null}
                   </article>
                   <article className="reports-metric-card">
                     <span>{t('reports.conversion')}</span>
                     <strong>{report.channelMetrics.conversionPct}%</strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: report.channelMetrics.deltas?.conversion ?? 0 })}</small> : null}
                   </article>
                   <article className="reports-metric-card">
-                    <span>{t('reports.ordersNoHuman')}</span>
+                    <span>{t('reports.orders')}</span>
                     <strong>{report.channelMetrics.ordersNoHuman}</strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: report.channelMetrics.deltas?.ordersNoHuman ?? 0 })}</small> : null}
                   </article>
                   <article className="reports-metric-card">
                     <span>{t('reports.repurchase')}</span>
                     <strong>{report.channelMetrics.repurchasePct}%</strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: report.channelMetrics.deltas?.repurchase ?? 0 })}</small> : null}
                   </article>
                 </section>
 
                 <section className="reports-panel reports-trend-panel ag-enter">
                   <div className="reports-chart-head">
-                    <h2>{t('reports.salesTrend')}</h2>
+                    <h2>{t('reports.insights')}</h2>
                   </div>
-                  <div className="reports-trend-kpis">
-                    {trendKpis.map((kpi) => (
-                      <article key={kpi.id} className={`reports-kpi-card reports-kpi-card--${kpi.id}`}>
-                        <span className="reports-kpi-label">{t(kpi.labelKey)}</span>
-                        <strong className="reports-kpi-value">{formatValue(kpi)}</strong>
-                        <span className={`reports-kpi-delta${kpi.deltaDown ? ' reports-kpi-delta--down' : ''}`}>
-                          {t(kpi.deltaKey, { value: deltaValue(kpi) })}
+                  <div className="reports-insights-grid">
+                    {insights.map((insight) => (
+                      <article key={insight.id} className="reports-kpi-card">
+                        <span className="reports-kpi-label">{t(insight.labelKey)}</span>
+                        <strong className="reports-kpi-value">{insight.value}</strong>
+                        <span className={`reports-kpi-delta${insight.down ? ' reports-kpi-delta--down' : ''}`}>
+                          {period === 'range'
+                            ? t('reports.vsPreviousMonth', { value: insight.delta })
+                            : `+${insight.delta}%`}
                         </span>
                       </article>
                     ))}
                   </div>
-                  <LineTrend data={report.salesTrend} valueKey="sales" />
                 </section>
 
                 <section className="reports-panel ag-enter">

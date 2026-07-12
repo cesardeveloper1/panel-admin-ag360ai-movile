@@ -335,6 +335,12 @@ function buildDashboard(
       conversionPct: 36,
       ordersNoHuman: Math.round(131 * rangeScale),
       repurchasePct: 24,
+      deltas: {
+        conversations: 9,
+        conversion: 4,
+        ordersNoHuman: 11,
+        repurchase: 6,
+      },
     },
     reservations: {
       total: Math.round(126 * rangeScale),

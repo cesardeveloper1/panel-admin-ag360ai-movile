@@ -2899,6 +2899,21 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   color: var(--ag-hot);
 }
 
+.reports-metric-card small {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--ag-done);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.reports-insights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
 .reports-chart {
   padding: 1rem;
   border-radius: 16px;

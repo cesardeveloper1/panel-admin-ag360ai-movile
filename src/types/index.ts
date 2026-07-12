@@ -152,6 +152,12 @@ export interface ChannelMetrics {
   conversionPct: number;
   ordersNoHuman: number;
   repurchasePct: number;
+  deltas?: {
+    conversations: number;
+    conversion: number;
+    ordersNoHuman: number;
+    repurchase: number;
+  };
 }
 
 export interface ReservationMetrics {
