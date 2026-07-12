@@ -163,6 +163,16 @@ const additionalPacificoOrders: Order[] = Array.from({ length: 38 }, (_, index) 
 
 initialOrders.push(...additionalPacificoOrders);
 
+const demoFirstNames = ['Sofía', 'Mateo', 'Valentina', 'Santiago', 'Camila', 'Sebastián', 'Luciana', 'Diego', 'Mía', 'Nicolás', 'Renata', 'Joaquín', 'Alessia', 'Thiago', 'Mariana'];
+const demoLastNames = ['García', 'Ramírez', 'Torres'];
+
+initialOrders
+  .filter((order) => order.brandId === 'pacifico')
+  .forEach((order, index) => {
+    order.customerName = `${demoFirstNames[index % demoFirstNames.length]} ${demoLastNames[Math.floor(index / demoFirstNames.length)]}`;
+    order.leadTag = index < 9 ? 'new' : index < 41 ? 'recurring' : 'vip';
+  });
+
 const initialProducts: CatalogProduct[] = [
   { id: 'p1', brandId: 'pacifico', nameKey: 'menu.items.ceviche', category: 'starters', price: 42, active: true, emoji: '🐟' },
   { id: 'p2', brandId: 'pacifico', nameKey: 'menu.items.arrozMariscos', category: 'mains', price: 35, active: true, emoji: '🍚' },
@@ -473,14 +483,16 @@ function loadOrders(): Order[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const stored = JSON.parse(raw) as Order[];
-      const storedIds = new Set(stored.map((order) => order.id));
+      const seedById = new Map(initialOrders.map((order) => [order.id, order]));
+      const enriched = stored.map((order) => {
+        const seed = seedById.get(order.id);
+        return seed ? { ...order, customerName: seed.customerName, leadTag: seed.leadTag, phone: seed.phone, paymentMethod: seed.paymentMethod } : order;
+      });
+      const storedIds = new Set(enriched.map((order) => order.id));
       const missing = initialOrders.filter((order) => !storedIds.has(order.id));
-      if (missing.length > 0) {
-        const migrated = [...stored, ...structuredClone(missing)];
-        saveOrders(migrated);
-        return migrated;
-      }
-      return stored;
+      const migrated = [...enriched, ...structuredClone(missing)];
+      saveOrders(migrated);
+      return migrated;
     }
   } catch { /* ignore */ }
   return structuredClone(initialOrders);

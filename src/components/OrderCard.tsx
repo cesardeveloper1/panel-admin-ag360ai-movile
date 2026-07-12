@@ -32,7 +32,10 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
 
   return (
     <article className={cardClass} style={style}>
-      <div className="order-customer">{t(order.customerKey)}</div>
+      <div className="order-customer-row">
+        <div className="order-customer">{order.customerName ?? t(order.customerKey)}</div>
+        {order.leadTag ? <span className={`order-lead-tag order-lead-tag--${order.leadTag}`}>{t(`orders.lead.${order.leadTag}`)}</span> : null}
+      </div>
       <div className="order-card-actions">
         <button type="button" onClick={onClick}><IonIcon icon={openOutline} />{t('orders.openStatus')}</button>
         <button type="button" onClick={onChat}><IonIcon icon={chatbubbleEllipsesOutline} />{t('orders.openChat')}</button>

@@ -52,7 +52,7 @@ export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps
           </div>
           <div className="order-sheet-row">
             <span className="order-sheet-label">{t('orderDetail.buyer')}</span>
-            <strong>{t(order.customerKey)}</strong>
+            <strong>{order.customerName ?? t(order.customerKey)}</strong>
           </div>
           <div className="order-sheet-row">
             <span className="order-sheet-label">{t('orderDetail.status')}</span>

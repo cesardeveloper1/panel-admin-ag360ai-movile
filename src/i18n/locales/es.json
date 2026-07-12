@@ -198,6 +198,11 @@
     "payPlin": "Plin"
   },
   "orders": {
+    "lead": {
+      "new": "Nuevo",
+      "recurring": "Recurrente",
+      "vip": "VIP"
+    },
     "openStatus": "Estado",
     "openChat": "Chat",
     "call": "Llamar",

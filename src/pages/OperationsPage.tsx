@@ -54,6 +54,7 @@ const OperationsPage: React.FC = () => {
     return orders.filter(
       (o) =>
         o.id.toLowerCase().includes(q) ||
+        o.customerName?.toLowerCase().includes(q) ||
         t(o.customerKey).toLowerCase().includes(q),
     );
   }, [orders, query, t]);

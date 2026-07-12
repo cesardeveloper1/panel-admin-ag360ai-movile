@@ -38,6 +38,8 @@ export interface OrderItem {
 export interface Order {
   id: string;
   customerKey: string;
+  customerName?: string;
+  leadTag?: 'new' | 'recurring' | 'vip';
   status: OrderStatus;
   channel: 'whatsapp' | 'web' | 'phone';
   deliveryType: 'delivery' | 'pickup';

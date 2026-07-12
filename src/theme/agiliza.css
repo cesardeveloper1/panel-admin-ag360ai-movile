@@ -509,6 +509,37 @@ ion-page {
   margin: 0.15rem 0;
 }
 
+.order-customer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.order-lead-tag {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.order-lead-tag--new {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.order-lead-tag--recurring {
+  background: rgba(135, 70, 255, 0.12);
+  color: var(--ag-pulse);
+}
+
+.order-lead-tag--vip {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
 .order-detail {
   font-size: 0.8125rem;
   color: var(--ag-muted);
