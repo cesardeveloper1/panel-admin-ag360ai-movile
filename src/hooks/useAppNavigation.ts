@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useIonRouter } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { blurActiveElement } from '../utils/navFocus';
-import { instantNavAnimation, iosTransitionAnimation } from '../utils/instantNavAnimation';
+import { fadeNavAnimation, instantNavAnimation } from '../utils/instantNavAnimation';
 import {
   AGILITO_PATH,
   CHATS_PATH,
@@ -29,7 +29,7 @@ export function useAppNavigation() {
         ionRouter.push(path, 'root', action, undefined, instantNavAnimation);
         return;
       }
-      ionRouter.push(path, 'root', action, undefined, iosTransitionAnimation);
+      ionRouter.push(path, 'root', action, undefined, fadeNavAnimation);
     },
     [ionRouter],
   );
@@ -38,10 +38,10 @@ export function useAppNavigation() {
     (path: string) => {
       blurActiveElement();
       if (TAB_ROOT_PATHS.has(path)) {
-        ionRouter.push(path, 'root', 'replace', undefined, iosTransitionAnimation);
+        ionRouter.push(path, 'root', 'replace', undefined, fadeNavAnimation);
         return;
       }
-      ionRouter.push(path, 'forward', 'push', undefined, iosTransitionAnimation);
+      ionRouter.push(path, 'forward', 'push', undefined, fadeNavAnimation);
     },
     [ionRouter],
   );
@@ -49,7 +49,7 @@ export function useAppNavigation() {
   const replace = useCallback(
     (path: string) => {
       blurActiveElement();
-      ionRouter.push(path, 'root', 'replace', undefined, iosTransitionAnimation);
+      ionRouter.push(path, 'root', 'replace', undefined, fadeNavAnimation);
     },
     [ionRouter],
   );
@@ -58,11 +58,11 @@ export function useAppNavigation() {
     (fallbackPath?: string) => {
       blurActiveElement();
       if (ionRouter.canGoBack()) {
-        ionRouter.goBack(iosTransitionAnimation);
+        ionRouter.goBack(fadeNavAnimation);
         return;
       }
       if (fallbackPath) {
-        ionRouter.push(fallbackPath, 'back', 'replace', undefined, iosTransitionAnimation);
+        ionRouter.push(fallbackPath, 'back', 'replace', undefined, fadeNavAnimation);
       } else {
         history.goBack();
       }
