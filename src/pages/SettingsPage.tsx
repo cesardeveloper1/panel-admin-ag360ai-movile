@@ -31,7 +31,7 @@ import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { goRoot, go } = useAppNavigation();
-  const { session, brand, orders, notifications, darkMode, setDarkMode, prepareBrandPick, logout } =
+  const { session, brand, orders, notifications, darkMode, setDarkMode, startBrandSwitch, logout } =
     useApp();
   const { breadcrumbs, onBack } = useModuleNav();
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -44,7 +44,7 @@ const SettingsPage: React.FC = () => {
   );
 
   const onChangeBrand = () => {
-    prepareBrandPick();
+    startBrandSwitch();
     goRoot('/welcome');
   };
 

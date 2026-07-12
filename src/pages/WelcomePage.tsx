@@ -80,6 +80,7 @@ const WelcomePage: React.FC = () => {
       if (selectingRef.current || brandLoading) return;
 
       selectingRef.current = true;
+      autoStartedRef.current = true;
       setSelectingId(selected.id);
 
       try {

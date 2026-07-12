@@ -36,7 +36,7 @@ const modules = [
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
   const { go, goRoot } = useAppNavigation();
-  const { brand, session, isOnboardingDone, notifications, prepareBrandPick, showToast } = useApp();
+  const { brand, session, isOnboardingDone, notifications, startBrandSwitch, showToast } = useApp();
   const avatar = session?.initials ?? brand?.initials ?? '?';
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
   const [input, setInput] = useState('');
@@ -147,7 +147,7 @@ const AgilitoPage: React.FC = () => {
   };
 
   const handleBackToBrands = () => {
-    prepareBrandPick();
+    startBrandSwitch();
     goRoot('/welcome');
   };
 
