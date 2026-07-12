@@ -137,6 +137,19 @@ ion-page {
   color: var(--ag-text-secondary);
 }
 
+.ag-header--centered-compact .ag-header-row {
+  justify-content: center;
+}
+
+.ag-header--centered-compact .ag-header-copy {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.ag-header--centered-compact .ag-header-title {
+  font-size: 1.03125rem;
+}
+
 .ag-header-avatar {
   flex-shrink: 0;
 }
@@ -144,6 +157,10 @@ ion-page {
 @media (max-width: 767px) {
   .ag-header {
     padding-left: 4.5rem;
+  }
+
+  .ag-header--centered-compact {
+    padding-right: 4.5rem;
   }
 
   .ag-header-avatar {

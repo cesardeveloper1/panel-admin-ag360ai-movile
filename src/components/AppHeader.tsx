@@ -13,6 +13,7 @@ interface AppHeaderProps {
   subtitle?: string;
   avatar?: string;
   showAlerts?: boolean;
+  centeredCompact?: boolean;
   profileFromAvatar?: boolean;
   backLabel?: string;
   onBack?: () => void;
@@ -33,6 +34,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   subtitle,
   avatar,
   showAlerts = false,
+  centeredCompact = false,
   profileFromAvatar = true,
   backLabel,
   onBack,
@@ -65,7 +67,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   ) : null;
 
   return (
-    <header className={`ag-header${onBack ? ' ag-header--sub' : ''}`}>
+    <header className={`ag-header${onBack ? ' ag-header--sub' : ''}${centeredCompact ? ' ag-header--centered-compact' : ''}`}>
       {onBack ? (
         <div className="ag-header-nav">
           <button type="button" className="ag-header-back" onClick={onBack} aria-label={backLabel ?? t('common.back')}>

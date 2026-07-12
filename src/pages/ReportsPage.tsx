@@ -148,9 +148,8 @@ const ReportsPage: React.FC = () => {
       <IonContent className="ag-screen">
         <AppShell>
           <AppHeader
-            showAlerts
+            centeredCompact
             title={t('reports.title')}
-            subtitle={t(period === 'week' ? 'reports.subtitleWeek' : 'reports.subtitle', { brand: brand ? t(brand.nameKey) : '' })}
           />
           <div className="ag-body module-body reports-body">
             {loading || !report ? (
