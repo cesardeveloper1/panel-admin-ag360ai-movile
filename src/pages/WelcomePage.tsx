@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
+import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewWillEnter } from '@ionic/react';
 import { chevronBackOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
@@ -30,6 +30,16 @@ const WelcomePage: React.FC = () => {
   });
   const selectingRef = useRef(false);
   const autoStartedRef = useRef(false);
+
+  useIonViewWillEnter(() => {
+    if (sessionStorage.getItem(PICK_BRAND_KEY) !== '1') return;
+    autoStartedRef.current = false;
+    selectingRef.current = false;
+    setSelectingId(null);
+    setLeaving(false);
+    setAwaitingAutoPick(false);
+    if (brand) clearBrand();
+  });
 
   const reloadBrands = useCallback(async () => {
     const data = await apiMock.getBrands();
