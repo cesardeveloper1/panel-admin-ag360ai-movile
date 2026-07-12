@@ -21,7 +21,7 @@ const OPS_SEGMENT_COLORS = {
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, orders, session } = useApp();
+  const { orders } = useApp();
   const [query, setQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
@@ -58,10 +58,6 @@ const OperationsPage: React.FC = () => {
   const bySubState = (list: Order[], subState: KanbanSubState) =>
     list.filter((o) => getKanbanSubState(o) === subState);
 
-  const subtitle = brand
-    ? `${t(brand.nameKey)} · ${t('locations.miraflores')}`
-    : '';
-
   const renderSubSection = (subState: KanbanSubState, list: Order[]) => {
     const items = bySubState(list, subState);
     if (items.length === 0) return null;
@@ -90,10 +86,8 @@ const OperationsPage: React.FC = () => {
       <IonContent className="ag-screen">
         <AppShell>
           <AppHeader
+            centeredCompact
             title={t('ops.title')}
-            subtitle={subtitle}
-            avatar={session?.initials ?? brand?.initials}
-            showAlerts
           />
           <div className="ag-body module-body ops-body ag-page-stack">
             <IonSearchbar

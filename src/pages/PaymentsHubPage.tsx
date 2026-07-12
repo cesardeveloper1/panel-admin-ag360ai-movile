@@ -8,9 +8,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
-import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { brandLabel } from '../utils/brandLabel';
 
 const modules = [
   {
@@ -46,17 +44,14 @@ const modules = [
 const PaymentsHubPage: React.FC = () => {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
-  const { brand } = useApp();
 
   return (
     <IonPage>
       <IonContent className="ag-screen">
         <AppShell>
           <AppHeader
+            centeredCompact
             title={t('payments.title')}
-            subtitle={brandLabel(brand, t)}
-            avatar={brand?.initials}
-            showAlerts
           />
           <div className="ag-body module-body ag-page-stack">
             <p className="hub-intro ag-enter">{t('payments.intro')}</p>

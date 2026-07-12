@@ -73,7 +73,6 @@ const ChatsPage: React.FC = () => {
     setSending(false);
   };
 
-  const inboxBreadcrumbs = [{ label: t('nav.chats') }];
   const threadBreadcrumbs = [
     { label: t('nav.chats') },
     { label: selected ? t(selected.nameKey) : '' },
@@ -151,10 +150,8 @@ const ChatsPage: React.FC = () => {
           ) : (
             <>
               <AppHeader
-                showAlerts
+                centeredCompact
                 title={t('chats.title')}
-                subtitle={t('chats.subtitle', { brand: brand ? t(brand.nameKey) : '' })}
-                breadcrumbs={inboxBreadcrumbs}
               />
               <div className="ag-body module-body chats-body ag-page-stack">
                 <div className="chats-status ag-enter">
