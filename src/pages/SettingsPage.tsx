@@ -45,7 +45,7 @@ const SettingsPage: React.FC = () => {
 
   const onChangeBrand = () => {
     startBrandSwitch();
-    goRoot('/welcome');
+    window.setTimeout(() => goRoot('/welcome'), 80);
   };
 
   const onLogout = () => {

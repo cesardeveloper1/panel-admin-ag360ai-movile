@@ -148,7 +148,7 @@ const AgilitoPage: React.FC = () => {
 
   const handleBackToBrands = () => {
     startBrandSwitch();
-    goRoot('/welcome');
+    window.setTimeout(() => goRoot('/welcome'), 80);
   };
 
   return (

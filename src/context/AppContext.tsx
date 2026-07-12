@@ -16,6 +16,7 @@ interface AppContextValue {
   notifications: NotificationItem[];
   loading: boolean;
   brandLoading: boolean;
+  brandTransitioning: boolean;
   kitchenMode: boolean;
   darkMode: boolean;
   authEpoch: number;
@@ -62,6 +63,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [brandLoading, setBrandLoading] = useState(false);
+  const [brandTransitioning, setBrandTransitioning] = useState(false);
   const [kitchenMode, setKitchenMode] = useState(false);
   const [darkMode, setDarkModeState] = useState(readDarkMode);
   const [toast, setToast] = useState<string | null>(null);
@@ -69,6 +71,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const ordersRequestId = useRef(0);
   const brandSelectPromise = useRef<Promise<boolean> | null>(null);
+  const brandTransitionTimer = useRef<number | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.toggle('ion-palette-dark', darkMode);
@@ -121,11 +124,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const startBrandSwitch = useCallback(() => {
+    if (brandTransitionTimer.current !== null) {
+      window.clearTimeout(brandTransitionTimer.current);
+    }
+    flushSync(() => setBrandTransitioning(true));
     ordersRequestId.current += 1;
     brandSelectPromise.current = null;
     prepareBrandPick();
     clearBrand();
     setAuthEpoch((n) => n + 1);
+    brandTransitionTimer.current = window.setTimeout(() => {
+      setBrandTransitioning(false);
+      brandTransitionTimer.current = null;
+    }, 1400);
   }, [clearBrand, prepareBrandPick]);
 
   const login = useCallback(
@@ -272,6 +283,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notifications,
       loading,
       brandLoading,
+      brandTransitioning,
       kitchenMode,
       darkMode,
       authEpoch,
@@ -299,6 +311,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notifications,
       loading,
       brandLoading,
+      brandTransitioning,
       kitchenMode,
       darkMode,
       authEpoch,

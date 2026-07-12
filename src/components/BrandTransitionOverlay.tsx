@@ -8,9 +8,9 @@ const BRAND_FLOW_PATHS = new Set(['/welcome', '/app/agilito']);
 
 export function BrandTransitionOverlay() {
   const { t } = useTranslation();
-  const { brandLoading } = useApp();
+  const { brandLoading, brandTransitioning } = useApp();
   const { pathname } = useLocation();
-  const shouldShow = brandLoading && BRAND_FLOW_PATHS.has(pathname);
+  const shouldShow = (brandLoading || brandTransitioning) && BRAND_FLOW_PATHS.has(pathname);
   const [mounted, setMounted] = useState(shouldShow);
   const [visible, setVisible] = useState(false);
 
