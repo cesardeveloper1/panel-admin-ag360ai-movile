@@ -19,6 +19,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import { AppProvider, useApp } from './context/AppContext';
 import { ToastUx } from './components/ToastUx';
 import { BrandTransitionOverlay } from './components/BrandTransitionOverlay';
+import { AppLaunchSplash } from './components/AppLaunchSplash';
 import { branded } from './components/RequireBrand';
 import { useNativeChrome } from './hooks/useNativeChrome';
 
@@ -95,6 +96,7 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => (
   <IonApp>
+    <AppLaunchSplash />
     <AppProvider>
       <IonReactRouter>
         <AppRoutes />
