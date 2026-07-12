@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
 import { chatbubbleEllipsesOutline, logoWhatsapp, sendOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
@@ -11,6 +12,7 @@ import type { ChatConversation, ChatMessage } from '../types';
 const ChatsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand } = useApp();
+  const location = useLocation();
   const [items, setItems] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,13 @@ const ChatsPage: React.FC = () => {
       setLoading(false);
     });
   }, [brand]);
+
+  useEffect(() => {
+    const customerKey = new URLSearchParams(location.search).get('customer');
+    if (!customerKey || items.length === 0) return;
+    const matchingChat = items.find((item) => item.nameKey === customerKey);
+    if (matchingChat) setSelected(matchingChat);
+  }, [items, location.search]);
 
   useEffect(() => {
     if (!selected) {

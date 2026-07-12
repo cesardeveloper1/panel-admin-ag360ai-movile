@@ -47,6 +47,8 @@ export interface Order {
   needsHuman?: boolean;
   brandId: string;
   locationKey: string;
+  phone?: string;
+  paymentMethod?: 'yape' | 'card' | 'cash' | 'plin';
 }
 
 export interface DashboardKpi {

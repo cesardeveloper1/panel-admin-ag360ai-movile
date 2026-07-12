@@ -9,6 +9,7 @@ import { OrderCard } from '../components/OrderCard';
 import { OrderDetailSheet } from '../components/OrderDetailSheet';
 import { useApp } from '../context/AppContext';
 import { getKanbanGroup, getKanbanSubState } from '../services/apiMock';
+import { useAppNavigation } from '../hooks/useAppNavigation';
 import type { KanbanSubState, Order } from '../types';
 
 const NEW_SUBSTATES: KanbanSubState[] = ['starting', 'ordering', 'human'];
@@ -23,6 +24,7 @@ const OPS_SEGMENT_COLORS = {
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
   const { orders } = useApp();
+  const { go } = useAppNavigation();
   const [query, setQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
@@ -79,6 +81,10 @@ const OperationsPage: React.FC = () => {
     window.setTimeout(() => searchRef.current?.setFocus(), 80);
   };
 
+  const openOrderChat = (order: Order) => {
+    go(`/app/chats?customer=${encodeURIComponent(order.customerKey)}`);
+  };
+
   const renderSubSection = (subState: KanbanSubState, list: Order[]) => {
     const items = bySubState(list, subState);
     if (items.length === 0) return null;
@@ -95,6 +101,7 @@ const OperationsPage: React.FC = () => {
               order={order}
               style={{ animationDelay: `${idx * 40}ms` }}
               onClick={() => setSelectedOrder(order)}
+              onChat={() => openOrderChat(order)}
             />
           ))}
         </div>
@@ -141,7 +148,7 @@ const OperationsPage: React.FC = () => {
                     <span className="kanban-count">{allStageItems.length}</span>
                   </header>
                   <div className="kanban-cards">
-                    {allStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} />)}
+                    {allStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} onChat={() => openOrderChat(order)} />)}
                   </div>
                   {allStageItems.length === 0 ? <p className="kanban-empty">{t('ops.emptyColumn')}</p> : null}
                 </section>
@@ -225,6 +232,7 @@ const OperationsPage: React.FC = () => {
                       order={order}
                       style={{ animationDelay: `${idx * 40}ms` }}
                       onClick={() => setSelectedOrder(order)}
+                      onChat={() => openOrderChat(order)}
                     />
                   ))}
                 </div>

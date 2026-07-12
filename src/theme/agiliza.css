@@ -1905,6 +1905,64 @@ body.ag-mobile-nav-open {
   font-size: 1.35rem;
 }
 
+.ag-header--centered-compact .ag-header-actions {
+  position: absolute;
+  right: 0.75rem;
+}
+
+.order-card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--ag-line);
+}
+
+.order-card-actions button,
+.order-card-actions a {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ag-mist);
+  color: var(--ag-ink);
+  font: 700 0.6875rem var(--ag-font-body);
+  text-decoration: none;
+}
+
+.order-card-actions ion-icon {
+  font-size: 1rem;
+}
+
+.order-handling-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 1rem;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--ag-mist);
+}
+
+.order-handling-mode button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ag-muted);
+  font-weight: 700;
+}
+
+.order-handling-mode button.active {
+  background: var(--ag-paper);
+  color: var(--ag-pulse);
+  box-shadow: var(--ag-shadow-sm);
+}
+
 .ops-view-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

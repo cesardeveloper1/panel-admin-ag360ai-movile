@@ -197,6 +197,9 @@
     "payPlin": "Plin"
   },
   "orders": {
+    "openStatus": "Estado",
+    "openChat": "Chat",
+    "call": "Llamar",
     "status": {
       "pre_order": "Pre-pedido",
       "accepted": "Nuevo",
@@ -379,6 +382,17 @@
     "agilitoHint": "Chat central en la barra inferior para consultas y acciones."
   },
   "orderDetail": {
+    "buyer": "Nombre del comprador",
+    "cart": "Carrito de compras",
+    "paymentMethod": "Método de pago",
+    "myself": "Yo mismo",
+    "ai": "IA",
+    "payment": {
+      "yape": "Yape",
+      "card": "Tarjeta",
+      "cash": "Efectivo",
+      "plin": "Plin"
+    },
     "title": "Pedido {{id}}",
     "close": "Cerrar",
     "customer": "Cliente",

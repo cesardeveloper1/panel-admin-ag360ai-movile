@@ -7,6 +7,7 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import type { Order } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -19,6 +20,7 @@ interface OrderDetailSheetProps {
 export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps) {
   const { t } = useTranslation();
   const { advanceOrder } = useApp();
+  const [handlingMode, setHandlingMode] = useState<'self' | 'ai'>('self');
 
   if (!order) return null;
 
@@ -44,8 +46,12 @@ export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps
       </IonHeader>
       <IonContent className="order-sheet-content">
         <div className="order-sheet-body">
+          <div className="order-handling-mode">
+            <button type="button" className={handlingMode === 'self' ? 'active' : ''} onClick={() => setHandlingMode('self')}>{t('orderDetail.myself')}</button>
+            <button type="button" className={handlingMode === 'ai' ? 'active' : ''} onClick={() => setHandlingMode('ai')}>{t('orderDetail.ai')}</button>
+          </div>
           <div className="order-sheet-row">
-            <span className="order-sheet-label">{t('orderDetail.customer')}</span>
+            <span className="order-sheet-label">{t('orderDetail.buyer')}</span>
             <strong>{t(order.customerKey)}</strong>
           </div>
           <div className="order-sheet-row">
@@ -64,8 +70,12 @@ export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps
             <span className="order-sheet-label">{t('orderDetail.location')}</span>
             <span>{t(order.locationKey)}</span>
           </div>
+          <div className="order-sheet-row">
+            <span className="order-sheet-label">{t('orderDetail.paymentMethod')}</span>
+            <span>{t(`orderDetail.payment.${order.paymentMethod ?? 'yape'}`)}</span>
+          </div>
 
-          <h3 className="order-sheet-section">{t('orderDetail.items')}</h3>
+          <h3 className="order-sheet-section">{t('orderDetail.cart')}</h3>
           <ul className="order-sheet-items">
             {order.items.map((item, idx) => (
               <li key={idx}>
