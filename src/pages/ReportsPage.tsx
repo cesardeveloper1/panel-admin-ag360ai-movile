@@ -120,6 +120,7 @@ const ReportsPage: React.FC = () => {
   const [rangeEnd, setRangeEnd] = useState(() => toLocalIsoDate(new Date()));
   const [rangeComplete, setRangeComplete] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [calendarValue, setCalendarValue] = useState(() => toLocalIsoDate(new Date()));
   const datetimeRef = useRef<HTMLIonDatetimeElement>(null);
 
   const calendarMonthTitle = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric' })
@@ -186,12 +187,15 @@ const ReportsPage: React.FC = () => {
 
   const openRangePicker = () => {
     setActiveRangeField('start');
+    setCalendarMonth(new Date());
+    setCalendarValue(toLocalIsoDate(new Date()));
     setRangeOpen(true);
   };
 
   const onRangeDateChange = (rawValue: string | string[] | null | undefined) => {
     const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
     if (!selected || !brand) return;
+    setCalendarValue(selected);
 
     if (activeRangeField === 'start') {
       setRangeStart(selected);
@@ -438,10 +442,9 @@ const ReportsPage: React.FC = () => {
           ) : null}
           <IonDatetime
             ref={datetimeRef}
-            key={activeRangeField}
             presentation="date"
             locale="es-PE"
-            value={activeRangeField === 'start' ? rangeStart : rangeEnd}
+            value={calendarValue}
             min={activeRangeField === 'end' ? rangeStart : undefined}
             max={toLocalIsoDate(new Date())}
             onIonChange={(event) => onRangeDateChange(event.detail.value)}
