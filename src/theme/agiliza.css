@@ -2752,6 +2752,11 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   font-size: 1.75rem;
 }
 
+.reports-range-picker__month button:disabled {
+  opacity: 0.22;
+  pointer-events: none;
+}
+
 .reports-range-picker ion-datetime {
   width: 100%;
   max-width: 100%;

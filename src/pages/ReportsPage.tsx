@@ -117,6 +117,9 @@ const ReportsPage: React.FC = () => {
 
   const calendarMonthTitle = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric' })
     .format(calendarMonth);
+  const today = new Date();
+  const calendarAtCurrentMonth = calendarMonth.getFullYear() === today.getFullYear()
+    && calendarMonth.getMonth() === today.getMonth();
 
   const syncCalendarHeader = () => {
     const datetime = datetimeRef.current as (HTMLIonDatetimeElement & {
@@ -455,7 +458,14 @@ const ReportsPage: React.FC = () => {
           <div className="reports-range-picker__month">
             <button type="button" onClick={() => moveCalendar('previous')} aria-label="Mes anterior">‹</button>
             <strong>{calendarMonthTitle}</strong>
-            <button type="button" onClick={() => moveCalendar('next')} aria-label="Mes siguiente">›</button>
+            <button
+              type="button"
+              onClick={() => moveCalendar('next')}
+              aria-label="Mes siguiente"
+              disabled={calendarAtCurrentMonth}
+            >
+              ›
+            </button>
           </div>
           {rangeStart ? (
             <div className="reports-range-picker__selection" aria-live="polite">
