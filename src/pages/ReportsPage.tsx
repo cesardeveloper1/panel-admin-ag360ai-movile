@@ -128,9 +128,15 @@ const ReportsPage: React.FC = () => {
   };
 
   const moveCalendar = (direction: 'previous' | 'next') => {
-    const buttons = datetimeRef.current?.shadowRoot?.querySelectorAll<HTMLButtonElement>('.calendar-next-prev ion-button');
-    buttons?.[direction === 'previous' ? 0 : 1]?.click();
-    window.setTimeout(syncCalendarHeader, 180);
+    const buttons = datetimeRef.current?.shadowRoot?.querySelectorAll<HTMLIonButtonElement>('.calendar-next-prev ion-button');
+    const button = buttons?.[direction === 'previous' ? 0 : 1];
+    if (!button || button.disabled) return;
+    button.click();
+    setCalendarMonth((visibleMonth) => new Date(
+      visibleMonth.getFullYear(),
+      visibleMonth.getMonth() + (direction === 'previous' ? -1 : 1),
+      1,
+    ));
   };
 
   useEffect(() => {
@@ -215,6 +221,27 @@ const ReportsPage: React.FC = () => {
       });
     });
   };
+
+  const highlightedRangeDates = useMemo(() => {
+    if (!rangeStart) return [];
+    const end = rangeEnd ?? rangeStart;
+    const cursor = new Date(`${rangeStart}T12:00:00`);
+    const endDate = new Date(`${end}T12:00:00`);
+    const dates = [];
+
+    while (cursor <= endDate) {
+      const date = toLocalIsoDate(cursor);
+      const isBoundary = date === rangeStart || date === end;
+      dates.push({
+        date,
+        textColor: isBoundary ? '#ffffff' : '#5f2fc5',
+        backgroundColor: isBoundary ? '#8746ff' : 'rgba(135, 70, 255, 0.16)',
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return dates;
+  }, [rangeStart, rangeEnd]);
 
   const sales = report?.kpis.find((k) => k.id === 'sales');
   const others = report?.kpis.filter((k) => k.id !== 'sales') ?? [];
@@ -441,6 +468,7 @@ const ReportsPage: React.FC = () => {
             presentation="date"
             locale="es-PE"
             value={calendarValue}
+            highlightedDates={highlightedRangeDates}
             max={toLocalIsoDate(new Date())}
             onIonChange={(event) => onRangeDateChange(event.detail.value)}
           />
