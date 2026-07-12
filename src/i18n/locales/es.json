@@ -170,6 +170,7 @@
     "scheduledOrders": "Pedidos programados",
     "deliveryOrdersPct": "% Pedidos delivery",
     "pickupOrdersPct": "% Recojo en tienda",
+    "recurringPaymentMethod": "Método recurrente",
     "vsPreviousMonth": "+{{value}}% vs Mes Anterior",
     "ordersTrend": "Pedidos por día",
     "channelComparison": "Ventas por canal",

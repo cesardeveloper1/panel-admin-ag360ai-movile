@@ -230,12 +230,21 @@ const ReportsPage: React.FC = () => {
   const sales = report?.kpis.find((k) => k.id === 'sales');
   const cancelled = report?.kpis.find((k) => k.id === 'cancelled');
   const ticket = report?.kpis.find((k) => k.id === 'ticket');
+  const recurringPaymentMethod = report?.paymentMethods.reduce((mostUsed, method) => (
+    method.pct > mostUsed.pct ? method : mostUsed
+  ));
   const insights = [
     { id: 'complaints', labelKey: 'reports.complaintsHuman', value: 8, delta: 7, down: true },
     { id: 'cancelled', labelKey: 'reports.cancelled', value: cancelled?.value ?? 0, delta: 3, down: true },
     { id: 'scheduled', labelKey: 'reports.scheduledOrders', value: 23, delta: 12 },
     { id: 'delivery', labelKey: 'reports.deliveryOrdersPct', value: '68%', delta: 8 },
     { id: 'pickup', labelKey: 'reports.pickupOrdersPct', value: '32%', delta: 5 },
+    {
+      id: 'payment',
+      labelKey: 'reports.recurringPaymentMethod',
+      value: recurringPaymentMethod ? `${recurringPaymentMethod.pct}% ${t(recurringPaymentMethod.labelKey)}` : '—',
+      delta: 6,
+    },
   ];
   const maxBar = useMemo(() => maxOf(report?.hourlySales ?? [1]), [report]);
 
