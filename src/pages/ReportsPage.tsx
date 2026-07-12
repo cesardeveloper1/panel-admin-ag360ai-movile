@@ -233,7 +233,6 @@ const ReportsPage: React.FC = () => {
   const insights = [
     { id: 'complaints', labelKey: 'reports.complaintsHuman', value: 8, delta: 7, down: true },
     { id: 'cancelled', labelKey: 'reports.cancelled', value: cancelled?.value ?? 0, delta: 3, down: true },
-    { id: 'ticket', labelKey: 'reports.avgTicket', value: `S/ ${ticket?.value ?? 0}`, delta: 4 },
     { id: 'scheduled', labelKey: 'reports.scheduledOrders', value: 23, delta: 12 },
     { id: 'delivery', labelKey: 'reports.deliveryOrdersPct', value: '68%', delta: 8 },
     { id: 'pickup', labelKey: 'reports.pickupOrdersPct', value: '32%', delta: 5 },
@@ -322,6 +321,11 @@ const ReportsPage: React.FC = () => {
                     <span>{t('reports.repurchase')}</span>
                     <strong>{report.channelMetrics.repurchasePct}%</strong>
                     {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: report.channelMetrics.deltas?.repurchase ?? 0 })}</small> : null}
+                  </article>
+                  <article className="reports-metric-card">
+                    <span>{t('reports.avgTicket')}</span>
+                    <strong>S/ {ticket?.value ?? 0}</strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: ticket?.deltaValue ?? 4 })}</small> : null}
                   </article>
                 </section>
 

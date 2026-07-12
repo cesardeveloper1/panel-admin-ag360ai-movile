@@ -2908,6 +2908,10 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   line-height: 1.25;
 }
 
+.reports-metrics-row .reports-metric-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .reports-insights-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
