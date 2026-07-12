@@ -190,7 +190,7 @@ function brandInitials(name: string) {
 }
 
 
-function buildDashboard(brandId: string, period: 'today' | 'week' = 'today'): DashboardReport {
+function buildDashboard(brandId: string, period: 'today' | 'range' = 'today', rangeDays = 7): DashboardReport {
   const orders = loadOrders().filter((o) => o.brandId === brandId);
   const cloned = structuredClone(kpis);
   cloned[1] = { ...cloned[1], value: orders.length + 43 };
@@ -254,44 +254,46 @@ function buildDashboard(brandId: string, period: 'today' | 'week' = 'today'): Da
 
   if (period === 'today') return dailyReport;
 
-  const weeklySales = dailyReport.salesTrend.reduce((total, point) => total + point.sales, 0);
-  const weeklyOrders = dailyReport.salesTrend.reduce((total, point) => total + point.orders, 0);
+  const normalizedDays = Math.max(1, rangeDays);
+  const rangeScale = normalizedDays / 7;
+  const weeklySales = Math.round(dailyReport.salesTrend.reduce((total, point) => total + point.sales, 0) * rangeScale);
+  const weeklyOrders = Math.round(dailyReport.salesTrend.reduce((total, point) => total + point.orders, 0) * rangeScale);
   const scaleRank = (item: RankItem): RankItem => ({
     ...item,
-    sales: Math.round(item.sales * 6.65),
-    orders: Math.round(item.orders * 6.55),
+    sales: Math.round(item.sales * normalizedDays * 0.95),
+    orders: Math.round(item.orders * normalizedDays * 0.94),
   });
 
   return {
     ...dailyReport,
     kpis: dailyReport.kpis.map((kpi) => {
-      if (kpi.id === 'sales') return { ...kpi, labelKey: 'reports.salesWeek', value: weeklySales, deltaKey: 'reports.deltaUpWeek' };
-      if (kpi.id === 'orders') return { ...kpi, value: weeklyOrders, deltaKey: 'reports.deltaOrdersWeek' };
-      if (kpi.id === 'ticket') return { ...kpi, value: 82.7, deltaKey: 'reports.deltaTicketWeek' };
-      return { ...kpi, value: 11, deltaKey: 'reports.deltaCancelledWeek' };
+      if (kpi.id === 'sales') return { ...kpi, labelKey: 'reports.salesRange', value: weeklySales, deltaKey: 'reports.deltaUpRange' };
+      if (kpi.id === 'orders') return { ...kpi, value: weeklyOrders, deltaKey: 'reports.deltaOrdersRange' };
+      if (kpi.id === 'ticket') return { ...kpi, value: 82.7, deltaKey: 'reports.deltaTicketRange' };
+      return { ...kpi, value: Math.max(1, Math.round(11 * rangeScale)), deltaKey: 'reports.deltaCancelledRange' };
     }),
     hourlySales: dailyReport.salesTrend.map((point) => point.sales),
     channelComparison: dailyReport.channelComparison.map((point) => ({
       ...point,
-      sales: Math.round(point.sales * 6.7),
-      orders: Math.round(point.orders * 6.6),
+      sales: Math.round(point.sales * normalizedDays * 0.957),
+      orders: Math.round(point.orders * normalizedDays * 0.943),
     })),
     restaurantRanking: dailyReport.restaurantRanking.map(scaleRank),
     productRanking: dailyReport.productRanking.map(scaleRank),
     paymentMethods: dailyReport.paymentMethods.map((method) => ({
       ...method,
-      amount: Math.round(method.amount * 6.7),
+      amount: Math.round(method.amount * normalizedDays * 0.957),
     })),
     channelMetrics: {
-      conversations: 862,
+      conversations: Math.round(862 * rangeScale),
       conversionPct: 36,
-      ordersNoHuman: 131,
+      ordersNoHuman: Math.round(131 * rangeScale),
       repurchasePct: 24,
     },
     reservations: {
-      total: 126,
-      confirmed: 101,
-      guests: 364,
+      total: Math.round(126 * rangeScale),
+      confirmed: Math.round(101 * rangeScale),
+      guests: Math.round(364 * rangeScale),
       cancellationPct: 7,
     },
   };
@@ -498,9 +500,9 @@ export const apiMock = {
     return orders[idx];
   },
 
-  async getDashboard(brandId: string, period: 'today' | 'week' = 'today') {
+  async getDashboard(brandId: string, period: 'today' | 'range' = 'today', rangeDays = 7) {
     await delay(200);
-    return buildDashboard(brandId, period);
+    return buildDashboard(brandId, period, rangeDays);
   },
 
 

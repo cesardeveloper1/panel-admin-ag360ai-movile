@@ -2683,6 +2683,114 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   color: var(--ag-pulse);
 }
 
+.reports-range-summary {
+  display: block;
+  width: 100%;
+  margin: -0.25rem 0 0.875rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(135, 70, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(135, 70, 255, 0.07);
+  color: var(--ag-ink);
+  font: 700 0.8125rem var(--ag-font-body);
+  text-align: center;
+}
+
+.reports-range-modal {
+  --border-radius: 24px 24px 0 0;
+  --background: var(--ag-paper);
+}
+
+.reports-range-picker {
+  min-height: 100%;
+  padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+}
+
+.reports-range-picker__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.reports-range-picker__head div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.reports-range-picker__head span {
+  color: var(--ag-muted);
+  font-size: 0.75rem;
+}
+
+.reports-range-picker__head strong {
+  font: 700 1.15rem var(--ag-font-display);
+}
+
+.reports-range-picker__head button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ag-mist);
+  color: var(--ag-ink);
+  font-size: 1.5rem;
+}
+
+.reports-range-picker__steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+}
+
+.reports-range-picker__steps button {
+  min-height: 58px;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ag-line);
+  border-radius: 14px;
+  background: var(--ag-mist);
+  color: var(--ag-ink);
+  font-family: var(--ag-font-body);
+  text-align: left;
+}
+
+.reports-range-picker__steps button.active {
+  border-color: rgba(135, 70, 255, 0.5);
+  background: rgba(135, 70, 255, 0.09);
+  color: var(--ag-pulse);
+}
+
+.reports-range-picker__steps span {
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.reports-range-picker__steps strong {
+  font-size: 0.75rem;
+}
+
+.reports-range-picker ion-datetime {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 18px;
+  background: var(--ag-paper);
+}
+
+.reports-range-picker__hint {
+  margin: 0.65rem 0 0;
+  color: var(--ag-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .reports-hero {
   padding: 1.125rem 1rem;
   margin-bottom: 0.875rem;

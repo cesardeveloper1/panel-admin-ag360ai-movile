@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IonContent, IonPage, IonSpinner } from '@ionic/react';
+import { IonContent, IonDatetime, IonModal, IonPage, IonSpinner } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -9,7 +9,31 @@ import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../typ
 
 const CHART_HOURS = ['10', '12', '14', '16', '18', '20', '22'];
 const CHART_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-type ReportPeriod = 'today' | 'week';
+type ReportPeriod = 'today' | 'range';
+
+function toLocalIsoDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function defaultRangeStart() {
+  const date = new Date();
+  date.setDate(date.getDate() - 6);
+  return toLocalIsoDate(date);
+}
+
+function rangeDays(start: string, end: string) {
+  const startDate = new Date(`${start}T12:00:00`);
+  const endDate = new Date(`${end}T12:00:00`);
+  return Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / 86_400_000) + 1);
+}
+
+function formatRangeDate(value: string) {
+  return new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })
+    .format(new Date(`${value}T12:00:00`));
+}
 
 function maxOf(values: number[]) {
   return Math.max(...values, 1);
@@ -95,31 +119,66 @@ const ReportsPage: React.FC = () => {
   const [period, setPeriod] = useState<ReportPeriod>('today');
   const [reports, setReports] = useState<Partial<Record<ReportPeriod, DashboardReport>>>({});
   const [loading, setLoading] = useState(true);
+  const [rangeOpen, setRangeOpen] = useState(false);
+  const [activeRangeField, setActiveRangeField] = useState<'start' | 'end'>('start');
+  const [rangeStart, setRangeStart] = useState(defaultRangeStart);
+  const [rangeEnd, setRangeEnd] = useState(() => toLocalIsoDate(new Date()));
 
   useEffect(() => {
     if (!brand) return;
     setLoading(true);
     void Promise.all([
       apiMock.getDashboard(brand.id, 'today'),
-      apiMock.getDashboard(brand.id, 'week'),
-    ]).then(([today, week]) => {
-      setReports({ today, week });
+      apiMock.getDashboard(brand.id, 'range', 7),
+    ]).then(([today, range]) => {
+      setReports({ today, range });
       setLoading(false);
     });
   }, [brand]);
 
   const report = reports[period] ?? null;
 
-  const changePeriod = (next: ReportPeriod) => {
-    if (next === period || !reports[next]) return;
+  const updateWithTransition = (update: () => void) => {
     const transitionDocument = document as Document & {
       startViewTransition?: (update: () => void) => void;
     };
     if (transitionDocument.startViewTransition) {
-      transitionDocument.startViewTransition(() => setPeriod(next));
+      transitionDocument.startViewTransition(update);
       return;
     }
-    setPeriod(next);
+    update();
+  };
+
+  const showToday = () => {
+    if (period === 'today') return;
+    updateWithTransition(() => setPeriod('today'));
+  };
+
+  const openRangePicker = () => {
+    setActiveRangeField('start');
+    setRangeOpen(true);
+  };
+
+  const onRangeDateChange = (rawValue: string | string[] | null | undefined) => {
+    const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
+    if (!selected || !brand) return;
+
+    if (activeRangeField === 'start') {
+      setRangeStart(selected);
+      if (rangeEnd < selected) setRangeEnd(selected);
+      setActiveRangeField('end');
+      return;
+    }
+
+    setRangeEnd(selected);
+    const days = rangeDays(rangeStart, selected);
+    void apiMock.getDashboard(brand.id, 'range', days).then((range) => {
+      updateWithTransition(() => {
+        setReports((current) => ({ ...current, range }));
+        setPeriod('range');
+        setRangeOpen(false);
+      });
+    });
   };
 
   const sales = report?.kpis.find((k) => k.id === 'sales');
@@ -135,11 +194,11 @@ const ReportsPage: React.FC = () => {
   };
 
   const deltaValue = (kpi: DashboardKpi) => {
-    if (period === 'week') return kpi.id === 'orders' ? 21 : kpi.id === 'cancelled' ? 2 : kpi.id === 'ticket' ? 4 : 8;
+    if (period === 'range') return kpi.id === 'orders' ? 21 : kpi.id === 'cancelled' ? 2 : kpi.id === 'ticket' ? 4 : 8;
     return kpi.id === 'orders' ? 5 : kpi.id === 'cancelled' ? 1 : 12;
   };
 
-  const chartLabels = period === 'week' ? CHART_DAYS : CHART_HOURS;
+  const chartLabels = period === 'range' ? CHART_DAYS : CHART_HOURS;
 
   const payMax = maxOf(report?.paymentMethods.map((p) => p.amount) ?? [1]);
 
@@ -163,19 +222,25 @@ const ReportsPage: React.FC = () => {
                     type="button"
                     className={`reports-period-chip${period === 'today' ? ' active' : ''}`}
                     aria-pressed={period === 'today'}
-                    onClick={() => changePeriod('today')}
+                    onClick={showToday}
                   >
                     {t('reports.periodToday')}
                   </button>
                   <button
                     type="button"
-                    className={`reports-period-chip${period === 'week' ? ' active' : ''}`}
-                    aria-pressed={period === 'week'}
-                    onClick={() => changePeriod('week')}
+                    className={`reports-period-chip${period === 'range' ? ' active' : ''}`}
+                    aria-pressed={period === 'range'}
+                    onClick={openRangePicker}
                   >
-                    {t('reports.periodWeek')}
+                    {t('reports.periodRange')}
                   </button>
                 </div>
+
+                {period === 'range' ? (
+                  <button type="button" className="reports-range-summary" onClick={openRangePicker}>
+                    {formatRangeDate(rangeStart)} — {formatRangeDate(rangeEnd)}
+                  </button>
+                ) : null}
 
                 {sales ? (
                   <section className="reports-hero ag-enter">
@@ -234,7 +299,7 @@ const ReportsPage: React.FC = () => {
 
                 <section className="reports-chart ag-enter">
                   <div className="reports-chart-head">
-                    <h2>{t(period === 'week' ? 'reports.chartTitleWeek' : 'reports.chartTitle')}</h2>
+                    <h2>{t(period === 'range' ? 'reports.chartTitleRange' : 'reports.chartTitle')}</h2>
                   </div>
                   <div className="reports-chart-bars" aria-hidden="true">
                     {report.hourlySales.map((height, idx) => (
@@ -317,6 +382,55 @@ const ReportsPage: React.FC = () => {
           </div>
         </AppShell>
       </IonContent>
+
+      <IonModal
+        isOpen={rangeOpen}
+        onDidDismiss={() => setRangeOpen(false)}
+        initialBreakpoint={0.9}
+        breakpoints={[0, 0.9]}
+        handleBehavior="cycle"
+        className="reports-range-modal"
+      >
+        <div className="reports-range-picker">
+          <div className="reports-range-picker__head">
+            <div>
+              <span>{t('reports.rangeTitle')}</span>
+              <strong>{t(activeRangeField === 'start' ? 'reports.rangeStart' : 'reports.rangeEnd')}</strong>
+            </div>
+            <button type="button" onClick={() => setRangeOpen(false)} aria-label={t('common.close')}>×</button>
+          </div>
+          <div className="reports-range-picker__steps">
+            <button
+              type="button"
+              className={activeRangeField === 'start' ? 'active' : ''}
+              onClick={() => setActiveRangeField('start')}
+            >
+              <span>{t('reports.rangeStart')}</span>
+              <strong>{formatRangeDate(rangeStart)}</strong>
+            </button>
+            <button
+              type="button"
+              className={activeRangeField === 'end' ? 'active' : ''}
+              onClick={() => setActiveRangeField('end')}
+            >
+              <span>{t('reports.rangeEnd')}</span>
+              <strong>{formatRangeDate(rangeEnd)}</strong>
+            </button>
+          </div>
+          <IonDatetime
+            key={activeRangeField}
+            presentation="date"
+            locale="es-PE"
+            value={activeRangeField === 'start' ? rangeStart : rangeEnd}
+            min={activeRangeField === 'end' ? rangeStart : undefined}
+            max={toLocalIsoDate(new Date())}
+            onIonChange={(event) => onRangeDateChange(event.detail.value)}
+          />
+          <p className="reports-range-picker__hint">
+            {t(activeRangeField === 'start' ? 'reports.rangeStartHint' : 'reports.rangeEndHint')}
+          </p>
+        </div>
+      </IonModal>
     </IonPage>
   );
 };
