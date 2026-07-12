@@ -2282,12 +2282,25 @@ ion-page.ion-page-hidden .agilito-composer-dock {
 }
 
 .ops-summary-card {
+  width: 100%;
   background: var(--ag-paper);
   border: 1px solid var(--ag-line);
   border-radius: 14px;
   padding: 0.75rem 0.5rem;
   text-align: center;
   box-shadow: var(--ag-shadow-sm);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ops-summary-card:active {
+  transform: scale(0.97);
+}
+
+.kanban-section {
+  scroll-margin-top: calc(16px + env(safe-area-inset-top, 0px));
 }
 
 .ops-summary-card strong {

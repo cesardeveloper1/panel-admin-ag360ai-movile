@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { IonContent, IonPage, IonSearchbar } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
@@ -24,6 +24,13 @@ const OperationsPage: React.FC = () => {
   const { orders } = useApp();
   const [query, setQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const newOrdersRef = useRef<HTMLElement>(null);
+  const processingOrdersRef = useRef<HTMLElement>(null);
+  const deliveredOrdersRef = useRef<HTMLElement>(null);
+
+  const scrollToOrders = (target: React.RefObject<HTMLElement | null>) => {
+    target.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -99,18 +106,18 @@ const OperationsPage: React.FC = () => {
             />
 
             <div className="ops-summary ag-enter">
-              <div className="ops-summary-card ops-summary-card--new">
+              <button type="button" className="ops-summary-card ops-summary-card--new" onClick={() => scrollToOrders(newOrdersRef)}>
                 <strong>{groups.new.length}</strong>
                 <span>{t('ops.kanbanNew')}</span>
-              </div>
-              <div className="ops-summary-card ops-summary-card--hot">
+              </button>
+              <button type="button" className="ops-summary-card ops-summary-card--hot" onClick={() => scrollToOrders(processingOrdersRef)}>
                 <strong>{groups.processing.length}</strong>
                 <span>{t('ops.kanbanProcessing')}</span>
-              </div>
-              <div className="ops-summary-card ops-summary-card--done">
+              </button>
+              <button type="button" className="ops-summary-card ops-summary-card--done" onClick={() => scrollToOrders(deliveredOrdersRef)}>
                 <strong>{groups.delivered.length}</strong>
                 <span>{t('ops.kanbanDelivered')}</span>
-              </div>
+              </button>
             </div>
 
             <div className="ops-proportion ag-enter" aria-hidden={proportionTotal === 0}>
@@ -140,7 +147,7 @@ const OperationsPage: React.FC = () => {
             </div>
 
             <KanbanBoard>
-              <section className="kanban-section kanban-section--new">
+              <section ref={newOrdersRef} className="kanban-section kanban-section--new">
                 <header className="kanban-section-head">
                   <h2>{t('ops.kanbanNew')}</h2>
                   <span className="kanban-count">{groups.new.length}</span>
@@ -151,7 +158,7 @@ const OperationsPage: React.FC = () => {
                 ) : null}
               </section>
 
-              <section className="kanban-section kanban-section--processing">
+              <section ref={processingOrdersRef} className="kanban-section kanban-section--processing">
                 <header className="kanban-section-head">
                   <h2>{t('ops.kanbanProcessing')}</h2>
                   <span className="kanban-count">{groups.processing.length}</span>
@@ -162,7 +169,7 @@ const OperationsPage: React.FC = () => {
                 ) : null}
               </section>
 
-              <section className="kanban-section kanban-section--delivered">
+              <section ref={deliveredOrdersRef} className="kanban-section kanban-section--delivered">
                 <header className="kanban-section-head">
                   <h2>{t('ops.kanbanDelivered')}</h2>
                   <span className="kanban-count">{groups.delivered.length}</span>
