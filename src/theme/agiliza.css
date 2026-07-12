@@ -102,12 +102,26 @@ ion-page {
 
 
 .ag-header {
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
-  z-index: 1100;
+  z-index: 1250;
+  flex-shrink: 0;
   padding: calc(1rem + var(--ag-safe-top, env(safe-area-inset-top, 0px))) 1rem 0.65rem;
   background: var(--ag-paper);
   border-bottom: 1px solid var(--ag-line);
+}
+
+.ag-app-shell-main:has(.reports-body) {
+  position: relative;
+  min-height: 100%;
+}
+
+.ag-app-shell-main:has(.reports-body) > .ag-header {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1250;
 }
 
 .ag-header-row {
