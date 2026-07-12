@@ -1,7 +1,6 @@
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import type {
   BranchLocation,
-  Brand,
   CatalogProduct,
   CrmClient,
   DashboardKpi,
@@ -11,6 +10,7 @@ import type {
   UserSession,
   BrandConfig,
   DashboardReport,
+  RankItem,
   ChatConversation,
   ChatMessage,
 } from '../types';
@@ -190,12 +190,12 @@ function brandInitials(name: string) {
 }
 
 
-function buildDashboard(brandId: string): DashboardReport {
+function buildDashboard(brandId: string, period: 'today' | 'week' = 'today'): DashboardReport {
   const orders = loadOrders().filter((o) => o.brandId === brandId);
   const cloned = structuredClone(kpis);
   cloned[1] = { ...cloned[1], value: orders.length + 43 };
 
-  return {
+  const dailyReport: DashboardReport = {
     kpis: cloned,
     hourlySales: [35, 55, 80, 65, 90, 70, 45],
     salesTrend: [
@@ -250,6 +250,50 @@ function buildDashboard(brandId: string): DashboardReport {
       { day: 'Sáb', connectedHours: 18, disconnectedHours: 1 },
       { day: 'Dom', connectedHours: 12, disconnectedHours: 4 },
     ],
+  };
+
+  if (period === 'today') return dailyReport;
+
+  const weeklySales = dailyReport.salesTrend.reduce((total, point) => total + point.sales, 0);
+  const weeklyOrders = dailyReport.salesTrend.reduce((total, point) => total + point.orders, 0);
+  const scaleRank = (item: RankItem): RankItem => ({
+    ...item,
+    sales: Math.round(item.sales * 6.65),
+    orders: Math.round(item.orders * 6.55),
+  });
+
+  return {
+    ...dailyReport,
+    kpis: dailyReport.kpis.map((kpi) => {
+      if (kpi.id === 'sales') return { ...kpi, labelKey: 'reports.salesWeek', value: weeklySales, deltaKey: 'reports.deltaUpWeek' };
+      if (kpi.id === 'orders') return { ...kpi, value: weeklyOrders, deltaKey: 'reports.deltaOrdersWeek' };
+      if (kpi.id === 'ticket') return { ...kpi, value: 82.7, deltaKey: 'reports.deltaTicketWeek' };
+      return { ...kpi, value: 11, deltaKey: 'reports.deltaCancelledWeek' };
+    }),
+    hourlySales: dailyReport.salesTrend.map((point) => point.sales),
+    channelComparison: dailyReport.channelComparison.map((point) => ({
+      ...point,
+      sales: Math.round(point.sales * 6.7),
+      orders: Math.round(point.orders * 6.6),
+    })),
+    restaurantRanking: dailyReport.restaurantRanking.map(scaleRank),
+    productRanking: dailyReport.productRanking.map(scaleRank),
+    paymentMethods: dailyReport.paymentMethods.map((method) => ({
+      ...method,
+      amount: Math.round(method.amount * 6.7),
+    })),
+    channelMetrics: {
+      conversations: 862,
+      conversionPct: 36,
+      ordersNoHuman: 131,
+      repurchasePct: 24,
+    },
+    reservations: {
+      total: 126,
+      confirmed: 101,
+      guests: 364,
+      cancellationPct: 7,
+    },
   };
 }
 
@@ -454,9 +498,9 @@ export const apiMock = {
     return orders[idx];
   },
 
-  async getDashboard(brandId: string) {
+  async getDashboard(brandId: string, period: 'today' | 'week' = 'today') {
     await delay(200);
-    return buildDashboard(brandId);
+    return buildDashboard(brandId, period);
   },
 
 

@@ -8,6 +8,8 @@ import { apiMock } from '../services/apiMock';
 import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../types';
 
 const CHART_HOURS = ['10', '12', '14', '16', '18', '20', '22'];
+const CHART_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+type ReportPeriod = 'today' | 'week';
 
 function maxOf(values: number[]) {
   return Math.max(...values, 1);
@@ -90,17 +92,18 @@ function RankingBlock({ title, items, t, showCategory }: { title: string; items:
 const ReportsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand } = useApp();
+  const [period, setPeriod] = useState<ReportPeriod>('today');
   const [report, setReport] = useState<DashboardReport | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!brand) return;
     setLoading(true);
-    void apiMock.getDashboard(brand.id).then((data) => {
+    void apiMock.getDashboard(brand.id, period).then((data) => {
       setReport(data);
       setLoading(false);
     });
-  }, [brand]);
+  }, [brand, period]);
 
   const sales = report?.kpis.find((k) => k.id === 'sales');
   const others = report?.kpis.filter((k) => k.id !== 'sales') ?? [];
@@ -114,7 +117,12 @@ const ReportsPage: React.FC = () => {
     return String(kpi.value);
   };
 
-  const deltaValue = (kpi: DashboardKpi) => (kpi.id === 'orders' ? 5 : kpi.id === 'cancelled' ? 1 : 12);
+  const deltaValue = (kpi: DashboardKpi) => {
+    if (period === 'week') return kpi.id === 'orders' ? 21 : kpi.id === 'cancelled' ? 2 : kpi.id === 'ticket' ? 4 : 8;
+    return kpi.id === 'orders' ? 5 : kpi.id === 'cancelled' ? 1 : 12;
+  };
+
+  const chartLabels = period === 'week' ? CHART_DAYS : CHART_HOURS;
 
   const payMax = maxOf(report?.paymentMethods.map((p) => p.amount) ?? [1]);
 
@@ -125,7 +133,7 @@ const ReportsPage: React.FC = () => {
           <AppHeader
             showAlerts
             title={t('reports.title')}
-            subtitle={t('reports.subtitle', { brand: brand ? t(brand.nameKey) : '' })}
+            subtitle={t(period === 'week' ? 'reports.subtitleWeek' : 'reports.subtitle', { brand: brand ? t(brand.nameKey) : '' })}
           />
           <div className="ag-body module-body reports-body">
             {loading || !report ? (
@@ -135,8 +143,22 @@ const ReportsPage: React.FC = () => {
             ) : (
               <>
                 <div className="reports-period ag-enter">
-                  <span className="reports-period-chip active">{t('reports.periodToday')}</span>
-                  <span className="reports-period-chip">{t('reports.periodWeek')}</span>
+                  <button
+                    type="button"
+                    className={`reports-period-chip${period === 'today' ? ' active' : ''}`}
+                    aria-pressed={period === 'today'}
+                    onClick={() => setPeriod('today')}
+                  >
+                    {t('reports.periodToday')}
+                  </button>
+                  <button
+                    type="button"
+                    className={`reports-period-chip${period === 'week' ? ' active' : ''}`}
+                    aria-pressed={period === 'week'}
+                    onClick={() => setPeriod('week')}
+                  >
+                    {t('reports.periodWeek')}
+                  </button>
                 </div>
 
                 {sales ? (
@@ -196,7 +218,7 @@ const ReportsPage: React.FC = () => {
 
                 <section className="reports-chart ag-enter">
                   <div className="reports-chart-head">
-                    <h2>{t('reports.chartTitle')}</h2>
+                    <h2>{t(period === 'week' ? 'reports.chartTitleWeek' : 'reports.chartTitle')}</h2>
                   </div>
                   <div className="reports-chart-bars" aria-hidden="true">
                     {report.hourlySales.map((height, idx) => (
@@ -205,7 +227,7 @@ const ReportsPage: React.FC = () => {
                           className="reports-chart-bar"
                           style={{ height: `${Math.max(12, (height / maxBar) * 100)}%` }}
                         />
-                        <span className="reports-chart-hour">{CHART_HOURS[idx] ?? `${10 + idx * 2}`}</span>
+                        <span className="reports-chart-hour">{chartLabels[idx] ?? ''}</span>
                       </div>
                     ))}
                   </div>
