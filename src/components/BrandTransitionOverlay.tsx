@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
@@ -9,13 +10,32 @@ export function BrandTransitionOverlay() {
   const { t } = useTranslation();
   const { brandLoading } = useApp();
   const { pathname } = useLocation();
+  const shouldShow = brandLoading && BRAND_FLOW_PATHS.has(pathname);
+  const [mounted, setMounted] = useState(shouldShow);
+  const [visible, setVisible] = useState(false);
 
-  if (!brandLoading || !BRAND_FLOW_PATHS.has(pathname)) {
+  useEffect(() => {
+    if (shouldShow) {
+      setMounted(true);
+      const frame = window.requestAnimationFrame(() => setVisible(true));
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    setVisible(false);
+    const timeout = window.setTimeout(() => setMounted(false), 360);
+    return () => window.clearTimeout(timeout);
+  }, [shouldShow]);
+
+  if (!mounted) {
     return null;
   }
 
   return (
-    <div className="brand-transition-overlay" aria-live="polite" aria-busy="true">
+    <div
+      className={`brand-transition-overlay${visible ? ' is-visible' : ''}`}
+      aria-live="polite"
+      aria-busy={shouldShow}
+    >
       <div className="login-scene" aria-hidden="true">
         <div className="login-bg" />
         <div className="login-overlay" />
