@@ -327,6 +327,11 @@ const ReportsPage: React.FC = () => {
                     <strong>S/ {ticket?.value ?? 0}</strong>
                     {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: ticket?.deltaValue ?? 4 })}</small> : null}
                   </article>
+                  <article className="reports-metric-card">
+                    <span>{t('reports.generatedReservations')}</span>
+                    <strong>{report.reservations.total}</strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: 8 })}</small> : null}
+                  </article>
                 </section>
 
                 <section className="reports-panel reports-trend-panel ag-enter">
