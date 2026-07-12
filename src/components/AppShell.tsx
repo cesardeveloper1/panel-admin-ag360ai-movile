@@ -14,8 +14,8 @@ export function AppShell({ children, hideNav = false }: AppShellProps) {
   return (
     <div className={`ag-app-shell${isTablet ? ' ag-app-shell--tablet' : ''}`}>
       {!hideNav ? <SideNav /> : null}
-      <div className="ag-app-shell-main">{children}</div>
       {!hideNav && !isTablet ? <MobileSideNav /> : null}
+      <div className="ag-app-shell-main">{children}</div>
     </div>
   );
 }

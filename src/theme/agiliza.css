@@ -102,6 +102,9 @@ ion-page {
 
 
 .ag-header {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
   padding: calc(1rem + var(--ag-safe-top, env(safe-area-inset-top, 0px))) 1rem 0.65rem;
   background: var(--ag-paper);
   border-bottom: 1px solid var(--ag-line);
@@ -1668,10 +1671,13 @@ ion-page {
 
 /* Mobile-first module navigation */
 .ag-mobile-menu-trigger {
-  position: fixed;
+  position: sticky;
+  align-self: flex-start;
+  flex: 0 0 44px;
   z-index: 1200;
   top: calc(env(safe-area-inset-top, 0px) + 12px);
-  left: 14px;
+  margin-left: 14px;
+  margin-bottom: -44px;
   width: 44px;
   height: 44px;
   display: grid;
