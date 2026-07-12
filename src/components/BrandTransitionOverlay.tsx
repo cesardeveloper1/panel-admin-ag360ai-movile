@@ -35,6 +35,7 @@ export function BrandTransitionOverlay() {
       className={`brand-transition-overlay${visible ? ' is-visible' : ''}`}
       aria-live="polite"
       aria-busy={shouldShow}
+      aria-label={t('app.loading')}
     >
       <div className="login-scene" aria-hidden="true">
         <div className="login-bg" />
@@ -49,7 +50,6 @@ export function BrandTransitionOverlay() {
           src={LOGO_WHITE_LOCAL}
           alt={t('app.name')}
         />
-        <p>{t('app.loading')}</p>
       </div>
     </div>
   );
