@@ -18,12 +18,6 @@ function toLocalIsoDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function defaultRangeStart() {
-  const date = new Date();
-  date.setDate(date.getDate() - 6);
-  return toLocalIsoDate(date);
-}
-
 function rangeDays(start: string, end: string) {
   const startDate = new Date(`${start}T12:00:00`);
   const endDate = new Date(`${end}T12:00:00`);
@@ -115,10 +109,8 @@ const ReportsPage: React.FC = () => {
   const [reports, setReports] = useState<Partial<Record<ReportPeriod, DashboardReport>>>({});
   const [loading, setLoading] = useState(true);
   const [rangeOpen, setRangeOpen] = useState(false);
-  const [activeRangeField, setActiveRangeField] = useState<'start' | 'end'>('start');
-  const [rangeStart, setRangeStart] = useState(defaultRangeStart);
-  const [rangeEnd, setRangeEnd] = useState(() => toLocalIsoDate(new Date()));
-  const [rangeComplete, setRangeComplete] = useState(false);
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [calendarValue, setCalendarValue] = useState(() => toLocalIsoDate(new Date()));
   const datetimeRef = useRef<HTMLIonDatetimeElement>(null);
@@ -165,7 +157,7 @@ const ReportsPage: React.FC = () => {
       syncCalendarHeader();
     }, 50);
     return () => window.clearTimeout(timer);
-  }, [rangeOpen, activeRangeField]);
+  }, [rangeOpen]);
 
   const report = reports[period] ?? null;
 
@@ -186,7 +178,6 @@ const ReportsPage: React.FC = () => {
   };
 
   const openRangePicker = () => {
-    setActiveRangeField('start');
     setCalendarMonth(new Date());
     setCalendarValue(toLocalIsoDate(new Date()));
     setRangeOpen(true);
@@ -194,24 +185,28 @@ const ReportsPage: React.FC = () => {
 
   const onRangeDateChange = (rawValue: string | string[] | null | undefined) => {
     const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
-    if (!selected || !brand) return;
+    if (!selected) return;
     setCalendarValue(selected);
 
-    if (activeRangeField === 'start') {
+    if (!rangeStart || rangeEnd) {
       setRangeStart(selected);
-      if (rangeEnd < selected) setRangeEnd(selected);
-      setRangeComplete(false);
-      setActiveRangeField('end');
+      setRangeEnd(null);
+      return;
+    }
+
+    if (selected < rangeStart) {
+      setRangeStart(selected);
+      setRangeEnd(rangeStart);
       return;
     }
 
     setRangeEnd(selected);
-    setRangeComplete(true);
   };
 
   const applyRange = () => {
-    if (!brand || !rangeComplete) return;
-    const days = rangeDays(rangeStart, rangeEnd);
+    if (!brand || !rangeStart) return;
+    const effectiveEnd = rangeEnd ?? rangeStart;
+    const days = rangeDays(rangeStart, effectiveEnd);
     void apiMock.getDashboard(brand.id, 'range', days).then((range) => {
       updateWithTransition(() => {
         setReports((current) => ({ ...current, range }));
@@ -278,7 +273,8 @@ const ReportsPage: React.FC = () => {
 
                 {period === 'range' ? (
                   <button type="button" className="reports-range-summary" onClick={openRangePicker}>
-                    {formatRangeDate(rangeStart)} — {formatRangeDate(rangeEnd)}
+                    {rangeStart ? formatRangeDate(rangeStart) : ''}
+                    {rangeStart && rangeEnd && rangeEnd !== rangeStart ? ` — ${formatRangeDate(rangeEnd)}` : ''}
                   </button>
                 ) : null}
 
@@ -434,9 +430,10 @@ const ReportsPage: React.FC = () => {
             <strong>{calendarMonthTitle}</strong>
             <button type="button" onClick={() => moveCalendar('next')} aria-label="Mes siguiente">›</button>
           </div>
-          {rangeComplete ? (
+          {rangeStart ? (
             <div className="reports-range-picker__selection" aria-live="polite">
-              {formatRangeDate(rangeStart)} — {formatRangeDate(rangeEnd)}
+              {formatRangeDate(rangeStart)}
+              {rangeEnd && rangeEnd !== rangeStart ? ` — ${formatRangeDate(rangeEnd)}` : ''}
             </div>
           ) : null}
           <IonDatetime
@@ -444,11 +441,10 @@ const ReportsPage: React.FC = () => {
             presentation="date"
             locale="es-PE"
             value={calendarValue}
-            min={activeRangeField === 'end' ? rangeStart : undefined}
             max={toLocalIsoDate(new Date())}
             onIonChange={(event) => onRangeDateChange(event.detail.value)}
           />
-          {rangeComplete ? (
+          {rangeStart ? (
             <button className="reports-range-picker__apply" type="button" onClick={applyRange}>
               Aplicar
             </button>
