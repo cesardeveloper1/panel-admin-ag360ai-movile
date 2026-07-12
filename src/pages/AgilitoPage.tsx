@@ -193,6 +193,7 @@ const AgilitoPage: React.FC = () => {
               <div ref={listRef} className="agilito-messages">
                 {messages.length === 0 && !thinking ? (
                   <div className="agilito-empty">
+                    <h2 className="agilito-empty-title">{t('agilito.heroHint')}</h2>
                     <div className="agilito-modules-card" aria-label={t('agilito.modulesTitle')}>
                       <div className="agilito-modules-track">
                         {modules.map((mod) => (
@@ -208,7 +209,6 @@ const AgilitoPage: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    <h2 className="agilito-empty-title">{t('agilito.heroHint')}</h2>
                   </div>
                 ) : null}
 
