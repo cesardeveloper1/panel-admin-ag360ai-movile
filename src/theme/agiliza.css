@@ -159,6 +159,47 @@ ion-page {
   flex-shrink: 0;
 }
 
+.ag-agent-toggle {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #d8e0ec;
+  border-radius: 999px;
+  background: #f4f7fb;
+  color: #64748b;
+  font-family: var(--ag-font-body);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ag-agent-toggle ion-icon {
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+
+.ag-agent-toggle.is-on {
+  border-color: rgba(135, 70, 255, 0.32);
+  background: rgba(135, 70, 255, 0.08);
+  color: var(--ag-pulse);
+}
+
+.ag-agent-toggle:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 374px) {
+  .ag-agent-toggle {
+    padding-inline: 0.5rem;
+    font-size: 0.625rem;
+  }
+}
+
 .ag-avatar {
   width: 44px;
   height: 44px;

@@ -17,6 +17,7 @@ import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import { AgentToggle } from '../components/AgentToggle';
 
 interface AgilitoMessage {
   id: string;
@@ -168,6 +169,7 @@ const AgilitoPage: React.FC = () => {
                 </button>
 
                 <div className="agilito-top-trailing">
+                  <AgentToggle />
                   <button
                     type="button"
                     className="agilito-top-bell"

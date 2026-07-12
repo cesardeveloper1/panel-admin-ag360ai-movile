@@ -6,6 +6,7 @@ import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import { AgentToggle } from './AgentToggle';
 
 interface AppHeaderProps {
   title: string;
@@ -91,15 +92,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </button>
           ) : null}
           {showAlerts ? (
-            <button
-              type="button"
-              className="ag-header-bell"
-              aria-label={t('nav.alerts')}
-              onClick={() => go(NOTIFICATIONS_PATH)}
-            >
-              <IonIcon icon={notificationsOutline} />
-              {unread > 0 ? <span className="ag-header-bell-badge">{unread}</span> : null}
-            </button>
+            <>
+              <AgentToggle />
+              <button
+                type="button"
+                className="ag-header-bell"
+                aria-label={t('nav.alerts')}
+                onClick={() => go(NOTIFICATIONS_PATH)}
+              >
+                <IonIcon icon={notificationsOutline} />
+                {unread > 0 ? <span className="ag-header-bell-badge">{unread}</span> : null}
+              </button>
+            </>
           ) : null}
         </div>
       </div>

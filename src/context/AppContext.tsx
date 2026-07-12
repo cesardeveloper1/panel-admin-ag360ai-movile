@@ -8,6 +8,7 @@ export const BRAND_KEY = 'ag360-brand-id';
 export const PICK_BRAND_KEY = 'ag360-pick-brand';
 export const ONBOARDING_PREFIX = 'ag360-onboarding-';
 const DARK_KEY = 'ag360-dark';
+const AGENT_KEY = 'ag360-agent-enabled';
 
 interface AppContextValue {
   session: UserSession | null;
@@ -19,6 +20,7 @@ interface AppContextValue {
   brandTransitioning: boolean;
   kitchenMode: boolean;
   darkMode: boolean;
+  agentEnabled: boolean;
   authEpoch: number;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -30,6 +32,7 @@ interface AppContextValue {
   advanceOrder: (orderId: string) => void;
   setKitchenMode: (value: boolean) => void;
   setDarkMode: (value: boolean) => void;
+  toggleAgent: () => void;
   toast: string | null;
   showToast: (key: string, params?: Record<string, string | number>) => void;
   completeOnboarding: () => void;
@@ -43,6 +46,11 @@ const AppContext = createContext<AppContextValue | null>(null);
 function readDarkMode() {
   if (typeof localStorage === 'undefined') return false;
   return localStorage.getItem(DARK_KEY) === 'true';
+}
+
+function readAgentEnabled() {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem(AGENT_KEY) === 'true';
 }
 
 function resetAuthStorage() {
@@ -66,6 +74,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [brandTransitioning, setBrandTransitioning] = useState(false);
   const [kitchenMode, setKitchenMode] = useState(false);
   const [darkMode, setDarkModeState] = useState(readDarkMode);
+  const [agentEnabled, setAgentEnabled] = useState(readAgentEnabled);
   const [toast, setToast] = useState<string | null>(null);
   const [authEpoch, setAuthEpoch] = useState(0);
 
@@ -231,6 +240,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDarkModeState(value);
   }, []);
 
+  const toggleAgent = useCallback(() => {
+    setAgentEnabled((current) => {
+      const next = !current;
+      localStorage.setItem(AGENT_KEY, String(next));
+      return next;
+    });
+  }, []);
+
   const completeOnboarding = useCallback(() => {
     if (!brand) return;
     localStorage.setItem(`${ONBOARDING_PREFIX}${brand.id}`, '1');
@@ -286,6 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       brandTransitioning,
       kitchenMode,
       darkMode,
+      agentEnabled,
       authEpoch,
       login,
       logout,
@@ -297,6 +315,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       advanceOrder,
       setKitchenMode,
       setDarkMode,
+      toggleAgent,
       toast,
       showToast,
       completeOnboarding,
@@ -314,6 +333,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       brandTransitioning,
       kitchenMode,
       darkMode,
+      agentEnabled,
       authEpoch,
       login,
       logout,
@@ -324,6 +344,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshOrders,
       advanceOrder,
       setDarkMode,
+      toggleAgent,
       toast,
       showToast,
       completeOnboarding,

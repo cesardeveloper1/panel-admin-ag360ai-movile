@@ -87,6 +87,12 @@
     "agilito": "Agilito",
     "profileHint": "Abrir perfil"
   },
+  "agent": {
+    "on": "AGENTE ON",
+    "off": "AGENTE OFF",
+    "turnOn": "Encender agente",
+    "turnOff": "Apagar agente"
+  },
   "ops": {
     "title": "Operaciones",
     "search": "Buscar pedido o cliente",
