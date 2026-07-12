@@ -93,17 +93,34 @@ const ReportsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand } = useApp();
   const [period, setPeriod] = useState<ReportPeriod>('today');
-  const [report, setReport] = useState<DashboardReport | null>(null);
+  const [reports, setReports] = useState<Partial<Record<ReportPeriod, DashboardReport>>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!brand) return;
     setLoading(true);
-    void apiMock.getDashboard(brand.id, period).then((data) => {
-      setReport(data);
+    void Promise.all([
+      apiMock.getDashboard(brand.id, 'today'),
+      apiMock.getDashboard(brand.id, 'week'),
+    ]).then(([today, week]) => {
+      setReports({ today, week });
       setLoading(false);
     });
-  }, [brand, period]);
+  }, [brand]);
+
+  const report = reports[period] ?? null;
+
+  const changePeriod = (next: ReportPeriod) => {
+    if (next === period || !reports[next]) return;
+    const transitionDocument = document as Document & {
+      startViewTransition?: (update: () => void) => void;
+    };
+    if (transitionDocument.startViewTransition) {
+      transitionDocument.startViewTransition(() => setPeriod(next));
+      return;
+    }
+    setPeriod(next);
+  };
 
   const sales = report?.kpis.find((k) => k.id === 'sales');
   const others = report?.kpis.filter((k) => k.id !== 'sales') ?? [];
@@ -147,7 +164,7 @@ const ReportsPage: React.FC = () => {
                     type="button"
                     className={`reports-period-chip${period === 'today' ? ' active' : ''}`}
                     aria-pressed={period === 'today'}
-                    onClick={() => setPeriod('today')}
+                    onClick={() => changePeriod('today')}
                   >
                     {t('reports.periodToday')}
                   </button>
@@ -155,7 +172,7 @@ const ReportsPage: React.FC = () => {
                     type="button"
                     className={`reports-period-chip${period === 'week' ? ' active' : ''}`}
                     aria-pressed={period === 'week'}
-                    onClick={() => setPeriod('week')}
+                    onClick={() => changePeriod('week')}
                   >
                     {t('reports.periodWeek')}
                   </button>
