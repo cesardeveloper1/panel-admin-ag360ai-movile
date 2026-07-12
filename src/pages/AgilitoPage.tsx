@@ -36,7 +36,7 @@ const modules = [
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
   const { go, goRoot } = useAppNavigation();
-  const { brand, session, isOnboardingDone, notifications, startBrandSwitch, showToast } = useApp();
+  const { brand, session, notifications, startBrandSwitch, showToast } = useApp();
   const avatar = session?.initials ?? brand?.initials ?? '?';
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
   const [input, setInput] = useState('');
@@ -190,12 +190,6 @@ const AgilitoPage: React.FC = () => {
             </header>
 
             <div className="agilito-body">
-              {brand && !isOnboardingDone(brand.id) ? (
-                <button type="button" className="agilito-onboard-banner" onClick={() => go('/app/onboarding')}>
-                  {t('agilito.onboardTitle')}
-                </button>
-              ) : null}
-
               <div ref={listRef} className="agilito-messages">
                 {messages.length === 0 && !thinking ? (
                   <div className="agilito-empty">
