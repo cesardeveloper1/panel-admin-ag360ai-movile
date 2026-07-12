@@ -190,7 +190,40 @@ function brandInitials(name: string) {
 }
 
 
-function buildDashboard(brandId: string, period: 'today' | 'range' = 'today', rangeDays = 7): DashboardReport {
+function mockSalesForDate(brandId: string, date: Date) {
+  const brandOffset = [...brandId].reduce((total, character) => total + character.charCodeAt(0), 0) % 420;
+  const monthIndex = date.getFullYear() * 12 + date.getMonth() - 24_000;
+  return Math.round(2_650 + brandOffset + monthIndex * 32 + date.getDate() * 29 + date.getDay() * 73);
+}
+
+function salesBetween(brandId: string, start: string, end: string, previousMonth = false) {
+  const cursor = new Date(`${start}T12:00:00`);
+  const last = new Date(`${end}T12:00:00`);
+  let total = 0;
+
+  while (cursor <= last) {
+    const saleDate = new Date(cursor);
+    if (previousMonth) {
+      const targetMonth = saleDate.getMonth() - 1;
+      const targetYear = targetMonth < 0 ? saleDate.getFullYear() - 1 : saleDate.getFullYear();
+      const normalizedMonth = (targetMonth + 12) % 12;
+      const lastDay = new Date(targetYear, normalizedMonth + 1, 0).getDate();
+      saleDate.setFullYear(targetYear, normalizedMonth, Math.min(saleDate.getDate(), lastDay));
+    }
+    total += mockSalesForDate(brandId, saleDate);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return total;
+}
+
+function buildDashboard(
+  brandId: string,
+  period: 'today' | 'range' = 'today',
+  rangeDays = 7,
+  rangeStart?: string,
+  rangeEnd?: string,
+): DashboardReport {
   const orders = loadOrders().filter((o) => o.brandId === brandId);
   const cloned = structuredClone(kpis);
   cloned[1] = { ...cloned[1], value: orders.length + 43 };
@@ -256,7 +289,13 @@ function buildDashboard(brandId: string, period: 'today' | 'range' = 'today', ra
 
   const normalizedDays = Math.max(1, rangeDays);
   const rangeScale = normalizedDays / 7;
-  const weeklySales = Math.round(dailyReport.salesTrend.reduce((total, point) => total + point.sales, 0) * rangeScale);
+  const weeklySales = rangeStart && rangeEnd
+    ? salesBetween(brandId, rangeStart, rangeEnd)
+    : Math.round(dailyReport.salesTrend.reduce((total, point) => total + point.sales, 0) * rangeScale);
+  const previousMonthSales = rangeStart && rangeEnd
+    ? salesBetween(brandId, rangeStart, rangeEnd, true)
+    : Math.round(weeklySales / 1.12);
+  const salesDelta = Math.round(((weeklySales - previousMonthSales) / Math.max(previousMonthSales, 1)) * 100);
   const weeklyOrders = Math.round(dailyReport.salesTrend.reduce((total, point) => total + point.orders, 0) * rangeScale);
   const scaleRank = (item: RankItem): RankItem => ({
     ...item,
@@ -267,7 +306,14 @@ function buildDashboard(brandId: string, period: 'today' | 'range' = 'today', ra
   return {
     ...dailyReport,
     kpis: dailyReport.kpis.map((kpi) => {
-      if (kpi.id === 'sales') return { ...kpi, labelKey: 'reports.salesRange', value: weeklySales, deltaKey: 'reports.deltaUpRange' };
+      if (kpi.id === 'sales') return {
+        ...kpi,
+        labelKey: 'reports.salesRange',
+        value: weeklySales,
+        deltaKey: 'reports.deltaUpRange',
+        deltaValue: Math.abs(salesDelta),
+        deltaDown: salesDelta < 0,
+      };
       if (kpi.id === 'orders') return { ...kpi, value: weeklyOrders, deltaKey: 'reports.deltaOrdersRange' };
       if (kpi.id === 'ticket') return { ...kpi, value: 82.7, deltaKey: 'reports.deltaTicketRange' };
       return { ...kpi, value: Math.max(1, Math.round(11 * rangeScale)), deltaKey: 'reports.deltaCancelledRange' };
@@ -500,9 +546,9 @@ export const apiMock = {
     return orders[idx];
   },
 
-  async getDashboard(brandId: string, period: 'today' | 'range' = 'today', rangeDays = 7) {
+  async getDashboard(brandId: string, period: 'today' | 'range' = 'today', rangeDays = 7, rangeStart?: string, rangeEnd?: string) {
     await delay(200);
-    return buildDashboard(brandId, period, rangeDays);
+    return buildDashboard(brandId, period, rangeDays, rangeStart, rangeEnd);
   },
 
 

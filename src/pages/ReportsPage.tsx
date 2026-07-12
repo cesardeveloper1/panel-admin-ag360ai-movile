@@ -216,7 +216,7 @@ const ReportsPage: React.FC = () => {
     if (!brand || !rangeStart) return;
     const effectiveEnd = rangeEnd ?? rangeStart;
     const days = rangeDays(rangeStart, effectiveEnd);
-    void apiMock.getDashboard(brand.id, 'range', days).then((range) => {
+    void apiMock.getDashboard(brand.id, 'range', days, rangeStart, effectiveEnd).then((range) => {
       updateWithTransition(() => {
         setReports((current) => ({ ...current, range }));
         setPeriod('range');
@@ -313,7 +313,7 @@ const ReportsPage: React.FC = () => {
                     <span className="reports-hero-label">{t(sales.labelKey)}</span>
                     <strong className="reports-hero-value">{formatValue(sales)}</strong>
                     <span className={`reports-hero-delta${sales.deltaDown ? ' reports-hero-delta--down' : ''}`}>
-                      {t(sales.deltaKey, { value: 12 })}
+                      {t(sales.deltaKey, { value: sales.deltaValue ?? 12 })}
                     </span>
                   </section>
                 ) : null}

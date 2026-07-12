@@ -54,6 +54,7 @@ export interface DashboardKpi {
   labelKey: string;
   value: number;
   deltaKey: string;
+  deltaValue?: number;
   deltaDown?: boolean;
 }
 
