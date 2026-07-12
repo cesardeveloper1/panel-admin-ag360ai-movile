@@ -2742,12 +2742,49 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   text-align: center;
 }
 
+.reports-range-picker__month {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 2.75rem 0.55rem 0;
+  text-align: center;
+}
+
+.reports-range-picker__month strong {
+  font: 700 1rem var(--ag-font-display);
+  text-transform: lowercase;
+}
+
+.reports-range-picker__month button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ag-ink);
+  font-size: 1.75rem;
+}
+
 .reports-range-picker ion-datetime {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
   border-radius: 18px;
   background: var(--ag-paper);
+}
+
+.reports-range-picker__apply {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 0.75rem;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ag-pulse);
+  color: #fff;
+  font: 700 0.9375rem var(--ag-font-body);
+  box-shadow: 0 8px 20px rgba(135, 70, 255, 0.24);
 }
 
 .reports-hero {

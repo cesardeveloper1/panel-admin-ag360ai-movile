@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonModal, IonPage, IonSpinner } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
@@ -119,6 +119,26 @@ const ReportsPage: React.FC = () => {
   const [rangeStart, setRangeStart] = useState(defaultRangeStart);
   const [rangeEnd, setRangeEnd] = useState(() => toLocalIsoDate(new Date()));
   const [rangeComplete, setRangeComplete] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const datetimeRef = useRef<HTMLIonDatetimeElement>(null);
+
+  const calendarMonthTitle = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric' })
+    .format(calendarMonth);
+
+  const syncCalendarHeader = () => {
+    const datetime = datetimeRef.current as (HTMLIonDatetimeElement & {
+      workingParts?: { month?: number; year?: number };
+    }) | null;
+    const month = datetime?.workingParts?.month;
+    const year = datetime?.workingParts?.year;
+    if (month && year) setCalendarMonth(new Date(year, month - 1, 1));
+  };
+
+  const moveCalendar = (direction: 'previous' | 'next') => {
+    const buttons = datetimeRef.current?.shadowRoot?.querySelectorAll<HTMLButtonElement>('.calendar-next-prev ion-button');
+    buttons?.[direction === 'previous' ? 0 : 1]?.click();
+    window.setTimeout(syncCalendarHeader, 180);
+  };
 
   useEffect(() => {
     if (!brand) return;
@@ -131,6 +151,20 @@ const ReportsPage: React.FC = () => {
       setLoading(false);
     });
   }, [brand]);
+
+  useEffect(() => {
+    if (!rangeOpen) return;
+    const timer = window.setTimeout(() => {
+      const shadow = datetimeRef.current?.shadowRoot;
+      if (!shadow || shadow.querySelector('[data-agiliza-calendar-style]')) return;
+      const style = document.createElement('style');
+      style.dataset.agilizaCalendarStyle = 'true';
+      style.textContent = '.calendar-action-buttons { display: none !important; }';
+      shadow.appendChild(style);
+      syncCalendarHeader();
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [rangeOpen, activeRangeField]);
 
   const report = reports[period] ?? null;
 
@@ -169,7 +203,11 @@ const ReportsPage: React.FC = () => {
 
     setRangeEnd(selected);
     setRangeComplete(true);
-    const days = rangeDays(rangeStart, selected);
+  };
+
+  const applyRange = () => {
+    if (!brand || !rangeComplete) return;
+    const days = rangeDays(rangeStart, rangeEnd);
     void apiMock.getDashboard(brand.id, 'range', days).then((range) => {
       updateWithTransition(() => {
         setReports((current) => ({ ...current, range }));
@@ -388,12 +426,18 @@ const ReportsPage: React.FC = () => {
       >
         <div className="reports-range-picker">
           <button className="reports-range-picker__close" type="button" onClick={() => setRangeOpen(false)} aria-label={t('common.close')}>×</button>
+          <div className="reports-range-picker__month">
+            <button type="button" onClick={() => moveCalendar('previous')} aria-label="Mes anterior">‹</button>
+            <strong>{calendarMonthTitle}</strong>
+            <button type="button" onClick={() => moveCalendar('next')} aria-label="Mes siguiente">›</button>
+          </div>
           {rangeComplete ? (
             <div className="reports-range-picker__selection" aria-live="polite">
               {formatRangeDate(rangeStart)} — {formatRangeDate(rangeEnd)}
             </div>
           ) : null}
           <IonDatetime
+            ref={datetimeRef}
             key={activeRangeField}
             presentation="date"
             locale="es-PE"
@@ -402,6 +446,11 @@ const ReportsPage: React.FC = () => {
             max={toLocalIsoDate(new Date())}
             onIonChange={(event) => onRangeDateChange(event.detail.value)}
           />
+          {rangeComplete ? (
+            <button className="reports-range-picker__apply" type="button" onClick={applyRange}>
+              Aplicar
+            </button>
+          ) : null}
         </div>
       </IonModal>
     </IonPage>
