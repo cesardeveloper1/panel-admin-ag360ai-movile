@@ -95,6 +95,9 @@
   },
   "ops": {
     "title": "Operaciones",
+    "ordersView": "Pedidos",
+    "allView": "All",
+    "ordersStage": "Órdenes",
     "search": "Buscar pedido o cliente",
     "modeOperator": "Operador",
     "modeKitchen": "Modo cocina",

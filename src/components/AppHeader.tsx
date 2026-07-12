@@ -26,6 +26,8 @@ interface AppHeaderProps {
   action?: {
     label: string;
     onClick: () => void;
+    icon?: string;
+    iconOnly?: boolean;
   };
 }
 
@@ -89,8 +91,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
         <div className="ag-header-actions">
           {action ? (
-            <button type="button" className="ag-header-action" onClick={action.onClick}>
-              {action.label}
+            <button type="button" className={`ag-header-action${action.iconOnly ? ' ag-header-action--icon' : ''}`} onClick={action.onClick} aria-label={action.label}>
+              {action.icon ? <IonIcon icon={action.icon} /> : null}
+              {action.iconOnly ? null : action.label}
             </button>
           ) : null}
           {showAlerts ? (

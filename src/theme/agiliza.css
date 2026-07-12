@@ -1894,6 +1894,57 @@ body.ag-mobile-nav-open {
   padding: 0.25rem 0.5rem;
 }
 
+.ag-header-action--icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 14px;
+  background: var(--ag-mist);
+  font-size: 1.35rem;
+}
+
+.ops-view-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--ag-line);
+}
+
+.ops-view-switch button,
+.ops-all-stages button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ag-muted);
+  font: 700 0.8125rem var(--ag-font-body);
+}
+
+.ops-view-switch button.active,
+.ops-all-stages button.active {
+  background: var(--ag-paper);
+  color: var(--ag-pulse);
+  box-shadow: var(--ag-shadow-sm);
+}
+
+.ops-all-stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--ag-line);
+}
+
+.ops-all-stages button {
+  padding: 0 0.25rem;
+  font-size: 0.6875rem;
+}
+
 @media (min-width: 768px) {
   ion-content.ag-screen {
     --padding-start: 0;

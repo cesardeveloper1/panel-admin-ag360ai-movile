@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { IonContent, IonPage, IonSearchbar } from '@ionic/react';
+import { searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -24,6 +25,10 @@ const OperationsPage: React.FC = () => {
   const { orders } = useApp();
   const [query, setQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
+  const [allStage, setAllStage] = useState<'starting' | 'ordering' | 'human' | 'orders'>('starting');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLIonSearchbarElement>(null);
   const newOrdersRef = useRef<HTMLElement>(null);
   const processingOrdersRef = useRef<HTMLElement>(null);
   const deliveredOrdersRef = useRef<HTMLElement>(null);
@@ -65,6 +70,15 @@ const OperationsPage: React.FC = () => {
   const bySubState = (list: Order[], subState: KanbanSubState) =>
     list.filter((o) => getKanbanSubState(o) === subState);
 
+  const allStageItems = allStage === 'orders'
+    ? filtered
+    : filtered.filter((order) => getKanbanSubState(order) === allStage);
+
+  const openSearch = () => {
+    setSearchOpen((current) => !current);
+    window.setTimeout(() => searchRef.current?.setFocus(), 80);
+  };
+
   const renderSubSection = (subState: KanbanSubState, list: Order[]) => {
     const items = bySubState(list, subState);
     if (items.length === 0) return null;
@@ -95,15 +109,45 @@ const OperationsPage: React.FC = () => {
           <AppHeader
             centeredCompact
             title={t('ops.title')}
+            action={{ label: t('ops.search'), icon: searchOutline, iconOnly: true, onClick: openSearch }}
           />
           <div className="ag-body module-body ops-body ag-page-stack">
-            <IonSearchbar
+            {searchOpen ? <IonSearchbar
+              ref={searchRef}
               className="ops-search ag-enter"
               value={query}
               onIonInput={(e) => setQuery(e.detail.value ?? '')}
               placeholder={t('ops.search')}
               debounce={200}
-            />
+            /> : null}
+
+            <div className="ops-view-switch ag-enter" role="tablist" aria-label={t('ops.title')}>
+              <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
+              <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
+            </div>
+
+            {viewMode === 'all' ? (
+              <>
+                <div className="ops-all-stages ag-enter">
+                  {(['starting', 'ordering', 'human', 'orders'] as const).map((stage) => (
+                    <button key={stage} type="button" className={allStage === stage ? 'active' : ''} onClick={() => setAllStage(stage)}>
+                      {stage === 'orders' ? t('ops.ordersStage') : t(`ops.subStates.${stage}`)}
+                    </button>
+                  ))}
+                </div>
+                <section className="kanban-section ops-all-results ag-enter">
+                  <header className="kanban-section-head">
+                    <h2>{allStage === 'orders' ? t('ops.ordersStage') : t(`ops.subStates.${allStage}`)}</h2>
+                    <span className="kanban-count">{allStageItems.length}</span>
+                  </header>
+                  <div className="kanban-cards">
+                    {allStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} />)}
+                  </div>
+                  {allStageItems.length === 0 ? <p className="kanban-empty">{t('ops.emptyColumn')}</p> : null}
+                </section>
+              </>
+            ) : (
+              <>
 
             <div className="ops-summary ag-enter">
               <button type="button" className="ops-summary-card ops-summary-card--new" onClick={() => scrollToOrders(newOrdersRef)}>
@@ -189,6 +233,8 @@ const OperationsPage: React.FC = () => {
                 ) : null}
               </section>
             </KanbanBoard>
+              </>
+            )}
           </div>
           <OrderDetailSheet
             order={selectedOrder}
