@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar } from '@ionic/react';
 import { chevronDownOutline, chevronUpOutline, searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +36,7 @@ const OperationsPage: React.FC = () => {
   const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
   const [dateEnd, setDateEnd] = useState<string | null>(null);
   const [dateClicks, setDateClicks] = useState(0);
+  const [activeOrderState, setActiveOrderState] = useState<'new' | 'processing' | 'delivered'>('new');
   const [visibleCards, setVisibleCards] = useState<Record<string, number>>({
     new: 3,
     processing: 3,
@@ -50,9 +51,36 @@ const OperationsPage: React.FC = () => {
   const processingOrdersRef = useRef<HTMLElement>(null);
   const deliveredOrdersRef = useRef<HTMLElement>(null);
 
-  const scrollToOrders = (target: React.RefObject<HTMLElement | null>) => {
+  const scrollToOrders = (
+    state: 'new' | 'processing' | 'delivered',
+    target: React.RefObject<HTMLElement | null>,
+  ) => {
+    setActiveOrderState(state);
     target.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  useEffect(() => {
+    if (viewMode !== 'orders') return;
+    const sections = [
+      ['new', newOrdersRef.current],
+      ['processing', processingOrdersRef.current],
+      ['delivered', deliveredOrdersRef.current],
+    ] as const;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        const state = visible?.target.getAttribute('data-order-state');
+        if (state === 'new' || state === 'processing' || state === 'delivered') {
+          setActiveOrderState(state);
+        }
+      },
+      { rootMargin: '-96px 0px -58% 0px', threshold: [0, 0.1, 0.35, 0.6] },
+    );
+    sections.forEach(([, section]) => section && observer.observe(section));
+    return () => observer.disconnect();
+  }, [viewMode]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -226,16 +254,16 @@ const OperationsPage: React.FC = () => {
             ) : (
               <>
 
-            <div className="ops-summary ag-enter">
-              <button type="button" className="ops-summary-card ops-summary-card--new" onClick={() => scrollToOrders(newOrdersRef)}>
+            <div className="ops-summary ops-summary--sticky ag-enter">
+              <button type="button" aria-pressed={activeOrderState === 'new'} className={`ops-summary-card ops-summary-card--new${activeOrderState === 'new' ? ' active' : ''}`} onClick={() => scrollToOrders('new', newOrdersRef)}>
                 <strong>{groups.new.length}</strong>
                 <span>{t('ops.kanbanNew')}</span>
               </button>
-              <button type="button" className="ops-summary-card ops-summary-card--hot" onClick={() => scrollToOrders(processingOrdersRef)}>
+              <button type="button" aria-pressed={activeOrderState === 'processing'} className={`ops-summary-card ops-summary-card--hot${activeOrderState === 'processing' ? ' active' : ''}`} onClick={() => scrollToOrders('processing', processingOrdersRef)}>
                 <strong>{groups.processing.length}</strong>
                 <span>{t('ops.kanbanProcessing')}</span>
               </button>
-              <button type="button" className="ops-summary-card ops-summary-card--done" onClick={() => scrollToOrders(deliveredOrdersRef)}>
+              <button type="button" aria-pressed={activeOrderState === 'delivered'} className={`ops-summary-card ops-summary-card--done${activeOrderState === 'delivered' ? ' active' : ''}`} onClick={() => scrollToOrders('delivered', deliveredOrdersRef)}>
                 <strong>{groups.delivered.length}</strong>
                 <span>{t('ops.kanbanDelivered')}</span>
               </button>
@@ -268,11 +296,7 @@ const OperationsPage: React.FC = () => {
             </div>
 
             <KanbanBoard>
-              <section ref={newOrdersRef} className="kanban-section kanban-section--new">
-                <header className="kanban-section-head">
-                  <h2>{t('ops.kanbanNew')}</h2>
-                  <span className="kanban-count">{groups.new.length}</span>
-                </header>
+              <section ref={newOrdersRef} data-order-state="new" className={`kanban-section kanban-section--new${activeOrderState === 'new' ? ' is-active' : ''}`}>
                 {NEW_SUBSTATES.map((sub) => renderSubSection(sub, groups.new.slice(0, visibleCards.new)))}
                 {groups.new.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
@@ -280,11 +304,7 @@ const OperationsPage: React.FC = () => {
                 {cardToggleButtons('new', Math.min(visibleCards.new, groups.new.length), groups.new.length)}
               </section>
 
-              <section ref={processingOrdersRef} className="kanban-section kanban-section--processing">
-                <header className="kanban-section-head">
-                  <h2>{t('ops.kanbanProcessing')}</h2>
-                  <span className="kanban-count">{groups.processing.length}</span>
-                </header>
+              <section ref={processingOrdersRef} data-order-state="processing" className={`kanban-section kanban-section--processing${activeOrderState === 'processing' ? ' is-active' : ''}`}>
                 {PROCESSING_SUBSTATES.map((sub) => renderSubSection(sub, groups.processing.slice(0, visibleCards.processing)))}
                 {groups.processing.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
@@ -292,11 +312,7 @@ const OperationsPage: React.FC = () => {
                 {cardToggleButtons('processing', Math.min(visibleCards.processing, groups.processing.length), groups.processing.length)}
               </section>
 
-              <section ref={deliveredOrdersRef} className="kanban-section kanban-section--delivered">
-                <header className="kanban-section-head">
-                  <h2>{t('ops.kanbanDelivered')}</h2>
-                  <span className="kanban-count">{groups.delivered.length}</span>
-                </header>
+              <section ref={deliveredOrdersRef} data-order-state="delivered" className={`kanban-section kanban-section--delivered${activeOrderState === 'delivered' ? ' is-active' : ''}`}>
                 <div className="kanban-cards">
                   {groups.delivered.slice(0, visibleCards.delivered).map((order, idx) => (
                     <OrderCard
