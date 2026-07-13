@@ -2016,6 +2016,31 @@ body.ag-mobile-nav-open {
   background: var(--ag-line);
 }
 
+.ops-view-switch--sticky {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 0.35rem);
+  z-index: 26;
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.operations-page--scroll-down .ops-view-switch--sticky {
+  opacity: 0;
+  transform: translateY(-115%);
+  pointer-events: none;
+}
+
+.operations-page--scroll-up .ops-view-switch--sticky {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.operations-page--scrolled .ag-header,
+.operations-page--scrolled .ag-mobile-menu-trigger {
+  opacity: 0;
+  transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
+  pointer-events: none;
+}
+
 .ops-view-switch button,
 .ops-all-stages button {
   min-height: 40px;
@@ -2496,6 +2521,15 @@ ion-page.ion-page-hidden .agilito-composer-dock {
   box-shadow: 0 10px 28px rgba(28, 20, 48, 0.08);
   backdrop-filter: blur(18px) saturate(145%);
   -webkit-backdrop-filter: blur(18px) saturate(145%);
+  transition: top 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.operations-page--scrolled.operations-page--scroll-up .ops-summary--sticky {
+  top: calc(env(safe-area-inset-top, 0px) + 3.85rem);
+}
+
+.operations-page--scroll-down .ops-summary--sticky {
+  top: calc(env(safe-area-inset-top, 0px) + 0.35rem);
 }
 
 .ops-summary--sticky .ops-summary-card {

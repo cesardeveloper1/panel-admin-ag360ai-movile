@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar } from '@ionic/react';
+import type { ScrollDetail } from '@ionic/react';
 import { chevronDownOutline, chevronUpOutline, searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
@@ -37,6 +38,8 @@ const OperationsPage: React.FC = () => {
   const [dateEnd, setDateEnd] = useState<string | null>(null);
   const [dateClicks, setDateClicks] = useState(0);
   const [activeOrderState, setActiveOrderState] = useState<'new' | 'processing' | 'delivered'>('new');
+  const [isPageScrolled, setIsPageScrolled] = useState(false);
+  const [isScrollingUp, setIsScrollingUp] = useState(true);
   const [visibleCards, setVisibleCards] = useState<Record<string, number>>({
     new: 3,
     processing: 3,
@@ -50,6 +53,18 @@ const OperationsPage: React.FC = () => {
   const newOrdersRef = useRef<HTMLElement>(null);
   const processingOrdersRef = useRef<HTMLElement>(null);
   const deliveredOrdersRef = useRef<HTMLElement>(null);
+  const lastScrollTopRef = useRef(0);
+
+  const handleOperationsScroll = (event: CustomEvent<ScrollDetail>) => {
+    const nextScrollTop = Math.max(0, event.detail.scrollTop);
+    const previousScrollTop = lastScrollTopRef.current;
+    setIsPageScrolled(nextScrollTop > 8);
+    if (Math.abs(nextScrollTop - previousScrollTop) > 4) {
+      setIsScrollingUp(nextScrollTop < previousScrollTop);
+      lastScrollTopRef.current = nextScrollTop;
+    }
+    if (nextScrollTop <= 8) setIsScrollingUp(true);
+  };
 
   const scrollToOrders = (
     state: 'new' | 'processing' | 'delivered',
@@ -206,8 +221,8 @@ const OperationsPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <IonContent className="ag-screen">
+    <IonPage className={`operations-page${isPageScrolled ? ' operations-page--scrolled' : ''}${isScrollingUp ? ' operations-page--scroll-up' : ' operations-page--scroll-down'}`}>
+      <IonContent className="ag-screen" scrollEvents onIonScroll={handleOperationsScroll}>
         <AppShell>
           <AppHeader
             centeredCompact
@@ -225,7 +240,7 @@ const OperationsPage: React.FC = () => {
               debounce={200}
             /> : null}
 
-            <div className="ops-view-switch ag-enter" role="tablist" aria-label={t('ops.title')}>
+            <div className="ops-view-switch ops-view-switch--sticky ag-enter" role="tablist" aria-label={t('ops.title')}>
               <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
               <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
             </div>
