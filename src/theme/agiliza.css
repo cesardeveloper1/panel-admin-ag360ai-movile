@@ -2029,6 +2029,12 @@ body.ag-mobile-nav-open {
   pointer-events: none;
 }
 
+body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
+  opacity: 0;
+  transform: translateY(-115%);
+  pointer-events: none;
+}
+
 .operations-page--scroll-up .ops-view-switch--sticky {
   opacity: 1;
   transform: translateY(0);
