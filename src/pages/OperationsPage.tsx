@@ -37,13 +37,13 @@ const OperationsPage: React.FC = () => {
   const [dateEnd, setDateEnd] = useState<string | null>(null);
   const [dateClicks, setDateClicks] = useState(0);
   const [visibleCards, setVisibleCards] = useState<Record<string, number>>({
-    new: 5,
-    processing: 5,
-    delivered: 5,
-    starting: 5,
-    ordering: 5,
-    human: 5,
-    orders: 5,
+    new: 3,
+    processing: 3,
+    delivered: 3,
+    starting: 3,
+    ordering: 3,
+    human: 3,
+    orders: 3,
   });
   const searchRef = useRef<HTMLIonSearchbarElement>(null);
   const newOrdersRef = useRef<HTMLElement>(null);
@@ -110,19 +110,19 @@ const OperationsPage: React.FC = () => {
     return dates;
   }, [dateStart, dateEnd]);
 
-  const showFiveMore = (state: string) => {
-    setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 5) + 5 }));
+  const showThreeMore = (state: string) => {
+    setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 3) + 3 }));
   };
 
-  const hideFive = (state: string) => {
-    setVisibleCards((current) => ({ ...current, [state]: Math.max(5, (current[state] ?? 5) - 5) }));
+  const hideThree = (state: string) => {
+    setVisibleCards((current) => ({ ...current, [state]: Math.max(3, (current[state] ?? 3) - 3) }));
   };
 
   const cardToggleButtons = (state: string, visible: number, total: number) => (
-    visible > 5 || visible < total ? (
+    visible > 3 || visible < total ? (
       <div className="ops-load-controls">
-        {visible > 5 ? <button type="button" className="ops-load-more" aria-label="Contraer 5 tarjetas" onClick={() => hideFive(state)}><IonIcon icon={chevronUpOutline} /></button> : null}
-        {visible < total ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore(state)}><IonIcon icon={chevronDownOutline} /></button> : null}
+        {visible > 3 ? <button type="button" className="ops-load-more" aria-label="Contraer 3 tarjetas" onClick={() => hideThree(state)}><IonIcon icon={chevronUpOutline} /></button> : null}
+        {visible < total ? <button type="button" className="ops-load-more" aria-label={t('ops.showThreeMore')} onClick={() => showThreeMore(state)}><IonIcon icon={chevronDownOutline} /></button> : null}
       </div>
     ) : null
   );
