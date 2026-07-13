@@ -132,11 +132,11 @@ const demoItems = [
   { nameKey: 'products.comboFamiliar', price: 95 },
 ] as const;
 
-const additionalPacificoOrders: Order[] = Array.from({ length: 38 }, (_, index) => {
+const additionalPacificoOrders: Order[] = Array.from({ length: 93 }, (_, index) => {
   const item = demoItems[index % demoItems.length];
   const customerKey = demoCustomers[index % demoCustomers.length];
-  const isNew = index < 12;
-  const isProcessing = index >= 12 && index < 24;
+  const isNew = index < 31;
+  const isProcessing = index >= 31 && index < 61;
   const newStage = index % 3;
   const processingStatuses: OrderStatus[] = ['in_kitchen', 'ready', 'on_the_way'];
   const status: OrderStatus = isNew
@@ -164,13 +164,13 @@ const additionalPacificoOrders: Order[] = Array.from({ length: 38 }, (_, index) 
 initialOrders.push(...additionalPacificoOrders);
 
 const demoFirstNames = ['Sofía', 'Mateo', 'Valentina', 'Santiago', 'Camila', 'Sebastián', 'Luciana', 'Diego', 'Mía', 'Nicolás', 'Renata', 'Joaquín', 'Alessia', 'Thiago', 'Mariana'];
-const demoLastNames = ['García', 'Ramírez', 'Torres'];
+const demoLastNames = ['García', 'Ramírez', 'Torres', 'Mendoza', 'Flores', 'Castillo', 'Vargas'];
 
 initialOrders
   .filter((order) => order.brandId === 'pacifico')
   .forEach((order, index) => {
     order.customerName = `${demoFirstNames[index % demoFirstNames.length]} ${demoLastNames[Math.floor(index / demoFirstNames.length)]}`;
-    order.leadTag = index < 9 ? 'new' : index < 41 ? 'recurring' : 'vip';
+    order.leadTag = index < 20 ? 'new' : index < 90 ? 'recurring' : 'vip';
     const createdAt = new Date();
     createdAt.setDate(createdAt.getDate() - (index % 10));
     order.createdAt = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`;
