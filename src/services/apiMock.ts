@@ -172,7 +172,6 @@ initialOrders
     order.customerName = `${demoFirstNames[index % demoFirstNames.length]} ${demoLastNames[Math.floor(index / demoFirstNames.length)]}`;
     order.leadTag = index < 20 ? 'new' : index < 90 ? 'recurring' : 'vip';
     const createdAt = new Date();
-    createdAt.setDate(createdAt.getDate() - (index % 10));
     order.createdAt = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`;
   });
 
