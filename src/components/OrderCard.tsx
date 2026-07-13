@@ -22,6 +22,7 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
     'customers.ana': '+51988777666',
   };
   const phone = order.phone ?? fallbackPhones[order.customerKey] ?? '+51900000000';
+  const displayPhone = phone.replace(/^(\+51)(\d{3})(\d{3})(\d{3})$/, '$1 $2 $3 $4');
 
   const cardClass =
     group === 'processing'
@@ -33,7 +34,7 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
   return (
     <article className={cardClass} style={style}>
       <div className="order-customer-row">
-        <div className="order-customer">{order.customerName ?? t(order.customerKey)}</div>
+        <div className="order-customer-identity"><div className="order-customer">{order.customerName ?? t(order.customerKey)}</div><span>{displayPhone}</span></div>
         {order.leadTag ? <span className={`order-lead-tag order-lead-tag--${order.leadTag}`}>{t(`orders.lead.${order.leadTag}`)}</span> : null}
       </div>
       <div className="order-card-actions">

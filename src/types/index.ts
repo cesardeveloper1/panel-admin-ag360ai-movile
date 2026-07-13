@@ -51,6 +51,7 @@ export interface Order {
   locationKey: string;
   phone?: string;
   paymentMethod?: 'yape' | 'card' | 'cash' | 'plin';
+  createdAt?: string;
 }
 
 export interface DashboardKpi {

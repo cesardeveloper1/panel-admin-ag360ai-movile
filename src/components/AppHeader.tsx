@@ -29,6 +29,10 @@ interface AppHeaderProps {
     icon?: string;
     iconOnly?: boolean;
   };
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -43,6 +47,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   breadcrumbs = [],
   search,
   action,
+  secondaryAction,
 }) => {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
@@ -90,6 +95,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {subtitle ? <p className="ag-header-sub">{subtitle}</p> : null}
         </div>
         <div className="ag-header-actions">
+          {secondaryAction ? <button type="button" className="ag-header-action ag-header-action--secondary" onClick={secondaryAction.onClick}>{secondaryAction.label}</button> : null}
           {action ? (
             <button type="button" className={`ag-header-action${action.iconOnly ? ' ag-header-action--icon' : ''}`} onClick={action.onClick} aria-label={action.label}>
               {action.icon ? <IonIcon icon={action.icon} /> : null}

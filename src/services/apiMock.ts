@@ -171,6 +171,9 @@ initialOrders
   .forEach((order, index) => {
     order.customerName = `${demoFirstNames[index % demoFirstNames.length]} ${demoLastNames[Math.floor(index / demoFirstNames.length)]}`;
     order.leadTag = index < 9 ? 'new' : index < 41 ? 'recurring' : 'vip';
+    const createdAt = new Date();
+    createdAt.setDate(createdAt.getDate() - (index % 10));
+    order.createdAt = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`;
   });
 
 const initialProducts: CatalogProduct[] = [
@@ -486,7 +489,7 @@ function loadOrders(): Order[] {
       const seedById = new Map(initialOrders.map((order) => [order.id, order]));
       const enriched = stored.map((order) => {
         const seed = seedById.get(order.id);
-        return seed ? { ...order, customerName: seed.customerName, leadTag: seed.leadTag, phone: seed.phone, paymentMethod: seed.paymentMethod } : order;
+        return seed ? { ...order, customerName: seed.customerName, leadTag: seed.leadTag, phone: seed.phone, paymentMethod: seed.paymentMethod, createdAt: seed.createdAt } : order;
       });
       const storedIds = new Set(enriched.map((order) => order.id));
       const missing = initialOrders.filter((order) => !storedIds.has(order.id));

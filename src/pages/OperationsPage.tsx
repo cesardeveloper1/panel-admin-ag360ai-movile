@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { IonContent, IonPage, IonSearchbar } from '@ionic/react';
-import { searchOutline } from 'ionicons/icons';
+import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar } from '@ionic/react';
+import { chevronDownOutline, searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -21,6 +21,8 @@ const OPS_SEGMENT_COLORS = {
   delivered: 'var(--ag-done)',
 } as const;
 
+const localIsoDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
   const { orders } = useApp();
@@ -30,14 +32,18 @@ const OperationsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
   const [allStage, setAllStage] = useState<'starting' | 'ordering' | 'human' | 'orders'>('starting');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
+  const [dateEnd, setDateEnd] = useState<string | null>(null);
+  const [dateClicks, setDateClicks] = useState(0);
   const [visibleCards, setVisibleCards] = useState<Record<string, number>>({
-    new: 3,
-    processing: 3,
-    delivered: 3,
-    starting: 3,
-    ordering: 3,
-    human: 3,
-    orders: 3,
+    new: 5,
+    processing: 5,
+    delivered: 5,
+    starting: 5,
+    ordering: 5,
+    human: 5,
+    orders: 5,
   });
   const searchRef = useRef<HTMLIonSearchbarElement>(null);
   const newOrdersRef = useRef<HTMLElement>(null);
@@ -50,14 +56,18 @@ const OperationsPage: React.FC = () => {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return orders;
-    return orders.filter(
+    const byDate = orders.filter((order) => {
+      const date = order.createdAt ?? localIsoDate(new Date());
+      return date >= dateStart && date <= (dateEnd ?? dateStart);
+    });
+    if (!q) return byDate;
+    return byDate.filter(
       (o) =>
         o.id.toLowerCase().includes(q) ||
         o.customerName?.toLowerCase().includes(q) ||
         t(o.customerKey).toLowerCase().includes(q),
     );
-  }, [orders, query, t]);
+  }, [orders, query, t, dateStart, dateEnd]);
 
   const groups = useMemo(
     () => ({
@@ -86,9 +96,39 @@ const OperationsPage: React.FC = () => {
     ? filtered
     : filtered.filter((order) => getKanbanSubState(order) === allStage);
   const visibleAllStageItems = allStageItems.slice(0, visibleCards[allStage]);
+  const highlightedOperationDates = useMemo(() => {
+    const end = dateEnd ?? dateStart;
+    const cursor = new Date(`${dateStart}T12:00:00`);
+    const last = new Date(`${end}T12:00:00`);
+    const dates = [];
+    while (cursor <= last) {
+      const date = localIsoDate(cursor);
+      const boundary = date === dateStart || date === end;
+      dates.push({ date, textColor: boundary ? '#ffffff' : '#5f2fc5', backgroundColor: boundary ? '#8746ff' : 'rgba(135, 70, 255, 0.16)' });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return dates;
+  }, [dateStart, dateEnd]);
 
-  const showThreeMore = (state: string) => {
-    setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 3) + 3 }));
+  const showFiveMore = (state: string) => {
+    setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 5) + 5 }));
+  };
+
+  const selectOperationDate = (rawValue: string | string[] | null | undefined) => {
+    const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
+    if (!selected) return;
+    if (dateClicks === 0 || dateEnd) {
+      setDateStart(selected);
+      setDateEnd(null);
+      setDateClicks(1);
+    } else if (selected < dateStart) {
+      setDateEnd(dateStart);
+      setDateStart(selected);
+      setDateClicks(2);
+    } else {
+      setDateEnd(selected);
+      setDateClicks(2);
+    }
   };
 
   const openSearch = () => {
@@ -131,6 +171,7 @@ const OperationsPage: React.FC = () => {
           <AppHeader
             centeredCompact
             title={t('ops.title')}
+            secondaryAction={{ label: dateEnd ? `${dateStart.slice(8)}–${dateEnd.slice(8)}` : dateStart === localIsoDate(new Date()) ? 'Hoy' : dateStart.slice(8), onClick: () => { setDateClicks(0); setDateOpen(true); } }}
             action={{ label: t('ops.search'), icon: searchOutline, iconOnly: true, onClick: openSearch }}
           />
           <div className="ag-body module-body ops-body ag-page-stack">
@@ -166,7 +207,7 @@ const OperationsPage: React.FC = () => {
                     {visibleAllStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} onChat={() => openOrderChat(order)} />)}
                   </div>
                   {allStageItems.length === 0 ? <p className="kanban-empty">{t('ops.emptyColumn')}</p> : null}
-                  {visibleAllStageItems.length < allStageItems.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore(allStage)}>{t('ops.showThreeMore')}</button> : null}
+                  {visibleAllStageItems.length < allStageItems.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore(allStage)}><IonIcon icon={chevronDownOutline} /></button> : null}
                 </section>
               </>
             ) : (
@@ -223,7 +264,7 @@ const OperationsPage: React.FC = () => {
                 {groups.new.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
-                {visibleCards.new < groups.new.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore('new')}>{t('ops.showThreeMore')}</button> : null}
+                {visibleCards.new < groups.new.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore('new')}><IonIcon icon={chevronDownOutline} /></button> : null}
               </section>
 
               <section ref={processingOrdersRef} className="kanban-section kanban-section--processing">
@@ -235,7 +276,7 @@ const OperationsPage: React.FC = () => {
                 {groups.processing.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
-                {visibleCards.processing < groups.processing.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore('processing')}>{t('ops.showThreeMore')}</button> : null}
+                {visibleCards.processing < groups.processing.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore('processing')}><IonIcon icon={chevronDownOutline} /></button> : null}
               </section>
 
               <section ref={deliveredOrdersRef} className="kanban-section kanban-section--delivered">
@@ -257,7 +298,7 @@ const OperationsPage: React.FC = () => {
                 {groups.delivered.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
-                {visibleCards.delivered < groups.delivered.length ? <button type="button" className="ops-load-more" onClick={() => showThreeMore('delivered')}>{t('ops.showThreeMore')}</button> : null}
+                {visibleCards.delivered < groups.delivered.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore('delivered')}><IonIcon icon={chevronDownOutline} /></button> : null}
               </section>
             </KanbanBoard>
               </>
@@ -268,6 +309,13 @@ const OperationsPage: React.FC = () => {
             open={!!selectedOrder}
             onClose={() => setSelectedOrder(null)}
           />
+          <IonModal isOpen={dateOpen} onDidDismiss={() => setDateOpen(false)} className="reports-range-modal">
+            <div className="reports-range-picker">
+              <div className="reports-range-picker__selection">{dateStart}{dateEnd && dateEnd !== dateStart ? ` — ${dateEnd}` : ''}</div>
+              <IonDatetime presentation="date" locale="es-PE" value={dateEnd ?? dateStart} highlightedDates={highlightedOperationDates} max={localIsoDate(new Date())} onIonChange={(event) => selectOperationDate(event.detail.value)} />
+              <button className="reports-range-picker__apply" type="button" onClick={() => setDateOpen(false)}>Aplicar</button>
+            </div>
+          </IonModal>
         </AppShell>
       </IonContent>
     </IonPage>
