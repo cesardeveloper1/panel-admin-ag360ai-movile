@@ -2040,6 +2040,17 @@ body.ag-mobile-nav-open {
   font: 700 0.8125rem var(--ag-font-body);
 }
 
+.ops-load-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ops-load-controls .ops-load-more {
+  margin: 0.5rem 0 0;
+}
+
 .ops-load-more ion-icon {
   font-size: 1.25rem;
 }

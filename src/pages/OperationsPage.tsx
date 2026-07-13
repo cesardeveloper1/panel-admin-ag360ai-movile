@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar } from '@ionic/react';
-import { chevronDownOutline, searchOutline } from 'ionicons/icons';
+import { chevronDownOutline, chevronUpOutline, searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -114,6 +114,19 @@ const OperationsPage: React.FC = () => {
     setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 5) + 5 }));
   };
 
+  const hideFive = (state: string) => {
+    setVisibleCards((current) => ({ ...current, [state]: Math.max(5, (current[state] ?? 5) - 5) }));
+  };
+
+  const cardToggleButtons = (state: string, visible: number, total: number) => (
+    visible > 5 || visible < total ? (
+      <div className="ops-load-controls">
+        {visible > 5 ? <button type="button" className="ops-load-more" aria-label="Contraer 5 tarjetas" onClick={() => hideFive(state)}><IonIcon icon={chevronUpOutline} /></button> : null}
+        {visible < total ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore(state)}><IonIcon icon={chevronDownOutline} /></button> : null}
+      </div>
+    ) : null
+  );
+
   const selectOperationDate = (rawValue: string | string[] | null | undefined) => {
     const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
     if (!selected) return;
@@ -207,7 +220,7 @@ const OperationsPage: React.FC = () => {
                     {visibleAllStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} onChat={() => openOrderChat(order)} />)}
                   </div>
                   {allStageItems.length === 0 ? <p className="kanban-empty">{t('ops.emptyColumn')}</p> : null}
-                  {visibleAllStageItems.length < allStageItems.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore(allStage)}><IonIcon icon={chevronDownOutline} /></button> : null}
+                  {cardToggleButtons(allStage, visibleAllStageItems.length, allStageItems.length)}
                 </section>
               </>
             ) : (
@@ -264,7 +277,7 @@ const OperationsPage: React.FC = () => {
                 {groups.new.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
-                {visibleCards.new < groups.new.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore('new')}><IonIcon icon={chevronDownOutline} /></button> : null}
+                {cardToggleButtons('new', Math.min(visibleCards.new, groups.new.length), groups.new.length)}
               </section>
 
               <section ref={processingOrdersRef} className="kanban-section kanban-section--processing">
@@ -276,7 +289,7 @@ const OperationsPage: React.FC = () => {
                 {groups.processing.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
-                {visibleCards.processing < groups.processing.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore('processing')}><IonIcon icon={chevronDownOutline} /></button> : null}
+                {cardToggleButtons('processing', Math.min(visibleCards.processing, groups.processing.length), groups.processing.length)}
               </section>
 
               <section ref={deliveredOrdersRef} className="kanban-section kanban-section--delivered">
@@ -298,7 +311,7 @@ const OperationsPage: React.FC = () => {
                 {groups.delivered.length === 0 ? (
                   <p className="kanban-empty">{t('ops.emptyColumn')}</p>
                 ) : null}
-                {visibleCards.delivered < groups.delivered.length ? <button type="button" className="ops-load-more" aria-label={t('ops.showFiveMore')} onClick={() => showFiveMore('delivered')}><IonIcon icon={chevronDownOutline} /></button> : null}
+                {cardToggleButtons('delivered', Math.min(visibleCards.delivered, groups.delivered.length), groups.delivered.length)}
               </section>
             </KanbanBoard>
               </>
