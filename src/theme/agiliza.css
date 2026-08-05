@@ -3861,7 +3861,7 @@ html.ag-native.ion-palette-dark .ag-header {
 
 /* Chats inbox */
 .chats-body {
-  padding-bottom: 24px;
+  padding-bottom: calc(var(--ag-nav-height) + env(safe-area-inset-bottom) + 24px);
 }
 
 .chats-status {
