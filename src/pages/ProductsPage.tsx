@@ -14,7 +14,7 @@ type CategoryFilter = 'all' | ProductCategory;
 const ProductsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand, showToast } = useApp();
-  const { breadcrumbs, onBack } = useModuleNav();
+  const { onBack } = useModuleNav();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -57,19 +57,14 @@ const ProductsPage: React.FC = () => {
     showToast(updated.active ? 'toast.productEnabled' : 'toast.productDisabled');
   };
 
-  const subtitle = brand ? `${t(brand.nameKey)} · ${t('menu.subtitle')}` : '';
-
   return (
     <IonPage>
       <IonContent className="ag-screen">
         <AppShell>
         <AppHeader
           onBack={onBack}
-          breadcrumbs={breadcrumbs}
           showAlerts
           title={t('menu.title')}
-          subtitle={subtitle}
-          avatar={brand?.initials}
           search={{
             value: query,
             placeholder: t('menu.search'),

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import { colorPaletteOutline, linkOutline, saveOutline, imageOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +19,7 @@ function normalizeHex(value: string, fallback: string) {
 const BrandDataPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand, showToast } = useApp();
-  const { breadcrumbs, onBack } = useModuleNav();
+  const { onBack } = useModuleNav();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<BrandConfig | null>(null);
@@ -35,11 +35,6 @@ const BrandDataPage: React.FC = () => {
 
   const previewPrimary = form?.primaryColor ?? '#8746FF';
   const previewSecondary = form?.secondaryColor ?? '#141A32';
-
-  const subtitle = useMemo(
-    () => (brand ? `${t(brand.nameKey)} · ${t('brandData.subtitle')}` : ''),
-    [brand, t],
-  );
 
   const patch = (partial: Partial<BrandConfig>) => {
     setForm((prev) => (prev ? { ...prev, ...partial } : prev));
@@ -67,7 +62,7 @@ const BrandDataPage: React.FC = () => {
     <IonPage>
       <IonContent className="ag-screen">
         <AppShell>
-        <AppHeader showAlerts title={t('brandData.title')} subtitle={subtitle} avatar={brand?.initials} onBack={onBack} breadcrumbs={breadcrumbs} />
+        <AppHeader showAlerts title={t('brandData.title')} onBack={onBack} />
         <div className="ag-body brand-data-body">
           {loading || !form ? (
             <div className="module-loading">

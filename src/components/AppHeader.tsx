@@ -53,6 +53,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const { go } = useAppNavigation();
   const { notifications, session } = useApp();
   const unread = notifications.filter((n) => n.unread).length;
+  const isSub = Boolean(onBack);
 
   const openProfile = () => {
     if (profileFromAvatar && session) go(PROFILE_PATH);
@@ -74,37 +75,55 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   ) : null;
 
   return (
-    <header className={`ag-header${onBack ? ' ag-header--sub' : ''}${centeredCompact ? ' ag-header--centered-compact' : ''}`}>
-      {onBack ? (
-        <div className="ag-header-nav">
-          <button type="button" className="ag-header-back" onClick={onBack} aria-label={backLabel ?? t('common.back')}>
-            <IonIcon icon={chevronBackOutline} className="ag-header-back-icon" />
-            <span>{backLabel ?? t('common.back')}</span>
-          </button>
-          {breadcrumbs.length > 0 ? <Breadcrumbs items={breadcrumbs} /> : null}
-        </div>
-      ) : breadcrumbs.length > 0 ? (
+    <header
+      className={`ag-header${isSub ? ' ag-header--sub' : ''}${centeredCompact ? ' ag-header--centered-compact' : ''}`}
+    >
+      {!isSub && breadcrumbs.length > 0 ? (
         <div className="ag-header-nav">
           <Breadcrumbs items={breadcrumbs} />
         </div>
       ) : null}
       <div className="ag-header-row">
-        {onBack ? null : avatarNode}
+        {isSub ? (
+          <button
+            type="button"
+            className="ag-header-back ag-header-back--icon"
+            onClick={onBack}
+            aria-label={backLabel ?? t('common.back')}
+          >
+            <IonIcon icon={chevronBackOutline} className="ag-header-back-icon" />
+          </button>
+        ) : (
+          avatarNode
+        )}
         <div className="ag-header-copy">
           <h1 className="ag-header-title">{title}</h1>
-          {subtitle ? <p className="ag-header-sub">{subtitle}</p> : null}
+          {!isSub && subtitle ? <p className="ag-header-sub">{subtitle}</p> : null}
         </div>
         <div className="ag-header-actions">
-          {secondaryAction ? <button type="button" className="ag-header-action ag-header-action--secondary" onClick={secondaryAction.onClick}>{secondaryAction.label}</button> : null}
+          {secondaryAction ? (
+            <button
+              type="button"
+              className="ag-header-action ag-header-action--secondary"
+              onClick={secondaryAction.onClick}
+            >
+              {secondaryAction.label}
+            </button>
+          ) : null}
           {action ? (
-            <button type="button" className={`ag-header-action${action.iconOnly ? ' ag-header-action--icon' : ''}`} onClick={action.onClick} aria-label={action.label}>
+            <button
+              type="button"
+              className={`ag-header-action${action.iconOnly ? ' ag-header-action--icon' : ''}`}
+              onClick={action.onClick}
+              aria-label={action.label}
+            >
               {action.icon ? <IonIcon icon={action.icon} /> : null}
               {action.iconOnly ? null : action.label}
             </button>
           ) : null}
           {showAlerts ? (
             <>
-              <AgentToggle />
+              {!isSub ? <AgentToggle /> : null}
               <button
                 type="button"
                 className="ag-header-bell"

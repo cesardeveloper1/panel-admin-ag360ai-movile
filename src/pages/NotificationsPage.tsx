@@ -9,7 +9,7 @@ import { useModuleNav } from '../hooks/useModuleNav';
 const NotificationsPage: React.FC = () => {
   const { t } = useTranslation();
   const { notifications, markNotificationRead, markAllNotificationsRead } = useApp();
-  const { breadcrumbs, onBack } = useModuleNav();
+  const { onBack } = useModuleNav();
 
   return (
     <IonPage>
@@ -17,11 +17,9 @@ const NotificationsPage: React.FC = () => {
         <AppShell>
           <AppHeader
             onBack={onBack}
-            breadcrumbs={breadcrumbs}
             showAlerts={false}
             profileFromAvatar={false}
             title={t('notifications.title')}
-            subtitle={t('notifications.subtitle')}
             action={
               notifications.some((n) => n.unread)
                 ? {

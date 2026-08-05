@@ -9,13 +9,12 @@ import { useApp } from '../context/AppContext';
 import { useModuleNav } from '../hooks/useModuleNav';
 import { apiMock } from '../services/apiMock';
 import type { BranchLocation } from '../types';
-import { brandLabel } from '../utils/brandLabel';
 
 const LocationsPage: React.FC = () => {
   const history = useHistory();
   const { t } = useTranslation();
   const { brand, showToast } = useApp();
-  const { breadcrumbs, onBack } = useModuleNav();
+  const { onBack } = useModuleNav();
   const [locations, setLocations] = useState<BranchLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,8 +36,6 @@ const LocationsPage: React.FC = () => {
     };
   }, [brand?.id]);
 
-  const subtitle = brand ? `${brandLabel(brand, t)} · ${t('locationsPage.subtitle')}` : '';
-
   return (
     <IonPage>
       <IonContent className="ag-screen">
@@ -46,10 +43,7 @@ const LocationsPage: React.FC = () => {
         <AppHeader
           showAlerts
           title={t('locationsPage.title')}
-          subtitle={subtitle}
-          avatar={brand?.initials}
           onBack={onBack}
-          breadcrumbs={breadcrumbs}
         />
         <div className="ag-body module-body ag-page-stack">
           <p className="module-intro">{t('locationsPage.intro')}</p>

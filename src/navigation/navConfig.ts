@@ -13,7 +13,6 @@ export const PAYMENTS_PATH = '/app/payments';
 export const CHATS_PATH = '/app/chats';
 
 const BUSINESS_PATHS = [
-  AGILITO_PATH,
   '/app/business',
   '/app/products',
   '/app/productos',
@@ -43,19 +42,19 @@ export const ownerNavLeft: NavItem[] = [
   },
 ];
 
-/** Derecha del FAB: Agilito (negocio), Pagos */
+/** Derecha del FAB: Agilito, Pagos (módulos de negocio bajo Pagos) */
 export const ownerNavRight: NavItem[] = [
   {
     path: AGILITO_PATH,
     icon: sparklesOutline,
     labelKey: 'nav.agilito',
-    matchPaths: BUSINESS_PATHS,
+    matchPaths: [AGILITO_PATH],
   },
   {
     path: PAYMENTS_PATH,
     icon: cardOutline,
     labelKey: 'nav.payments',
-    matchPaths: [PAYMENTS_PATH],
+    matchPaths: [PAYMENTS_PATH, ...BUSINESS_PATHS],
   },
 ];
 

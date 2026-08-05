@@ -16,7 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import { AGILITO_PATH, NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 import { AgentToggle } from '../components/AgentToggle';
 
 interface AgilitoMessage {
@@ -155,7 +156,7 @@ const AgilitoPage: React.FC = () => {
   return (
     <IonPage>
       <IonContent className="ag-screen agilito-screen welcome-screen">
-        <AppShell>
+        <AppShell agilitoChrome>
           <div className="agilito-layout">
             <header className="agilito-top">
               <div className="agilito-top-row">
@@ -203,7 +204,10 @@ const AgilitoPage: React.FC = () => {
                             key={mod.path}
                             type="button"
                             className="agilito-modules-item"
-                            onClick={() => go(mod.path)}
+                            onClick={() => {
+                              setModuleNavFrom(AGILITO_PATH);
+                              go(mod.path);
+                            }}
                           >
                             <IonIcon icon={mod.icon} aria-hidden="true" />
                             <span>{t(mod.labelKey)}</span>

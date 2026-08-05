@@ -188,6 +188,15 @@ ion-page {
     padding-right: 4.5rem;
   }
 
+  /* Sin hamburguesa (tabs con BottomNav): usar el ancho completo */
+  .ag-app-shell--bottom-nav .ag-header {
+    padding-left: 1rem;
+  }
+
+  .ag-app-shell--bottom-nav .ag-header--centered-compact {
+    padding-right: 1rem;
+  }
+
   .ag-header-avatar {
     display: none;
   }
@@ -2416,9 +2425,23 @@ ion-page .ag-header--sub.ag-enter {
   animation: none;
 }
 
-ion-page.ion-page-hidden .agilito-composer-dock {
-  opacity: 0;
-  pointer-events: none;
+/* Fixed footers escapan del display:none del ion-page en transiciones */
+ion-page.ion-page-hidden .agilito-composer-dock,
+ion-page.ion-page-hidden .ag-bottom-nav {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/*
+ * Ionic a veces deja 2 ion-page sin .ion-page-hidden a la vez.
+ * Solo la página superior (última hermana visible) debe mostrar footer fijo.
+ */
+.ion-page:not(.ion-page-hidden):has(~ .ion-page:not(.ion-page-hidden)) .agilito-composer-dock,
+.ion-page:not(.ion-page-hidden):has(~ .ion-page:not(.ion-page-hidden)) .ag-bottom-nav {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 @keyframes ag-fade-up {
@@ -5436,6 +5459,20 @@ html.ag-native.ion-palette-dark .ag-header {
   padding-bottom: 0.5rem;
 }
 
+.ag-header--sub .ag-header-row {
+  min-height: 44px;
+  gap: 0.35rem;
+}
+
+.ag-header--sub .ag-header-title {
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.ag-header--sub .ag-search {
+  margin-top: 0.5rem;
+}
+
 .ag-header-nav {
   display: flex;
   flex-direction: column;
@@ -5456,8 +5493,24 @@ html.ag-native.ion-palette-dark .ag-header {
   cursor: pointer;
 }
 
+.ag-header-back--icon {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin-left: 0;
+  border-radius: 12px;
+  justify-content: center;
+  color: var(--ag-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ag-header-back--icon:active {
+  background: rgba(15, 23, 42, 0.06);
+}
+
 .ag-header-back-icon {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
 }
 
 .ag-breadcrumbs {
@@ -5527,7 +5580,7 @@ html.ag-native.ion-palette-dark .ag-header {
 .hub-grid {
   display: grid;
   gap: var(--ag-gap-md);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .hub-card {

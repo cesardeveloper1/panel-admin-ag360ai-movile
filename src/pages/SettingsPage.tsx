@@ -29,7 +29,7 @@ const SettingsPage: React.FC = () => {
   const { goRoot, go } = useAppNavigation();
   const { session, brand, orders, notifications, darkMode, setDarkMode, startBrandSwitch, logout } =
     useApp();
-  const { breadcrumbs, onBack } = useModuleNav();
+  const { onBack } = useModuleNav();
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   const unread = notifications.filter((n) => n.unread).length;
@@ -52,7 +52,7 @@ const SettingsPage: React.FC = () => {
     <IonPage>
       <IonContent className="ag-screen">
         <AppShell>
-          <AppHeader title={t('settings.title')} avatar={session?.initials} showAlerts onBack={onBack} breadcrumbs={breadcrumbs} />
+          <AppHeader title={t('settings.title')} showAlerts onBack={onBack} />
           <div className="ag-body settings-body">
             <section className="profile-hero ag-enter">
               <div className="profile-hero-avatar">{session?.initials ?? '?'}</div>

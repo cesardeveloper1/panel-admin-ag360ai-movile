@@ -29,30 +29,30 @@ export const TAB_ROOTS = new Set([
 
 export const ROUTE_NAV: Record<string, RouteNavConfig> = {
   '/app/products': {
-    parent: AGILITO_PATH,
+    parent: PAYMENTS_PATH,
     crumbs: [
-      { key: 'nav.agilito', path: AGILITO_PATH },
+      { key: 'nav.payments', path: PAYMENTS_PATH },
       { key: 'menu.title' },
     ],
   },
   '/app/clients': {
-    parent: AGILITO_PATH,
+    parent: PAYMENTS_PATH,
     crumbs: [
-      { key: 'nav.agilito', path: AGILITO_PATH },
+      { key: 'nav.payments', path: PAYMENTS_PATH },
       { key: 'marketing.title' },
     ],
   },
   '/app/locations': {
-    parent: AGILITO_PATH,
+    parent: PAYMENTS_PATH,
     crumbs: [
-      { key: 'nav.agilito', path: AGILITO_PATH },
+      { key: 'nav.payments', path: PAYMENTS_PATH },
       { key: 'locationsPage.title' },
     ],
   },
   '/app/datos-marca': {
-    parent: AGILITO_PATH,
+    parent: PAYMENTS_PATH,
     crumbs: [
-      { key: 'nav.agilito', path: AGILITO_PATH },
+      { key: 'nav.payments', path: PAYMENTS_PATH },
       { key: 'brandData.title' },
     ],
   },

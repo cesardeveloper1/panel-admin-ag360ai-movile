@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { BreadcrumbItem } from '../components/Breadcrumbs';
 import { AGILITO_PATH } from '../navigation/navConfig';
 import { getRouteNav, isTabRoot } from '../navigation/breadcrumbs';
+import { getModuleNavFrom } from '../navigation/moduleNavFrom';
 import { useAppNavigation } from './useAppNavigation';
 
 export function useModuleNav(fallbackParent = AGILITO_PATH) {
@@ -23,7 +24,8 @@ export function useModuleNav(fallbackParent = AGILITO_PATH) {
   );
 
   const onBack = useCallback(() => {
-    back(config?.parent ?? fallbackParent);
+    // Pop del stack Ionic; si no hay historial, ir al hub de origen (Pagos/Agilito).
+    back(getModuleNavFrom(config?.parent ?? fallbackParent));
   }, [back, config?.parent, fallbackParent]);
 
   const showBack = !!config && !isTabRoot(location.pathname);

@@ -15,7 +15,7 @@ type SegmentFilter = 'all' | ClientSegment;
 const MarketingPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand, showToast } = useApp();
-  const { breadcrumbs, onBack } = useModuleNav();
+  const { onBack } = useModuleNav();
   const [clients, setClients] = useState<CrmClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -50,19 +50,14 @@ const MarketingPage: React.FC = () => {
     });
   }, [clients, segment, query, t]);
 
-  const subtitle = brand ? `${t(brand.nameKey)} · ${t('marketing.subtitle')}` : '';
-
   return (
     <IonPage>
       <IonContent className="ag-screen">
         <AppShell>
         <AppHeader
           onBack={onBack}
-          breadcrumbs={breadcrumbs}
           showAlerts
           title={t('marketing.title')}
-          subtitle={subtitle}
-          avatar={brand?.initials}
           search={{
             value: query,
             placeholder: t('marketing.search'),

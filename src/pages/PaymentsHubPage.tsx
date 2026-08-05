@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { useAppNavigation } from '../hooks/useAppNavigation';
+import { PAYMENTS_PATH } from '../navigation/navConfig';
+import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 
 const modules = [
   {
@@ -62,7 +64,10 @@ const PaymentsHubPage: React.FC = () => {
                   type="button"
                   className={`hub-card hub-card--${mod.tone} ag-enter`}
                   style={{ animationDelay: `${idx * 60}ms` }}
-                  onClick={() => go(mod.path)}
+                  onClick={() => {
+                    setModuleNavFrom(PAYMENTS_PATH);
+                    go(mod.path);
+                  }}
                 >
                   <span className="hub-card-icon">
                     <IonIcon icon={mod.icon} />

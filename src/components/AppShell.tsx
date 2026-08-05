@@ -1,28 +1,25 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { SideNav } from './SideNav';
 import { MobileSideNav } from './MobileSideNav';
 import { useViewport } from '../hooks/useViewport';
-import { AGILITO_PATH } from '../navigation/navConfig';
 
 interface AppShellProps {
   children: ReactNode;
   hideNav?: boolean;
+  /**
+   * Chrome fijo de Agilito (hamburguesa, sin BottomNav).
+   * No depende de useLocation: Ionic mantiene páginas en el stack y la ruta
+   * global cambiaría el footer de Agilito al navegar a Pagos/Productos.
+   */
+  agilitoChrome?: boolean;
 }
 
-function isAgilitoPath(pathname: string): boolean {
-  return pathname === AGILITO_PATH || pathname.startsWith(`${AGILITO_PATH}/`);
-}
-
-export function AppShell({ children, hideNav = false }: AppShellProps) {
+export function AppShell({ children, hideNav = false, agilitoChrome = false }: AppShellProps) {
   const { isTablet } = useViewport();
-  const location = useLocation();
   const shellRef = useRef<HTMLDivElement>(null);
-  const onAgilito = isAgilitoPath(location.pathname);
-  /** Agilito: hamburguesa + composer. Resto: BottomNav de master, sin hamburguesa. */
-  const showMobileSideNav = !hideNav && !isTablet && onAgilito;
-  const showBottomNav = !hideNav && !isTablet && !onAgilito;
+  const showMobileSideNav = !hideNav && !isTablet && agilitoChrome;
+  const showBottomNav = !hideNav && !isTablet && !agilitoChrome;
 
   useEffect(() => {
     const content = shellRef.current?.closest('ion-content');
