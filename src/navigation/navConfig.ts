@@ -12,7 +12,7 @@ export const AGILITO_PATH = '/app/agilito';
 export const PAYMENTS_PATH = '/app/payments';
 export const CHATS_PATH = '/app/chats';
 
-const BUSINESS_PATHS = [
+export const BUSINESS_PATHS = [
   '/app/business',
   '/app/products',
   '/app/productos',

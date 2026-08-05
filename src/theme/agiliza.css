@@ -188,7 +188,7 @@ ion-page {
     padding-right: 4.5rem;
   }
 
-  /* Sin hamburguesa (tabs con BottomNav): usar el ancho completo */
+  /* BottomNav desactivado: ya no se quita el hueco de la hamburguesa
   .ag-app-shell--bottom-nav .ag-header {
     padding-left: 1rem;
   }
@@ -196,6 +196,7 @@ ion-page {
   .ag-app-shell--bottom-nav .ag-header--centered-compact {
     padding-right: 1rem;
   }
+  */
 
   .ag-header-avatar {
     display: none;
@@ -2425,9 +2426,10 @@ ion-page .ag-header--sub.ag-enter {
   animation: none;
 }
 
-/* Fixed footers escapan del display:none del ion-page en transiciones */
+/* Fixed footers / chrome escapan del display:none del ion-page en transiciones */
 ion-page.ion-page-hidden .agilito-composer-dock,
-ion-page.ion-page-hidden .ag-bottom-nav {
+ion-page.ion-page-hidden .ag-bottom-nav,
+ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -2435,10 +2437,11 @@ ion-page.ion-page-hidden .ag-bottom-nav {
 
 /*
  * Ionic a veces deja 2 ion-page sin .ion-page-hidden a la vez.
- * Solo la página superior (última hermana visible) debe mostrar footer fijo.
+ * Solo la página superior debe mostrar chrome fijo.
  */
 .ion-page:not(.ion-page-hidden):has(~ .ion-page:not(.ion-page-hidden)) .agilito-composer-dock,
-.ion-page:not(.ion-page-hidden):has(~ .ion-page:not(.ion-page-hidden)) .ag-bottom-nav {
+.ion-page:not(.ion-page-hidden):has(~ .ion-page:not(.ion-page-hidden)) .ag-bottom-nav,
+.ion-page:not(.ion-page-hidden):has(~ .ion-page:not(.ion-page-hidden)) .ag-mobile-menu-trigger {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;

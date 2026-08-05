@@ -16,7 +16,7 @@ import { LOGO_COLOR_LOCAL } from '../constants/assets';
 
 export function SideNav() {
   const { t } = useTranslation();
-  const { go } = useAppNavigation();
+  const { go } = useAppNavigation(); // pushTabRoot / syncTabVisibility (misma lógica que BottomNav)
   const location = useLocation();
   const { notifications, brand, session } = useApp();
   const { isTablet } = useViewport();

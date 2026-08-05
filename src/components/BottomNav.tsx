@@ -1,3 +1,7 @@
+/**
+ * BottomNav desactivado temporalmente (navegación vía hamburguesa / SideNav).
+ * AppShell ya no monta este componente; se conserva para reactivarlo.
+ */
 import { IonIcon } from '@ionic/react';
 import { logoWhatsapp } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';

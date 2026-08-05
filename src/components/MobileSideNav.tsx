@@ -13,15 +13,44 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { AGILITO_PATH, CHATS_PATH, PAYMENTS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import {
+  AGILITO_PATH,
+  BUSINESS_PATHS,
+  CHATS_PATH,
+  PAYMENTS_PATH,
+  PROFILE_PATH,
+  isNavActive,
+  type NavItem,
+} from '../navigation/navConfig';
 
-const mobileModules = [
-  { path: AGILITO_PATH, icon: sparklesOutline, labelKey: 'nav.agilito' },
+/** Mismos destinos que BottomNav; `go()` aplica pushTabRoot / syncTabVisibility. */
+const mobileModules: (NavItem & { icon: string })[] = [
+  {
+    path: AGILITO_PATH,
+    icon: sparklesOutline,
+    labelKey: 'nav.agilito',
+    matchPaths: [AGILITO_PATH],
+  },
   { path: '/app/reports', icon: barChartOutline, labelKey: 'nav.reports' },
-  { path: '/app/operations', icon: gridOutline, labelKey: 'nav.orders' },
-  { path: CHATS_PATH, icon: chatbubbleEllipsesOutline, labelKey: 'nav.chats' },
-  { path: PAYMENTS_PATH, icon: cardOutline, labelKey: 'nav.payments' },
-] as const;
+  {
+    path: '/app/operations',
+    icon: gridOutline,
+    labelKey: 'nav.orders',
+    matchPaths: ['/app/operations'],
+  },
+  {
+    path: CHATS_PATH,
+    icon: chatbubbleEllipsesOutline,
+    labelKey: 'nav.chats',
+    matchPaths: [CHATS_PATH],
+  },
+  {
+    path: PAYMENTS_PATH,
+    icon: cardOutline,
+    labelKey: 'nav.payments',
+    matchPaths: [PAYMENTS_PATH, ...BUSINESS_PATHS],
+  },
+];
 
 export function MobileSideNav() {
   const { t } = useTranslation();
@@ -39,6 +68,7 @@ export function MobileSideNav() {
 
   const selectModule = (path: string) => {
     setOpen(false);
+    // Misma lógica que BottomNav: tabs raíz vía pushTabRoot
     go(path);
   };
 
@@ -72,7 +102,7 @@ export function MobileSideNav() {
           </div>
           <nav className="ag-mobile-side-nav__items">
             {mobileModules.map((item) => {
-              const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+              const active = isNavActive(location.pathname, item);
               return (
                 <button
                   key={item.path}
