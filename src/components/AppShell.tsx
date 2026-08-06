@@ -7,14 +7,24 @@ import { useViewport } from '../hooks/useViewport';
 interface AppShellProps {
   children: ReactNode;
   hideNav?: boolean;
+  /**
+   * Oculta la hamburguesa de forma estable (no depende del pathname global).
+   * Necesario en módulos stack: al Volver la URL cambia antes de desmontar la página.
+   */
+  hideMobileMenu?: boolean;
   /** @deprecated BottomNav desactivado; se mantiene por compatibilidad con AgilitoPage. */
   agilitoChrome?: boolean;
 }
 
-export function AppShell({ children, hideNav = false }: AppShellProps) {
+export function AppShell({
+  children,
+  hideNav = false,
+  hideMobileMenu = false,
+}: AppShellProps) {
   const { isTablet } = useViewport();
   const shellRef = useRef<HTMLDivElement>(null);
-  const showMobileSideNav = !hideNav && !isTablet;
+  const noHamburger = hideMobileMenu;
+  const showMobileSideNav = !hideNav && !isTablet && !noHamburger;
   // BottomNav desactivado — navegación por hamburguesa / SideNav (misma lógica go/pushTabRoot).
   // const showBottomNav = !hideNav && !isTablet && !agilitoChrome;
 
@@ -48,7 +58,13 @@ export function AppShell({ children, hideNav = false }: AppShellProps) {
   return (
     <div
       ref={shellRef}
-      className={`ag-app-shell${isTablet ? ' ag-app-shell--tablet' : ''}`}
+      className={[
+        'ag-app-shell',
+        isTablet ? 'ag-app-shell--tablet' : '',
+        noHamburger ? 'ag-app-shell--no-hamburger' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {!hideNav ? <SideNav /> : null}
       {showMobileSideNav ? <MobileSideNav /> : null}

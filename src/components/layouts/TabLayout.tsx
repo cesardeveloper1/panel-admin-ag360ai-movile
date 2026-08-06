@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { IonContent, IonPage } from '@ionic/react';
 import { AppHeader } from '../AppHeader';
 import { AppShell } from '../AppShell';
+import { normalizePath } from '../../navigation/appRouteRegistry';
 
 type HeaderSearch = {
   value: string;
@@ -52,8 +53,12 @@ export function TabLayout({
   bodyClassName = 'ag-body module-body ag-page-stack',
   pageExtras,
 }: TabLayoutProps) {
+  const routePath = useRef(
+    normalizePath(typeof window !== 'undefined' ? window.location.pathname : ''),
+  ).current;
+
   return (
-    <IonPage>
+    <IonPage data-ag-route={routePath}>
       <IonContent className={contentClassName}>
         <AppShell>
           <AppHeader

@@ -3,7 +3,9 @@
  * navConfig, breadcrumbs, useAppNavigation y syncTabVisibility derivan de aquí.
  */
 
-import { BUSINESS_MODULE_PATHS as CATALOG_MODULE_PATHS } from './businessModules';
+import {
+  BUSINESS_MODULE_PATHS as CATALOG_MODULE_PATHS,
+} from './businessModules';
 
 export const NOTIFICATIONS_PATH = '/app/notifications';
 export const PROFILE_PATH = '/app/profile';
@@ -37,6 +39,11 @@ export interface AppRoute {
 
 /** Canonical business module paths — misma fuente que businessModules. */
 export const BUSINESS_MODULE_PATHS = CATALOG_MODULE_PATHS;
+
+/** True en Productos / Clientes / Locales / Datos de marca (y aliases). */
+export function isBusinessModulePath(pathname: string): boolean {
+  return BUSINESS_MODULE_PATHS.includes(normalizePath(pathname));
+}
 
 /** BUSINESS_MODULE_PATHS + legacy aliases (for nav matchPaths). */
 export const BUSINESS_PATHS: string[] = [

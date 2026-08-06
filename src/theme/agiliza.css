@@ -188,6 +188,15 @@ ion-page {
     padding-right: 4.5rem;
   }
 
+  /* Sin hamburguesa (módulos Productos/Marketing/Locales/Marca): hueco del menú */
+  .ag-app-shell--no-hamburger .ag-header {
+    padding-left: 1rem;
+  }
+
+  .ag-app-shell--no-hamburger .ag-header--centered-compact {
+    padding-right: 1rem;
+  }
+
   /* BottomNav desactivado: ya no se quita el hueco de la hamburguesa
   .ag-app-shell--bottom-nav .ag-header {
     padding-left: 1rem;
