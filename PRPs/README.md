@@ -7,8 +7,8 @@ Refactor de navegación y chrome para poder añadir features sin duplicar paths 
 | # | PRP | Status | Notas |
 |---|-----|--------|--------|
 | 001 | [route-registry](./001--route-registry.md) | Done | Fundación — registry único |
-| 002 | [business-modules-catalog](./002--business-modules-catalog.md) | Ready | Catálogo hubs |
-| 003 | [tab-stack-layouts](./003--tab-stack-layouts.md) | Ready | Chrome DRY |
+| 002 | [business-modules-catalog](./002--business-modules-catalog.md) | Done | Catálogo hubs |
+| 003 | [tab-stack-layouts](./003--tab-stack-layouts.md) | Done | Chrome DRY |
 | 004 | [ionic-nav-stable](./004--ionic-nav-stable.md) | Draft | Spike obligatorio |
 
 ## Estado actual (contexto Cesar)

@@ -3,7 +3,7 @@
 > **Project:** agiliza360-mobile  
 > **Version:** 1.0  
 > **Created:** 2026-08-06  
-> **Status:** Ready  
+> **Status:** Done  
 > **Depends on:** PRP 001 (useModuleNav / parents estables)  
 > **Branch target:** `develop`
 
@@ -31,10 +31,10 @@ Layouts reutilizables para el chrome de páginas autenticadas, eliminando el boi
 - Opcional: search slot en StackLayout (Products/Marketing)
 
 ### Success Criteria
-- [ ] Al menos Products, Marketing, Locations, BrandData, Settings, Notifications usan StackLayout
-- [ ] Reportes y/o PaymentsHub usan TabLayout (o documentar excepción)
-- [ ] Cero breadcrumbs/subtítulo en stacks (como el compact actual)
-- [ ] lint + build OK; mobile header con padding para hamburguesa
+- [x] Al menos Products, Marketing, Locations, BrandData, Settings, Notifications usan StackLayout
+- [x] Reportes y/o PaymentsHub usan TabLayout (o documentar excepción)
+- [x] Cero breadcrumbs/subtítulo en stacks (como el compact actual)
+- [x] lint + build OK; mobile header con padding para hamburguesa
 
 ---
 
@@ -138,10 +138,17 @@ Manual (390px):
 
 ## Final Checklist
 
-- [ ] Layouts usados en ≥6 pages stack
-- [ ] Comportamiento header compacto preservado
-- [ ] Mobile-first / safe-area
-- [ ] lint/build OK
+- [x] Layouts usados en ≥6 pages stack
+- [x] Comportamiento header compacto preservado
+- [x] Mobile-first / safe-area
+- [x] lint/build OK
+
+## Fuera de alcance (documentado)
+
+- **Agilito** — chrome propio (composer)
+- **OperationsPage** — header/scroll propio
+- **ChatsPage** — dual header lista/thread
+- **Login / Welcome / Onboarding** — auth flow
 
 ---
 

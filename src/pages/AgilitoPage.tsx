@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
-  businessOutline,
-  colorPaletteOutline,
-  megaphoneOutline,
   micOutline,
   notificationsOutline,
-  restaurantOutline,
   sendOutline,
   sparklesOutline,
   stopCircleOutline,
@@ -17,6 +13,7 @@ import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { AGILITO_PATH, NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 import { AgentToggle } from '../components/AgentToggle';
 
@@ -27,13 +24,6 @@ interface AgilitoMessage {
   text?: string;
   voice?: boolean;
 }
-
-const modules = [
-  { path: '/app/products', icon: restaurantOutline, labelKey: 'agilito.menuTitle' },
-  { path: '/app/clients', icon: megaphoneOutline, labelKey: 'agilito.marketingTitle' },
-  { path: '/app/locations', icon: businessOutline, labelKey: 'agilito.locationsTitle' },
-  { path: '/app/datos-marca', icon: colorPaletteOutline, labelKey: 'agilito.brandTitle' },
-] as const;
 
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
@@ -199,9 +189,9 @@ const AgilitoPage: React.FC = () => {
                     <h2 className="agilito-empty-title">{t('agilito.heroHint')}</h2>
                     <div className="agilito-modules-card" aria-label={t('agilito.modulesTitle')}>
                       <div className="agilito-modules-track">
-                        {modules.map((mod) => (
+                        {BUSINESS_MODULES.map((mod) => (
                           <button
-                            key={mod.path}
+                            key={mod.id}
                             type="button"
                             className="agilito-modules-item"
                             onClick={() => {
@@ -210,7 +200,7 @@ const AgilitoPage: React.FC = () => {
                             }}
                           >
                             <IonIcon icon={mod.icon} aria-hidden="true" />
-                            <span>{t(mod.labelKey)}</span>
+                            <span>{t(mod.i18n.agilitoLabel)}</span>
                           </button>
                         ))}
                       </div>

@@ -3,7 +3,7 @@
 > **Project:** agiliza360-mobile  
 > **Version:** 1.0  
 > **Created:** 2026-08-06  
-> **Status:** Ready  
+> **Status:** Done  
 > **Depends on:** PRP 001 (recomendado; puede hacerse en paralelo si se exporta BUSINESS_PATHS estable)  
 > **Branch target:** `develop`
 
@@ -31,10 +31,10 @@ Un catálogo único de los 4 módulos de negocio (productos, clientes/locales ma
 - Al navegar: `setModuleNavFrom(AGILITO_PATH | PAYMENTS_PATH)` como hoy
 
 ### Success Criteria
-- [ ] Un solo array define path + icon (+ id) de los 4 módulos
-- [ ] Agilito / Pagos / Business no definen su propio `modules` con paths
-- [ ] Volver desde Productos respeta origen (moduleNavFrom)
-- [ ] lint + build OK
+- [x] Un solo array define path + icon (+ id) de los 4 módulos
+- [x] Agilito / Pagos / Business no definen su propio `modules` con paths
+- [x] Volver desde Productos respeta origen (moduleNavFrom)
+- [x] lint + build OK
 
 ---
 
@@ -154,11 +154,11 @@ Manual:
 
 ## Final Checklist
 
-- [ ] Un catálogo, tres consumidores
-- [ ] setModuleNavFrom en todos los entry points
-- [ ] BusinessHub usa go(), no history.push suelto
-- [ ] lint/build OK
-- [ ] Mobile-first en grids (1 col mobile si aplica)
+- [x] Un catálogo, tres consumidores
+- [x] setModuleNavFrom en todos los entry points
+- [x] BusinessHub usa go(), no history.push suelto
+- [x] lint/build OK
+- [x] Mobile-first en grids (1 col mobile si aplica)
 
 ---
 

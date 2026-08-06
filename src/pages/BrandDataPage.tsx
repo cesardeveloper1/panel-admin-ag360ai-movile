@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
+import { IonIcon, IonSpinner } from '@ionic/react';
 import { colorPaletteOutline, linkOutline, saveOutline, imageOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
-import { AppHeader } from '../components/AppHeader';
-import { AppShell } from '../components/AppShell';
+import { StackLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
-import { useModuleNav } from '../hooks/useModuleNav';
 import { apiMock } from '../services/apiMock';
 import type { BrandConfig } from '../types';
 import { LOGO_COLOR_LOCAL, LOGO_WHITE_LOCAL } from '../constants/assets';
@@ -19,7 +17,6 @@ function normalizeHex(value: string, fallback: string) {
 const BrandDataPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand, showToast } = useApp();
-  const { onBack } = useModuleNav();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<BrandConfig | null>(null);
@@ -59,11 +56,7 @@ const BrandDataPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <IonContent className="ag-screen">
-        <AppShell>
-        <AppHeader showAlerts title={t('brandData.title')} onBack={onBack} />
-        <div className="ag-body brand-data-body">
+    <StackLayout title={t('brandData.title')} showAlerts bodyClassName="ag-body brand-data-body">
           {loading || !form ? (
             <div className="module-loading">
               <IonSpinner name="crescent" />
@@ -177,10 +170,7 @@ const BrandDataPage: React.FC = () => {
               </button>
             </>
           )}
-        </div>
-        </AppShell>
-      </IonContent>
-    </IonPage>
+    </StackLayout>
   );
 };
 

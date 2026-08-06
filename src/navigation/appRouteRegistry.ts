@@ -3,6 +3,8 @@
  * navConfig, breadcrumbs, useAppNavigation y syncTabVisibility derivan de aquí.
  */
 
+import { BUSINESS_MODULE_PATHS as CATALOG_MODULE_PATHS } from './businessModules';
+
 export const NOTIFICATIONS_PATH = '/app/notifications';
 export const PROFILE_PATH = '/app/profile';
 export const AGILITO_PATH = '/app/agilito';
@@ -33,13 +35,8 @@ export interface AppRoute {
   crumbParentKey?: string;
 }
 
-/** Canonical business module paths (under Pagos in nav). */
-export const BUSINESS_MODULE_PATHS = [
-  '/app/products',
-  '/app/clients',
-  '/app/locations',
-  '/app/datos-marca',
-] as const;
+/** Canonical business module paths — misma fuente que businessModules. */
+export const BUSINESS_MODULE_PATHS = CATALOG_MODULE_PATHS;
 
 /** BUSINESS_MODULE_PATHS + legacy aliases (for nav matchPaths). */
 export const BUSINESS_PATHS: string[] = [

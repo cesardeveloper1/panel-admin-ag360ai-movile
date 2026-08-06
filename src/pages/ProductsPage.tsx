@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IonContent, IonPage, IonSpinner, IonToggle } from '@ionic/react';
+import { IonSpinner, IonToggle } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
-import { AppHeader } from '../components/AppHeader';
-import { AppShell } from '../components/AppShell';
 import { FilterChips } from '../components/FilterChips';
+import { StackLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
-import { useModuleNav } from '../hooks/useModuleNav';
 import { apiMock } from '../services/apiMock';
 import type { CatalogProduct, ProductCategory } from '../types';
 
@@ -14,7 +12,6 @@ type CategoryFilter = 'all' | ProductCategory;
 const ProductsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand, showToast } = useApp();
-  const { onBack } = useModuleNav();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -58,58 +55,50 @@ const ProductsPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <IonContent className="ag-screen">
-        <AppShell>
-        <AppHeader
-          onBack={onBack}
-          showAlerts
-          title={t('menu.title')}
-          search={{
-            value: query,
-            placeholder: t('menu.search'),
-            onChange: setQuery,
-          }}
-        />
-        <div className="ag-body module-body ag-page-stack">
-          <FilterChips chips={chips} value={category} onChange={(id) => setCategory(id as CategoryFilter)} />
+    <StackLayout
+      title={t('menu.title')}
+      showAlerts
+      search={{
+        value: query,
+        placeholder: t('menu.search'),
+        onChange: setQuery,
+      }}
+    >
+      <FilterChips chips={chips} value={category} onChange={(id) => setCategory(id as CategoryFilter)} />
 
-          {loading ? (
-            <div className="module-loading">
-              <IonSpinner name="crescent" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <p className="module-empty">{t('menu.empty')}</p>
-          ) : (
-            <div className="product-list">
-              {filtered.map((product) => (
-                <article key={product.id} className={`product-card${product.soldOut ? ' product-card--soldout' : ''}`}>
-                  <div className="product-card__thumb">{product.emoji}</div>
-                  <div className="product-card__body">
-                    <div className="product-card__row">
-                      <h3>{t(product.nameKey)}</h3>
-                      {product.soldOut ? <span className="ag-pill ag-pill--hot">{t('menu.soldOut')}</span> : null}
-                    </div>
-                    <p className="product-card__meta">{t(`menu.categories.${product.category}`)}</p>
-                    <p className="product-card__price">S/ {product.price.toFixed(2)}</p>
-                  </div>
-                  <IonToggle
-                    checked={product.active}
-                    disabled={product.soldOut}
-                    onIonChange={() => void onToggle(product)}
-                  />
-                </article>
-              ))}
-            </div>
-          )}
-
-          <button type="button" className="module-fab" onClick={() => showToast('toast.comingSoon')}>
-            + {t('menu.newProduct')}
-          </button>
+      {loading ? (
+        <div className="module-loading">
+          <IonSpinner name="crescent" />
         </div>
-        </AppShell>
-      </IonContent>
-    </IonPage>
+      ) : filtered.length === 0 ? (
+        <p className="module-empty">{t('menu.empty')}</p>
+      ) : (
+        <div className="product-list">
+          {filtered.map((product) => (
+            <article key={product.id} className={`product-card${product.soldOut ? ' product-card--soldout' : ''}`}>
+              <div className="product-card__thumb">{product.emoji}</div>
+              <div className="product-card__body">
+                <div className="product-card__row">
+                  <h3>{t(product.nameKey)}</h3>
+                  {product.soldOut ? <span className="ag-pill ag-pill--hot">{t('menu.soldOut')}</span> : null}
+                </div>
+                <p className="product-card__meta">{t(`menu.categories.${product.category}`)}</p>
+                <p className="product-card__price">S/ {product.price.toFixed(2)}</p>
+              </div>
+              <IonToggle
+                checked={product.active}
+                disabled={product.soldOut}
+                onIonChange={() => void onToggle(product)}
+              />
+            </article>
+          ))}
+        </div>
+      )}
+
+      <button type="button" className="module-fab" onClick={() => showToast('toast.comingSoon')}>
+        + {t('menu.newProduct')}
+      </button>
+    </StackLayout>
   );
 };
 

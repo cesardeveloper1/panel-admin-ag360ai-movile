@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonDatetime, IonModal, IonPage, IonSpinner } from '@ionic/react';
+import { IonDatetime, IonModal, IonSpinner } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
-import { AppHeader } from '../components/AppHeader';
-import { AppShell } from '../components/AppShell';
+import { TabLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
 import { apiMock } from '../services/apiMock';
 import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../types';
@@ -259,14 +258,53 @@ const ReportsPage: React.FC = () => {
   const payMax = maxOf(report?.paymentMethods.map((p) => p.amount) ?? [1]);
 
   return (
-    <IonPage>
-      <IonContent className="ag-screen">
-        <AppShell>
-          <AppHeader
-            centeredCompact
-            title={t('reports.title')}
+    <TabLayout
+      title={t('reports.title')}
+      centeredCompact
+      bodyClassName="ag-body module-body reports-body"
+      pageExtras={
+      <IonModal
+        isOpen={rangeOpen}
+        onDidDismiss={() => setRangeOpen(false)}
+        className="reports-range-modal"
+      >
+        <div className="reports-range-picker">
+          <div className="reports-range-picker__month">
+            <button type="button" onClick={() => moveCalendar('previous')} aria-label="Mes anterior">‹</button>
+            <strong>{calendarMonthTitle}</strong>
+            <button
+              type="button"
+              onClick={() => moveCalendar('next')}
+              aria-label="Mes siguiente"
+              disabled={calendarAtCurrentMonth}
+            >
+              ›
+            </button>
+          </div>
+          {rangeStart ? (
+            <div className="reports-range-picker__selection" aria-live="polite">
+              {formatRangeDate(rangeStart)}
+              {rangeEnd && rangeEnd !== rangeStart ? ` — ${formatRangeDate(rangeEnd)}` : ''}
+            </div>
+          ) : null}
+          <IonDatetime
+            ref={datetimeRef}
+            presentation="date"
+            locale="es-PE"
+            value={calendarValue}
+            highlightedDates={highlightedRangeDates}
+            max={toLocalIsoDate(new Date())}
+            onIonChange={(event) => onRangeDateChange(event.detail.value)}
           />
-          <div className="ag-body module-body reports-body">
+          {rangeStart ? (
+            <button className="reports-range-picker__apply" type="button" onClick={applyRange}>
+              Aplicar
+            </button>
+          ) : null}
+        </div>
+      </IonModal>
+      }
+    >
             {loading || !report ? (
               <div className="module-loading">
                 <IonSpinner name="crescent" />
@@ -451,51 +489,7 @@ const ReportsPage: React.FC = () => {
                 </section>
               </>
             )}
-          </div>
-        </AppShell>
-      </IonContent>
-
-      <IonModal
-        isOpen={rangeOpen}
-        onDidDismiss={() => setRangeOpen(false)}
-        className="reports-range-modal"
-      >
-        <div className="reports-range-picker">
-          <div className="reports-range-picker__month">
-            <button type="button" onClick={() => moveCalendar('previous')} aria-label="Mes anterior">‹</button>
-            <strong>{calendarMonthTitle}</strong>
-            <button
-              type="button"
-              onClick={() => moveCalendar('next')}
-              aria-label="Mes siguiente"
-              disabled={calendarAtCurrentMonth}
-            >
-              ›
-            </button>
-          </div>
-          {rangeStart ? (
-            <div className="reports-range-picker__selection" aria-live="polite">
-              {formatRangeDate(rangeStart)}
-              {rangeEnd && rangeEnd !== rangeStart ? ` — ${formatRangeDate(rangeEnd)}` : ''}
-            </div>
-          ) : null}
-          <IonDatetime
-            ref={datetimeRef}
-            presentation="date"
-            locale="es-PE"
-            value={calendarValue}
-            highlightedDates={highlightedRangeDates}
-            max={toLocalIsoDate(new Date())}
-            onIonChange={(event) => onRangeDateChange(event.detail.value)}
-          />
-          {rangeStart ? (
-            <button className="reports-range-picker__apply" type="button" onClick={applyRange}>
-              Aplicar
-            </button>
-          ) : null}
-        </div>
-      </IonModal>
-    </IonPage>
+    </TabLayout>
   );
 };
 
