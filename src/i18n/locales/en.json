@@ -110,7 +110,10 @@
       "on_the_way": "On the way",
       "delivered": "Delivered"
     },
-    "proportionAria": "Distribution of {{total}} orders by status"
+    "proportionAria": "Distribution of {{total}} orders by status",
+    "dateToday": "Today",
+    "dateRange": "Range",
+    "dateApply": "Apply"
   },
   "kitchen": {
     "title": "Kitchen mode",

@@ -121,7 +121,10 @@
       "on_the_way": "En camino",
       "delivered": "Entregado"
     },
-    "proportionAria": "Distribución de {{total}} pedidos por estado"
+    "proportionAria": "Distribución de {{total}} pedidos por estado",
+    "dateToday": "Hoy",
+    "dateRange": "Rango",
+    "dateApply": "Aplicar"
   },
   "kitchen": {
     "title": "Modo cocina",

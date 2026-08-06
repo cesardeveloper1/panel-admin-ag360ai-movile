@@ -3126,6 +3126,85 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   box-shadow: 0 8px 20px rgba(135, 70, 255, 0.24);
 }
 
+/* Operaciones — date picker compacto (Hoy / Rango) */
+.ops-date-modal {
+  --width: min(390px, calc(100% - 28px));
+  --height: auto;
+  --max-height: min(640px, calc(100% - 40px));
+  --border-radius: 22px;
+  --background: var(--ag-paper);
+  --box-shadow: 0 24px 64px rgba(20, 26, 50, 0.24);
+}
+
+.ops-date-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 0.85rem calc(env(safe-area-inset-bottom, 0px) + 0.85rem);
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+}
+
+.ops-date-picker__modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--ag-line);
+}
+
+.ops-date-picker__modes button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ag-muted);
+  font: 700 0.8125rem var(--ag-font-body);
+}
+
+.ops-date-picker__modes button.active {
+  background: var(--ag-paper);
+  color: var(--ag-pulse);
+  box-shadow: var(--ag-shadow-sm);
+}
+
+.ops-date-picker__selection {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(135, 70, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(135, 70, 255, 0.07);
+  color: var(--ag-ink);
+  font: 700 0.8125rem var(--ag-font-body);
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.ops-date-picker ion-datetime {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 16px;
+  background: var(--ag-paper);
+}
+
+.ops-date-picker__apply {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+  min-height: 48px;
+  margin: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ag-pulse);
+  color: #fff;
+  font: 700 0.9375rem var(--ag-font-body);
+  box-shadow: 0 8px 20px rgba(135, 70, 255, 0.24);
+}
+
 .reports-hero {
   padding: 1.125rem 1rem;
   margin-bottom: 0.875rem;

@@ -37,6 +37,7 @@ const OperationsPage: React.FC = () => {
   const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
   const [dateEnd, setDateEnd] = useState<string | null>(null);
   const [dateClicks, setDateClicks] = useState(0);
+  const [dateMode, setDateMode] = useState<'today' | 'range'>('today');
   const [activeOrderState, setActiveOrderState] = useState<'new' | 'processing' | 'delivered'>('new');
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
@@ -173,6 +174,14 @@ const OperationsPage: React.FC = () => {
   const selectOperationDate = (rawValue: string | string[] | null | undefined) => {
     const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
     if (!selected) return;
+
+    if (dateMode === 'today') {
+      setDateStart(selected);
+      setDateEnd(null);
+      setDateClicks(0);
+      return;
+    }
+
     if (dateClicks === 0 || dateEnd) {
       setDateStart(selected);
       setDateEnd(null);
@@ -185,6 +194,35 @@ const OperationsPage: React.FC = () => {
       setDateEnd(selected);
       setDateClicks(2);
     }
+  };
+
+  const openDatePicker = () => {
+    const today = localIsoDate(new Date());
+    const isRange = Boolean(dateEnd && dateEnd !== dateStart);
+    setDateMode(isRange ? 'range' : dateStart === today ? 'today' : 'range');
+    setDateClicks(0);
+    setDateOpen(true);
+  };
+
+  const pickToday = () => {
+    const today = localIsoDate(new Date());
+    setDateMode('today');
+    setDateStart(today);
+    setDateEnd(null);
+    setDateClicks(0);
+  };
+
+  const pickRangeMode = () => {
+    setDateMode('range');
+    setDateClicks(0);
+    setDateEnd(null);
+  };
+
+  const formatOpsDate = (iso: string) => {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short' }).format(
+      new Date(y, m - 1, d),
+    );
   };
 
   const openSearch = () => {
@@ -227,7 +265,14 @@ const OperationsPage: React.FC = () => {
           <AppHeader
             centeredCompact
             title={t('ops.title')}
-            secondaryAction={{ label: dateEnd ? `${dateStart.slice(8)}–${dateEnd.slice(8)}` : dateStart === localIsoDate(new Date()) ? 'Hoy' : dateStart.slice(8), onClick: () => { setDateClicks(0); setDateOpen(true); } }}
+            secondaryAction={{
+              label: dateEnd
+                ? `${dateStart.slice(8)}–${dateEnd.slice(8)}`
+                : dateStart === localIsoDate(new Date())
+                  ? t('ops.dateToday')
+                  : dateStart.slice(8),
+              onClick: openDatePicker,
+            }}
             action={{ label: t('ops.search'), icon: searchOutline, iconOnly: true, onClick: openSearch }}
           />
           <div className="ag-body module-body ops-body ag-page-stack">
@@ -269,7 +314,7 @@ const OperationsPage: React.FC = () => {
             ) : (
               <>
 
-            <div className="ops-summary ops-summary--sticky ag-enter">
+            <div className="ops-summary ag-enter">
               <button type="button" aria-pressed={activeOrderState === 'new'} className={`ops-summary-card ops-summary-card--new${activeOrderState === 'new' ? ' active' : ''}`} onClick={() => scrollToOrders('new', newOrdersRef)}>
                 <strong>{groups.new.length}</strong>
                 <span>{t('ops.kanbanNew')}</span>
@@ -353,11 +398,55 @@ const OperationsPage: React.FC = () => {
             open={!!selectedOrder}
             onClose={() => setSelectedOrder(null)}
           />
-          <IonModal isOpen={dateOpen} onDidDismiss={() => setDateOpen(false)} className="reports-range-modal">
-            <div className="reports-range-picker">
-              <div className="reports-range-picker__selection">{dateStart}{dateEnd && dateEnd !== dateStart ? ` — ${dateEnd}` : ''}</div>
-              <IonDatetime presentation="date" locale="es-PE" value={dateEnd ?? dateStart} highlightedDates={highlightedOperationDates} max={localIsoDate(new Date())} onIonChange={(event) => selectOperationDate(event.detail.value)} />
-              <button className="reports-range-picker__apply" type="button" onClick={() => setDateOpen(false)}>Aplicar</button>
+          <IonModal
+            isOpen={dateOpen}
+            onDidDismiss={() => setDateOpen(false)}
+            className="ops-date-modal"
+          >
+            <div className="ops-date-picker">
+              <div className="ops-date-picker__modes" role="tablist" aria-label={t('ops.selectDate')}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={dateMode === 'today'}
+                  className={dateMode === 'today' ? 'active' : ''}
+                  onClick={pickToday}
+                >
+                  {t('ops.dateToday')}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={dateMode === 'range'}
+                  className={dateMode === 'range' ? 'active' : ''}
+                  onClick={pickRangeMode}
+                >
+                  {t('ops.dateRange')}
+                </button>
+              </div>
+
+              <div className="ops-date-picker__selection" aria-live="polite">
+                {dateMode === 'today' || !dateEnd || dateEnd === dateStart
+                  ? formatOpsDate(dateStart)
+                  : `${formatOpsDate(dateStart)} — ${formatOpsDate(dateEnd)}`}
+              </div>
+
+              <IonDatetime
+                presentation="date"
+                locale="es-PE"
+                value={dateEnd ?? dateStart}
+                highlightedDates={dateMode === 'range' ? highlightedOperationDates : []}
+                max={localIsoDate(new Date())}
+                onIonChange={(event) => selectOperationDate(event.detail.value)}
+              />
+
+              <button
+                className="ops-date-picker__apply"
+                type="button"
+                onClick={() => setDateOpen(false)}
+              >
+                {t('ops.dateApply')}
+              </button>
             </div>
           </IonModal>
         </AppShell>
