@@ -1,80 +1,31 @@
-import { AGILITO_PATH, CHATS_PATH, PAYMENTS_PATH } from './navConfig';
+import {
+  AGILITO_PATH,
+  buildRouteNav,
+  getAliases,
+  getTabRoots,
+  isTabRootPath,
+  normalizePath,
+  type RouteNavConfig,
+} from './appRouteRegistry';
+
+export type { RouteNavConfig };
 
 export interface BreadcrumbDef {
   key: string;
   path?: string;
 }
 
-export interface RouteNavConfig {
-  parent: string;
-  crumbs: BreadcrumbDef[];
-}
+/** @deprecated Use getAliases() — kept for any direct imports */
+export const ALIASES: Record<string, string> = getAliases();
 
-const ALIASES: Record<string, string> = {
-  '/app/productos': '/app/products',
-  '/app/marketing/clientes': '/app/clients',
-  '/app/locales': '/app/locations',
-  '/app/datos-marca': '/app/datos-marca',
-  '/app/brand-data': '/app/datos-marca',
-};
+/** Tab roots — misma fuente que useAppNavigation */
+export const TAB_ROOTS: Set<string> = getTabRoots();
 
-export const TAB_ROOTS = new Set([
-  AGILITO_PATH,
-  '/app/business',
-  '/app/operations',
-  '/app/reports',
-  CHATS_PATH,
-  PAYMENTS_PATH,
-]);
-
-export const ROUTE_NAV: Record<string, RouteNavConfig> = {
-  '/app/products': {
-    parent: PAYMENTS_PATH,
-    crumbs: [
-      { key: 'nav.payments', path: PAYMENTS_PATH },
-      { key: 'menu.title' },
-    ],
-  },
-  '/app/clients': {
-    parent: PAYMENTS_PATH,
-    crumbs: [
-      { key: 'nav.payments', path: PAYMENTS_PATH },
-      { key: 'marketing.title' },
-    ],
-  },
-  '/app/locations': {
-    parent: PAYMENTS_PATH,
-    crumbs: [
-      { key: 'nav.payments', path: PAYMENTS_PATH },
-      { key: 'locationsPage.title' },
-    ],
-  },
-  '/app/datos-marca': {
-    parent: PAYMENTS_PATH,
-    crumbs: [
-      { key: 'nav.payments', path: PAYMENTS_PATH },
-      { key: 'brandData.title' },
-    ],
-  },
-  '/app/notifications': {
-    parent: AGILITO_PATH,
-    crumbs: [
-      { key: 'nav.alerts' },
-    ],
-  },
-  '/app/profile': {
-    parent: AGILITO_PATH,
-    crumbs: [{ key: 'settings.title' }],
-  },
-  '/app/onboarding': {
-    parent: AGILITO_PATH,
-    crumbs: [{ key: 'onboarding.title' }],
-  },
-};
+/** Stack parents + crumbs — derivado del registry */
+export const ROUTE_NAV: Record<string, RouteNavConfig> = buildRouteNav();
 
 export function normalizeRoutePath(pathname: string): string {
-  const clean = pathname.replace(/\/$/, '') || '/';
-  return ALIASES[clean] ?? clean;
+  return normalizePath(pathname);
 }
 
 export function getRouteNav(pathname: string): RouteNavConfig | undefined {
@@ -83,5 +34,8 @@ export function getRouteNav(pathname: string): RouteNavConfig | undefined {
 }
 
 export function isTabRoot(pathname: string): boolean {
-  return TAB_ROOTS.has(normalizeRoutePath(pathname));
+  return isTabRootPath(pathname);
 }
+
+// Re-export for callers that imported AGILITO_PATH from here historically
+export { AGILITO_PATH };

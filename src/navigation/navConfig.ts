@@ -4,25 +4,34 @@ import {
   gridOutline,
   notificationsOutline,
   sparklesOutline,
+  logoWhatsapp,
 } from 'ionicons/icons';
+import {
+  AGILITO_PATH,
+  BUSINESS_PATHS,
+  CHATS_PATH,
+  NOTIFICATIONS_PATH,
+  OPERATIONS_PATH,
+  PAYMENTS_PATH,
+  REPORTS_PATH,
+  getRoute,
+} from './appRouteRegistry';
 
-export const NOTIFICATIONS_PATH = '/app/notifications';
-export const PROFILE_PATH = '/app/profile';
-export const AGILITO_PATH = '/app/agilito';
-export const PAYMENTS_PATH = '/app/payments';
-export const CHATS_PATH = '/app/chats';
-
-export const BUSINESS_PATHS = [
-  '/app/business',
-  '/app/products',
-  '/app/productos',
-  '/app/clients',
-  '/app/marketing/clientes',
-  '/app/locations',
-  '/app/locales',
-  '/app/datos-marca',
-  '/app/brand-data',
-];
+export {
+  AGILITO_PATH,
+  BUSINESS_PATHS,
+  BUSINESS_MODULE_PATHS,
+  BUSINESS_HUB_PATH,
+  CHATS_PATH,
+  NOTIFICATIONS_PATH,
+  OPERATIONS_PATH,
+  PAYMENTS_PATH,
+  PROFILE_PATH,
+  REPORTS_PATH,
+  getTabRoots,
+  isTabRootPath,
+  normalizePath,
+} from './appRouteRegistry';
 
 export interface NavItem {
   path: string;
@@ -31,30 +40,39 @@ export interface NavItem {
   matchPaths?: string[];
 }
 
-/** Izquierda del FAB: Reportes, Pedidos */
+function matchPathsFor(path: string, fallback: string[]): string[] {
+  return getRoute(path)?.matchPaths ?? fallback;
+}
+
+/** Izquierda del FAB / sidebar: Reportes, Pedidos */
 export const ownerNavLeft: NavItem[] = [
-  { path: '/app/reports', icon: barChartOutline, labelKey: 'nav.reports' },
   {
-    path: '/app/operations',
+    path: REPORTS_PATH,
+    icon: barChartOutline,
+    labelKey: 'nav.reports',
+    matchPaths: matchPathsFor(REPORTS_PATH, [REPORTS_PATH]),
+  },
+  {
+    path: OPERATIONS_PATH,
     icon: gridOutline,
     labelKey: 'nav.orders',
-    matchPaths: ['/app/operations'],
+    matchPaths: matchPathsFor(OPERATIONS_PATH, [OPERATIONS_PATH]),
   },
 ];
 
-/** Derecha del FAB: Agilito, Pagos (módulos de negocio bajo Pagos) */
+/** Derecha: Agilito, Pagos (módulos de negocio bajo Pagos) */
 export const ownerNavRight: NavItem[] = [
   {
     path: AGILITO_PATH,
     icon: sparklesOutline,
     labelKey: 'nav.agilito',
-    matchPaths: [AGILITO_PATH],
+    matchPaths: matchPathsFor(AGILITO_PATH, [AGILITO_PATH]),
   },
   {
     path: PAYMENTS_PATH,
     icon: cardOutline,
     labelKey: 'nav.payments',
-    matchPaths: [PAYMENTS_PATH, ...BUSINESS_PATHS],
+    matchPaths: matchPathsFor(PAYMENTS_PATH, [PAYMENTS_PATH, ...BUSINESS_PATHS]),
   },
 ];
 
@@ -62,10 +80,18 @@ export const ownerNavItems: NavItem[] = [...ownerNavLeft, ...ownerNavRight];
 
 export const chatsNavItem: NavItem = {
   path: CHATS_PATH,
-  icon: 'logoWhatsapp',
+  icon: logoWhatsapp,
   labelKey: 'nav.chats',
-  matchPaths: [CHATS_PATH],
+  matchPaths: matchPathsFor(CHATS_PATH, [CHATS_PATH]),
 };
+
+/** Items de hamburguesa mobile: Agilito, Reportes, Ops, Chats, Pagos */
+export const mobileNavItems: NavItem[] = [
+  ownerNavRight[0],
+  ...ownerNavLeft,
+  chatsNavItem,
+  ownerNavRight[1],
+];
 
 export const agilitoNavItem: NavItem = ownerNavRight[0];
 

@@ -4,20 +4,9 @@ import { useHistory } from 'react-router-dom';
 import { blurActiveElement } from '../utils/navFocus';
 import { fadeNavAnimation, instantNavAnimation } from '../utils/instantNavAnimation';
 import { syncTabVisibility } from '../utils/syncTabVisibility';
-import {
-  AGILITO_PATH,
-  CHATS_PATH,
-  PAYMENTS_PATH,
-} from '../navigation/navConfig';
+import { getTabRoots } from '../navigation/appRouteRegistry';
 
-const TAB_ROOT_PATHS = new Set([
-  AGILITO_PATH,
-  '/app/business',
-  '/app/operations',
-  '/app/reports',
-  CHATS_PATH,
-  PAYMENTS_PATH,
-]);
+const TAB_ROOT_PATHS = getTabRoots();
 
 function scheduleTabSync(path: string, delayMs: number) {
   window.setTimeout(() => syncTabVisibility(path), delayMs);
@@ -58,7 +47,8 @@ export function useAppNavigation() {
   const history = useHistory();
 
   const goRoot = useCallback(
-    (path: string, _action: 'push' | 'replace' = 'replace', instant = false) => {
+    (path: string, action: 'push' | 'replace' = 'replace', instant = false) => {
+      void action;
       blurActiveElement();
       pushTabRoot(ionRouter, path, instant);
     },
