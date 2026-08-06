@@ -91,36 +91,9 @@ const ReportsPage: React.FC = () => {
   const [rangeOpen, setRangeOpen] = useState(false);
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [pickerMode, setPickerMode] = useState<'today' | 'range'>('range');
   const [calendarValue, setCalendarValue] = useState(() => toLocalIsoDate(new Date()));
   const datetimeRef = useRef<HTMLIonDatetimeElement>(null);
-
-  const calendarMonthTitle = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric' })
-    .format(calendarMonth);
-  const today = new Date();
-  const calendarAtCurrentMonth = calendarMonth.getFullYear() === today.getFullYear()
-    && calendarMonth.getMonth() === today.getMonth();
-
-  const syncCalendarHeader = () => {
-    const datetime = datetimeRef.current as (HTMLIonDatetimeElement & {
-      workingParts?: { month?: number; year?: number };
-    }) | null;
-    const month = datetime?.workingParts?.month;
-    const year = datetime?.workingParts?.year;
-    if (month && year) setCalendarMonth(new Date(year, month - 1, 1));
-  };
-
-  const moveCalendar = (direction: 'previous' | 'next') => {
-    const buttons = datetimeRef.current?.shadowRoot?.querySelectorAll<HTMLIonButtonElement>('.calendar-next-prev ion-button');
-    const button = buttons?.[direction === 'previous' ? 0 : 1];
-    if (!button || button.disabled) return;
-    button.click();
-    setCalendarMonth((visibleMonth) => new Date(
-      visibleMonth.getFullYear(),
-      visibleMonth.getMonth() + (direction === 'previous' ? -1 : 1),
-      1,
-    ));
-  };
 
   useEffect(() => {
     if (!brand) return;
@@ -143,7 +116,6 @@ const ReportsPage: React.FC = () => {
       style.dataset.agilizaCalendarStyle = 'true';
       style.textContent = '.calendar-action-buttons { display: none !important; }';
       shadow.appendChild(style);
-      syncCalendarHeader();
     }, 50);
     return () => window.clearTimeout(timer);
   }, [rangeOpen]);
@@ -161,21 +133,56 @@ const ReportsPage: React.FC = () => {
     update();
   };
 
-  const showToday = () => {
-    if (period === 'today') return;
-    updateWithTransition(() => setPeriod('today'));
+  const openDatePicker = () => {
+    const today = toLocalIsoDate(new Date());
+    const mode: 'today' | 'range' = period === 'today' ? 'today' : 'range';
+    setPickerMode(mode);
+    if (mode === 'today') {
+      setCalendarValue(today);
+      setRangeStart(today);
+      setRangeEnd(null);
+    } else {
+      setCalendarValue(rangeEnd ?? rangeStart ?? today);
+      if (!rangeStart) {
+        setRangeStart(null);
+        setRangeEnd(null);
+      }
+    }
+    setRangeOpen(true);
   };
 
-  const openRangePicker = () => {
-    setCalendarMonth(new Date());
-    setCalendarValue(toLocalIsoDate(new Date()));
-    setRangeOpen(true);
+  const periodSummaryLabel = (() => {
+    if (period === 'today') return t('reports.periodToday');
+    if (!rangeStart) return t('reports.periodRange');
+    if (rangeEnd && rangeEnd !== rangeStart) {
+      return `${formatRangeDate(rangeStart)} — ${formatRangeDate(rangeEnd)}`;
+    }
+    return formatRangeDate(rangeStart);
+  })();
+
+  const pickTodayMode = () => {
+    const today = toLocalIsoDate(new Date());
+    setPickerMode('today');
+    setCalendarValue(today);
+    setRangeStart(today);
+    setRangeEnd(null);
+  };
+
+  const pickRangeMode = () => {
+    setPickerMode('range');
+    setRangeEnd(null);
   };
 
   const onRangeDateChange = (rawValue: string | string[] | null | undefined) => {
     const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
     if (!selected) return;
     setCalendarValue(selected);
+
+    if (pickerMode === 'today') {
+      setRangeStart(selected);
+      setRangeEnd(null);
+      return;
+    }
 
     if (!rangeStart || rangeEnd) {
       setRangeStart(selected);
@@ -192,7 +199,30 @@ const ReportsPage: React.FC = () => {
     setRangeEnd(selected);
   };
 
-  const applyRange = () => {
+  const applyPicker = () => {
+    const today = toLocalIsoDate(new Date());
+
+    if (pickerMode === 'today') {
+      const selected = rangeStart ?? today;
+      if (selected === today) {
+        updateWithTransition(() => {
+          setPeriod('today');
+          setRangeOpen(false);
+        });
+        return;
+      }
+      if (!brand) return;
+      void apiMock.getDashboard(brand.id, 'range', 1, selected, selected).then((range) => {
+        updateWithTransition(() => {
+          setReports((current) => ({ ...current, range }));
+          setPeriod('range');
+          setRangeEnd(selected);
+          setRangeOpen(false);
+        });
+      });
+      return;
+    }
+
     if (!brand || !rangeStart) return;
     const effectiveEnd = rangeEnd ?? rangeStart;
     const days = rangeDays(rangeStart, effectiveEnd);
@@ -266,41 +296,57 @@ const ReportsPage: React.FC = () => {
       <IonModal
         isOpen={rangeOpen}
         onDidDismiss={() => setRangeOpen(false)}
-        className="reports-range-modal"
+        className="ops-date-modal"
       >
-        <div className="reports-range-picker">
-          <div className="reports-range-picker__month">
-            <button type="button" onClick={() => moveCalendar('previous')} aria-label="Mes anterior">‹</button>
-            <strong>{calendarMonthTitle}</strong>
+        <div className="ops-date-picker">
+          <div className="ops-date-picker__modes" role="tablist" aria-label={t('reports.title')}>
             <button
               type="button"
-              onClick={() => moveCalendar('next')}
-              aria-label="Mes siguiente"
-              disabled={calendarAtCurrentMonth}
+              role="tab"
+              aria-selected={pickerMode === 'today'}
+              className={pickerMode === 'today' ? 'active' : ''}
+              onClick={pickTodayMode}
             >
-              ›
+              {t('reports.periodToday')}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={pickerMode === 'range'}
+              className={pickerMode === 'range' ? 'active' : ''}
+              onClick={pickRangeMode}
+            >
+              {t('reports.periodRange')}
             </button>
           </div>
+
           {rangeStart ? (
-            <div className="reports-range-picker__selection" aria-live="polite">
+            <div className="ops-date-picker__selection" aria-live="polite">
               {formatRangeDate(rangeStart)}
-              {rangeEnd && rangeEnd !== rangeStart ? ` — ${formatRangeDate(rangeEnd)}` : ''}
+              {pickerMode === 'range' && rangeEnd && rangeEnd !== rangeStart
+                ? ` — ${formatRangeDate(rangeEnd)}`
+                : ''}
             </div>
           ) : null}
+
           <IonDatetime
             ref={datetimeRef}
             presentation="date"
             locale="es-PE"
             value={calendarValue}
-            highlightedDates={highlightedRangeDates}
+            highlightedDates={pickerMode === 'range' ? highlightedRangeDates : []}
             max={toLocalIsoDate(new Date())}
             onIonChange={(event) => onRangeDateChange(event.detail.value)}
           />
-          {rangeStart ? (
-            <button className="reports-range-picker__apply" type="button" onClick={applyRange}>
-              Aplicar
-            </button>
-          ) : null}
+
+          <button
+            className="ops-date-picker__apply"
+            type="button"
+            disabled={pickerMode === 'range' && !rangeStart}
+            onClick={applyPicker}
+          >
+            {t('ops.dateApply')}
+          </button>
         </div>
       </IonModal>
       }
@@ -311,31 +357,14 @@ const ReportsPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="reports-period ag-enter">
-                  <button
-                    type="button"
-                    className={`reports-period-chip${period === 'today' ? ' active' : ''}`}
-                    aria-pressed={period === 'today'}
-                    onClick={showToday}
-                  >
-                    {t('reports.periodToday')}
-                  </button>
-                  <button
-                    type="button"
-                    className={`reports-period-chip${period === 'range' ? ' active' : ''}`}
-                    aria-pressed={period === 'range'}
-                    onClick={openRangePicker}
-                  >
-                    {t('reports.periodRange')}
-                  </button>
-                </div>
-
-                {period === 'range' ? (
-                  <button type="button" className="reports-range-summary" onClick={openRangePicker}>
-                    {rangeStart ? formatRangeDate(rangeStart) : ''}
-                    {rangeStart && rangeEnd && rangeEnd !== rangeStart ? ` — ${formatRangeDate(rangeEnd)}` : ''}
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  className="reports-range-summary ag-enter"
+                  onClick={openDatePicker}
+                  aria-label={t('reports.periodRange')}
+                >
+                  {periodSummaryLabel}
+                </button>
 
                 {sales ? (
                   <section className="reports-hero ag-enter">

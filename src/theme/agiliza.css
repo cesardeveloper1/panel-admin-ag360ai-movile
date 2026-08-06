@@ -3036,7 +3036,7 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   display: block;
   width: fit-content;
   max-width: 100%;
-  margin: -0.25rem auto 0.875rem;
+  margin: 1.25rem 0 0.875rem;
   padding: 0.65rem 0.8rem;
   border: 1px solid rgba(135, 70, 255, 0.22);
   border-radius: 12px;
@@ -3044,6 +3044,7 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   color: var(--ag-ink);
   font: 700 0.8125rem var(--ag-font-body);
   text-align: center;
+  text-transform: capitalize;
 }
 
 .reports-range-modal {
@@ -3203,6 +3204,12 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   color: #fff;
   font: 700 0.9375rem var(--ag-font-body);
   box-shadow: 0 8px 20px rgba(135, 70, 255, 0.24);
+}
+
+.ops-date-picker__apply:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .reports-hero {
