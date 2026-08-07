@@ -34,6 +34,9 @@ const ChatsPage: React.FC = () => {
     () => !new URLSearchParams(window.location.search).get('customer'),
   );
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const prevCustomerKeyRef = useRef<string | null>(
+    new URLSearchParams(window.location.search).get('customer'),
+  );
 
   const customerKeyFromUrl = useMemo(
     () => new URLSearchParams(location.search).get('customer'),
@@ -51,8 +54,28 @@ const ChatsPage: React.FC = () => {
   }, [brand]);
 
   useEffect(() => {
+    const resetToInbox = () => {
+      setSelected(null);
+      setDraft('');
+      setOpenedFromExternal(false);
+      setDeepLinkSettled(true);
+    };
+    window.addEventListener('ag:chats-inbox', resetToInbox);
+    return () => window.removeEventListener('ag:chats-inbox', resetToInbox);
+  }, []);
+
+  useEffect(() => {
+    const prev = prevCustomerKeyRef.current;
+    prevCustomerKeyRef.current = customerKeyFromUrl;
+
     if (!customerKeyFromUrl) {
       setDeepLinkSettled(true);
+      // Salimos de un deep-link (?customer= → limpio): volver al inbox
+      if (prev) {
+        setSelected(null);
+        setDraft('');
+        setOpenedFromExternal(false);
+      }
       return;
     }
     setDeepLinkSettled(false);

@@ -12,7 +12,7 @@ import {
   isNavActive,
   ownerNavItems,
 } from '../navigation/navConfig';
-import { clearChatNavFrom } from '../navigation/chatNavFrom';
+import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { brandLabel } from '../utils/brandLabel';
 
@@ -44,6 +44,11 @@ export function SideNav() {
   }, [collapsed]);
 
   if (!isTablet) return null;
+
+  const openChatsInbox = () => {
+    requestChatsInbox();
+    goRoot(CHATS_PATH, 'replace', true);
+  };
 
   const onChangeBrand = () => {
     startBrandSwitch();
@@ -92,10 +97,7 @@ export function SideNav() {
         <button
           type="button"
           className={`ag-side-nav-item ag-side-nav-item--chats${location.pathname.startsWith(CHATS_PATH) ? ' active' : ''}`}
-          onClick={() => {
-            clearChatNavFrom();
-            go(CHATS_PATH);
-          }}
+          onClick={openChatsInbox}
         >
           <IonIcon icon={logoWhatsapp} aria-hidden="true" />
           <span>{t('nav.chats')}</span>

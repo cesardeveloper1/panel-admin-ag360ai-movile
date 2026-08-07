@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH, isNavActive, mobileNavItems, CHATS_PATH } from '../navigation/navConfig';
-import { clearChatNavFrom } from '../navigation/chatNavFrom';
+import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { brandLabel } from '../utils/brandLabel';
 
@@ -27,7 +27,9 @@ export function MobileSideNav() {
   const selectModule = (path: string) => {
     setOpen(false);
     if (path === CHATS_PATH || path.startsWith(`${CHATS_PATH}?`)) {
-      clearChatNavFrom();
+      requestChatsInbox();
+      goRoot(CHATS_PATH, 'replace', true);
+      return;
     }
     go(path);
   };
