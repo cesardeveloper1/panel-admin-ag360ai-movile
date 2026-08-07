@@ -294,6 +294,11 @@ const OperationsPage: React.FC = () => {
             </button>
 
             <div className="ops-sticky-controls ag-enter">
+              <div className="ops-view-switch" role="tablist" aria-label={t('ops.title')}>
+                <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
+                <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
+              </div>
+
               <IonSearchbar
                 className="ops-search"
                 value={query}
@@ -301,11 +306,6 @@ const OperationsPage: React.FC = () => {
                 placeholder={t('ops.search')}
                 debounce={200}
               />
-
-              <div className="ops-view-switch" role="tablist" aria-label={t('ops.title')}>
-                <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
-                <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
-              </div>
             </div>
 
             {viewMode === 'all' ? (

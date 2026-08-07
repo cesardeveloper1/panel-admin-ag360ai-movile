@@ -2345,10 +2345,8 @@ body.ag-mobile-nav-open {
   flex-direction: column;
   gap: 0.75rem;
   margin: 0 0 0.75rem;
-  padding: 0.35rem 0;
-  background: color-mix(in srgb, var(--ag-paper) 94%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  padding: 0;
+  background: transparent;
   transition: opacity 180ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
