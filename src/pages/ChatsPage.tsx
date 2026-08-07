@@ -8,6 +8,7 @@ import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
 import { apiMock } from '../services/apiMock';
 import type { ChatConversation, ChatMessage } from '../types';
+import { avatarColor } from '../utils/avatarColor';
 
 const ChatsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -98,6 +99,7 @@ const ChatsPage: React.FC = () => {
                 subtitle={selected.phone}
                 onBack={onBackToInbox}
                 breadcrumbs={threadBreadcrumbs}
+                showAlerts
               />
               <div className="ag-body module-body chats-body chats-body--thread">
                 <div className="chat-thread-meta ag-enter">
@@ -161,6 +163,7 @@ const ChatsPage: React.FC = () => {
               <AppHeader
                 centeredCompact
                 title={t('chats.title')}
+                showAlerts
               />
               <div className="ag-body module-body chats-body ag-page-stack">
                 <div className="chats-status ag-enter">
@@ -195,7 +198,13 @@ const ChatsPage: React.FC = () => {
                           className="chat-row"
                           onClick={() => onOpenChat(chat)}
                         >
-                          <div className="chat-row-avatar">{t(chat.nameKey).slice(0, 1)}</div>
+                          <div
+                            className="chat-row-avatar"
+                            style={{ backgroundColor: avatarColor(chat.id || chat.nameKey) }}
+                            aria-hidden="true"
+                          >
+                            {t(chat.nameKey).slice(0, 1)}
+                          </div>
                           <div className="chat-row-main">
                             <div className="chat-row-top">
                               <strong>{t(chat.nameKey)}</strong>

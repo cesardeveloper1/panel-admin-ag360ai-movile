@@ -6,16 +6,15 @@ import {
   sendOutline,
   sparklesOutline,
   stopCircleOutline,
-  storefrontOutline,
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
+import { AgentToggle } from '../components/AgentToggle';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { AGILITO_PATH, NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
 import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
-import { AgentToggle } from '../components/AgentToggle';
 
 interface AgilitoMessage {
   id: string;
@@ -27,8 +26,8 @@ interface AgilitoMessage {
 
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
-  const { go, goRoot } = useAppNavigation();
-  const { brand, session, notifications, startBrandSwitch, showToast } = useApp();
+  const { go } = useAppNavigation();
+  const { brand, session, notifications, showToast } = useApp();
   const avatar = session?.initials ?? brand?.initials ?? '?';
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
   const [input, setInput] = useState('');
@@ -38,7 +37,6 @@ const AgilitoPage: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
-
   const unread = notifications.filter((n) => n.unread).length;
 
   const scrollToBottom = () => {
@@ -138,11 +136,6 @@ const AgilitoPage: React.FC = () => {
     }
   };
 
-  const handleBackToBrands = () => {
-    startBrandSwitch();
-    window.setTimeout(() => goRoot('/welcome'), 80);
-  };
-
   return (
     <IonPage>
       <IonContent className="ag-screen agilito-screen welcome-screen">
@@ -150,15 +143,6 @@ const AgilitoPage: React.FC = () => {
           <div className="agilito-layout">
             <header className="agilito-top">
               <div className="agilito-top-row">
-                <button
-                  type="button"
-                  className="welcome-back"
-                  onClick={handleBackToBrands}
-                  aria-label={t('agilito.backBrand')}
-                >
-                  <IonIcon icon={storefrontOutline} aria-hidden="true" />
-                </button>
-
                 <div className="agilito-top-trailing">
                   <AgentToggle />
                   <button
@@ -241,66 +225,66 @@ const AgilitoPage: React.FC = () => {
                 ) : null}
               </div>
             </div>
+
+            <form
+              className="agilito-composer-dock"
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(input);
+              }}
+            >
+              <div className={`agilito-composer-inner${isRecording ? ' agilito-composer-inner--recording' : ''}`}>
+                {isRecording ? (
+                  <>
+                    <div className="agilito-composer-recording" aria-live="polite">
+                      <span className="agilito-composer-rec-dot" aria-hidden="true" />
+                      <span className="agilito-composer-rec-label">{t('agilito.recording')}</span>
+                      <div className="agilito-composer-wave" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="agilito-composer-stop"
+                      onClick={stopRecording}
+                      aria-label={t('agilito.stopRecording')}
+                    >
+                      <IonIcon icon={stopCircleOutline} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      className="agilito-composer-input"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder={t('agilito.placeholder')}
+                      aria-label={t('agilito.placeholder')}
+                    />
+                    {input.trim() ? (
+                      <button type="submit" className="agilito-composer-send" disabled={thinking}>
+                        <IonIcon icon={sendOutline} />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="agilito-composer-mic"
+                        onClick={() => void startRecording()}
+                        disabled={thinking}
+                        aria-label={t('agilito.recordAudio')}
+                      >
+                        <AgilitoVoiceLines />
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </form>
           </div>
         </AppShell>
-
-        <form
-          className="agilito-composer-dock"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-        >
-          <div className={`agilito-composer-inner${isRecording ? ' agilito-composer-inner--recording' : ''}`}>
-            {isRecording ? (
-              <>
-                <div className="agilito-composer-recording" aria-live="polite">
-                  <span className="agilito-composer-rec-dot" aria-hidden="true" />
-                  <span className="agilito-composer-rec-label">{t('agilito.recording')}</span>
-                  <div className="agilito-composer-wave" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="agilito-composer-stop"
-                  onClick={stopRecording}
-                  aria-label={t('agilito.stopRecording')}
-                >
-                  <IonIcon icon={stopCircleOutline} />
-                </button>
-              </>
-            ) : (
-              <>
-                <input
-                  className="agilito-composer-input"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={t('agilito.placeholder')}
-                  aria-label={t('agilito.placeholder')}
-                />
-                {input.trim() ? (
-                  <button type="submit" className="agilito-composer-send" disabled={thinking}>
-                    <IonIcon icon={sendOutline} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="agilito-composer-mic"
-                    onClick={() => void startRecording()}
-                    disabled={thinking}
-                    aria-label={t('agilito.recordAudio')}
-                  >
-                    <AgilitoVoiceLines />
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </form>
       </IonContent>
     </IonPage>
   );

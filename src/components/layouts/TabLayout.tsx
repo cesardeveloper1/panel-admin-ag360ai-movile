@@ -42,7 +42,7 @@ export function TabLayout({
   title,
   subtitle,
   avatar,
-  showAlerts = false,
+  showAlerts = true,
   centeredCompact = true,
   profileFromAvatar,
   search,

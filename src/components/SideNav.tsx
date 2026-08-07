@@ -1,5 +1,5 @@
 import { IonIcon } from '@ionic/react';
-import { logoWhatsapp } from 'ionicons/icons';
+import { logoWhatsapp, storefrontOutline } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
@@ -13,17 +13,23 @@ import {
   ownerNavItems,
 } from '../navigation/navConfig';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
+import { brandLabel } from '../utils/brandLabel';
 
 export function SideNav() {
   const { t } = useTranslation();
-  const { go } = useAppNavigation(); // pushTabRoot / syncTabVisibility (misma lógica que BottomNav)
+  const { go, goRoot } = useAppNavigation();
   const location = useLocation();
-  const { notifications, brand, session } = useApp();
+  const { notifications, brand, session, startBrandSwitch } = useApp();
   const { isTablet } = useViewport();
 
   if (!isTablet) return null;
 
   const unread = notifications.filter((n) => n.unread).length;
+
+  const onChangeBrand = () => {
+    startBrandSwitch();
+    window.setTimeout(() => goRoot('/welcome'), 80);
+  };
 
   const renderItem = (item: (typeof ownerNavItems)[number]) => {
     const active = isNavActive(location.pathname, item);
@@ -44,8 +50,9 @@ export function SideNav() {
     <aside className="ag-side-nav" aria-label={t('nav.sidebar')}>
       <div className="ag-side-nav-brand">
         <img src={LOGO_COLOR_LOCAL} alt={t('app.name')} className="ag-side-nav-logo" />
-        {brand ? <span className="ag-side-nav-brand-name">{t(brand.nameKey)}</span> : null}
+        {brand ? <span className="ag-side-nav-brand-name">{brandLabel(brand, t)}</span> : null}
       </div>
+
       <nav className="ag-side-nav-items">
         {ownerNavItems.map(renderItem)}
         <button
@@ -65,6 +72,17 @@ export function SideNav() {
           <span>{t(alertsNavItem.labelKey)}</span>
           {unread > 0 ? <span className="ag-side-nav-badge">{unread}</span> : null}
         </button>
+      </nav>
+
+      <div className="ag-side-nav-footer">
+        <button
+          type="button"
+          className="ag-side-nav-item ag-side-nav-item--brand-switch"
+          onClick={onChangeBrand}
+        >
+          <IonIcon icon={storefrontOutline} />
+          <span>{t('settings.changeBrand')}</span>
+        </button>
         {session ? (
           <button
             type="button"
@@ -75,7 +93,7 @@ export function SideNav() {
             <span>{t('nav.profile')}</span>
           </button>
         ) : null}
-      </nav>
+      </div>
     </aside>
   );
 }

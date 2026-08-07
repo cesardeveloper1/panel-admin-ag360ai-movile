@@ -26,7 +26,12 @@
     "title": "Elige tu marca",
     "question": "¿Qué vas a operar hoy?",
     "description": "Selecciona la marca para ver pedidos, reportes y menú en tiempo real.",
+    "hello": "¡Bienvenido, {{name}}!",
     "newBrand": "+ Nueva marca",
+    "createBrand": "Crear nueva marca",
+    "createBrandHint": "para empezar a gestionar tu negocio",
+    "locationOne": "{{count}} sucursal",
+    "locationMany": "{{count}} sucursales",
     "meta": "{{locations}} locales · {{orders}} pedidos hoy",
     "loadingBrand": "Cargando {{brand}}...",
     "newBrandTitle": "Crear nueva marca",
@@ -39,7 +44,7 @@
     "newBrandSubmit": "Crear marca",
     "newBrandOk": "Marca creada correctamente",
     "newBrandExists": "Ese subdominio ya existe",
-    "subtitle": "Escoge tu marca"
+    "subtitle": "Selecciona una marca para gestionar o crea una nueva"
   },
   "brands": {
     "pacifico": "Cevichería Pacífico",
@@ -73,6 +78,7 @@
     "marketing": "Mkt",
     "locations": "Locales",
     "alerts": "Alertas",
+    "statusMenu": "Agente y alertas",
     "profile": "Perfil",
     "kitchen": "Cocina",
     "dashboard": "Dash",

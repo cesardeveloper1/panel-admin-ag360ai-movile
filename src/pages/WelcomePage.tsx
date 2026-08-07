@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewWillEnter } from '@ionic/react';
-import { chevronBackOutline } from 'ionicons/icons';
+import {
+  chevronForwardOutline,
+  logOutOutline,
+  personOutline,
+  storefrontOutline,
+} from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
 import { BRAND_KEY, PICK_BRAND_KEY, useApp } from '../context/AppContext';
@@ -46,7 +51,6 @@ const WelcomePage: React.FC = () => {
     setBrands(data);
     return data;
   }, []);
-
 
   useLayoutEffect(() => {
     if (sessionStorage.getItem(PICK_BRAND_KEY) !== '1' || !brand) return;
@@ -139,7 +143,7 @@ const WelcomePage: React.FC = () => {
     }
   };
 
-  const handleBackToLogin = () => {
+  const handleLogout = () => {
     logout();
     goRoot('/login');
   };
@@ -148,21 +152,13 @@ const WelcomePage: React.FC = () => {
   const activeBrand = selectingId ? brands.find((b) => b.id === selectingId) : null;
   const userName = t(session?.nameKey ?? 'users.maria');
 
+  const locationLabel = (count: number) =>
+    t(count === 1 ? 'welcome.locationOne' : 'welcome.locationMany', { count });
+
   return (
     <IonPage>
       <IonContent className="ag-screen welcome-screen">
         <div className="welcome-layout">
-          <div className="welcome-top">
-            <button
-              type="button"
-              className="welcome-back"
-              onClick={handleBackToLogin}
-              aria-label={t('common.back')}
-            >
-              <IonIcon icon={chevronBackOutline} aria-hidden="true" />
-            </button>
-          </div>
-
           <div className="ag-body welcome-body">
             {busy ? (
               <div className="welcome-loading">
@@ -177,31 +173,81 @@ const WelcomePage: React.FC = () => {
               </div>
             ) : (
               <>
-                <h1 className="welcome-greeting">{t('auth.greeting', { name: userName })}</h1>
-                <p className="welcome-subtitle">{t('welcome.subtitle')}</p>
+                <header className="welcome-hero">
+                  <h1 className="welcome-greeting">
+                    {t('welcome.hello', { name: userName })}
+                  </h1>
+                  <p className="welcome-subtitle">{t('welcome.subtitle')}</p>
 
-                {loading ? (
-                  <IonSpinner name="crescent" />
-                ) : (
-                  <div className="brand-grid brand-grid--names">
-                    {brands.map((brand) => (
-                      <button
-                        key={brand.id}
-                        type="button"
-                        className={`brand-card brand-card--name${selectingId === brand.id ? ' brand-card--loading brand-card--active' : ''}`}
-                        disabled={busy}
-                        onClick={() => void handleSelect(brand)}
-                      >
-                        <span className="brand-name">{brandLabel(brand, t)}</span>
-                      </button>
-                    ))}
+                  <div className="welcome-actions">
                     <button
                       type="button"
-                      className="brand-card brand-card--new brand-card--name"
+                      className="welcome-action-btn"
+                      onClick={() => showToast('toast.comingSoon')}
+                    >
+                      <IonIcon icon={personOutline} aria-hidden="true" />
+                      {t('nav.profile')}
+                    </button>
+                    <button
+                      type="button"
+                      className="welcome-action-btn welcome-action-btn--logout"
+                      onClick={handleLogout}
+                    >
+                      <IonIcon icon={logOutOutline} aria-hidden="true" />
+                      {t('auth.logout')}
+                    </button>
+                  </div>
+                </header>
+
+                {loading ? (
+                  <div className="welcome-loading welcome-loading--inline">
+                    <IonSpinner name="crescent" />
+                  </div>
+                ) : (
+                  <div className="brand-grid brand-grid--welcome">
+                    {brands.map((item) => {
+                      const name = brandLabel(item, t);
+                      const hasLogo = Boolean(item.logoUrl?.trim());
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`brand-card brand-card--welcome${selectingId === item.id ? ' brand-card--loading brand-card--active' : ''}`}
+                          disabled={busy}
+                          onClick={() => void handleSelect(item)}
+                        >
+                          <div className={`brand-card__media${hasLogo ? '' : ' brand-card__media--fallback'}`}>
+                            {hasLogo ? (
+                              <img src={item.logoUrl} alt="" />
+                            ) : (
+                              <IonIcon icon={storefrontOutline} aria-hidden="true" />
+                            )}
+                          </div>
+                          <div className="brand-card__copy">
+                            <strong className="brand-name">{name}</strong>
+                            <span className="brand-meta">
+                              <IonIcon icon={storefrontOutline} aria-hidden="true" />
+                              {locationLabel(item.locations)}
+                            </span>
+                          </div>
+                          <IonIcon
+                            icon={chevronForwardOutline}
+                            className="brand-card__chevron"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      className="brand-card brand-card--create"
                       disabled={busy}
                       onClick={() => setNewBrandOpen(true)}
                     >
-                      <span className="brand-name brand-name--new">{t('welcome.newBrand')}</span>
+                      <span className="brand-card__add-icon" aria-hidden="true">+</span>
+                      <strong>{t('welcome.createBrand')}</strong>
+                      <small>{t('welcome.createBrandHint')}</small>
                     </button>
                   </div>
                 )}

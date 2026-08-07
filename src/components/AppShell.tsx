@@ -29,13 +29,20 @@ export function AppShell({
   // const showBottomNav = !hideNav && !isTablet && !agilitoChrome;
 
   useEffect(() => {
-    const content = shellRef.current?.closest('ion-content');
+    const content = shellRef.current?.closest('ion-content') as HTMLIonContentElement | null;
     if (!content) return;
+    // Tablet+: scroll en la columna main; ion-content no debe mover sidebar/header.
+    content.scrollY = !isTablet;
+  }, [isTablet]);
 
-    content.scrollEvents = true;
+  useEffect(() => {
+    const content = shellRef.current?.closest('ion-content');
+    const main = shellRef.current?.querySelector('.ag-app-shell-main');
+    if (!content && !main) return;
+
     let lastScrollTop = 0;
-    const onScroll = (event: Event) => {
-      const scrollTop = (event as CustomEvent<{ scrollTop: number }>).detail.scrollTop;
+
+    const applyScrollState = (scrollTop: number) => {
       const scrollingDown = scrollTop > lastScrollTop + 4;
       const scrollingUp = scrollTop < lastScrollTop - 4;
 
@@ -48,12 +55,30 @@ export function AppShell({
       lastScrollTop = Math.max(0, scrollTop);
     };
 
-    content.addEventListener('ionScroll', onScroll);
+    const onIonScroll = (event: Event) => {
+      applyScrollState((event as CustomEvent<{ scrollTop: number }>).detail.scrollTop);
+    };
+
+    const onMainScroll = (event: Event) => {
+      applyScrollState((event.currentTarget as HTMLElement).scrollTop);
+    };
+
+    if (isTablet && main) {
+      main.addEventListener('scroll', onMainScroll, { passive: true });
+      return () => {
+        main.removeEventListener('scroll', onMainScroll);
+        document.body.classList.remove('ag-module-header-hidden');
+      };
+    }
+
+    if (!content) return;
+    content.scrollEvents = true;
+    content.addEventListener('ionScroll', onIonScroll);
     return () => {
-      content.removeEventListener('ionScroll', onScroll);
+      content.removeEventListener('ionScroll', onIonScroll);
       document.body.classList.remove('ag-module-header-hidden');
     };
-  }, []);
+  }, [isTablet]);
 
   return (
     <div

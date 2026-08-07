@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IonIcon } from '@ionic/react';
-import { closeOutline, menuOutline } from 'ionicons/icons';
+import { closeOutline, menuOutline, storefrontOutline } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
@@ -9,8 +9,8 @@ import { PROFILE_PATH, isNavActive, mobileNavItems } from '../navigation/navConf
 
 export function MobileSideNav() {
   const { t } = useTranslation();
-  const { go } = useAppNavigation();
-  const { session } = useApp();
+  const { go, goRoot } = useAppNavigation();
+  const { session, startBrandSwitch } = useApp();
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -24,6 +24,12 @@ export function MobileSideNav() {
   const selectModule = (path: string) => {
     setOpen(false);
     go(path);
+  };
+
+  const onChangeBrand = () => {
+    setOpen(false);
+    startBrandSwitch();
+    window.setTimeout(() => goRoot('/welcome'), 80);
   };
 
   return (
@@ -72,18 +78,29 @@ export function MobileSideNav() {
               );
             })}
           </nav>
-          {session ? (
+          <div className="ag-mobile-side-nav__footer">
             <button
               type="button"
-              className={`ag-mobile-side-nav__profile${location.pathname.startsWith(PROFILE_PATH) ? ' active' : ''}`}
-              onClick={() => selectModule(PROFILE_PATH)}
-              aria-current={location.pathname.startsWith(PROFILE_PATH) ? 'page' : undefined}
+              className="ag-mobile-side-nav__item ag-mobile-side-nav__brand-switch"
+              onClick={onChangeBrand}
               tabIndex={open ? 0 : -1}
             >
-              <span className="ag-mobile-side-nav__avatar">{session.initials}</span>
-              <span>{t('nav.profile')}</span>
+              <IonIcon icon={storefrontOutline} />
+              <span>{t('settings.changeBrand')}</span>
             </button>
-          ) : null}
+            {session ? (
+              <button
+                type="button"
+                className={`ag-mobile-side-nav__profile${location.pathname.startsWith(PROFILE_PATH) ? ' active' : ''}`}
+                onClick={() => selectModule(PROFILE_PATH)}
+                aria-current={location.pathname.startsWith(PROFILE_PATH) ? 'page' : undefined}
+                tabIndex={open ? 0 : -1}
+              >
+                <span className="ag-mobile-side-nav__avatar">{session.initials}</span>
+                <span>{t('nav.profile')}</span>
+              </button>
+            ) : null}
+          </div>
         </aside>
       </div>
     </>

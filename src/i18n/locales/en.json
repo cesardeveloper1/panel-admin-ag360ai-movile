@@ -26,7 +26,12 @@
     "title": "Choose your brand",
     "question": "What will you run today?",
     "description": "Select a brand to see orders, reports and live menu.",
+    "hello": "Welcome, {{name}}!",
     "newBrand": "+ New brand",
+    "createBrand": "Create new brand",
+    "createBrandHint": "to start managing your business",
+    "locationOne": "{{count}} location",
+    "locationMany": "{{count}} locations",
     "meta": "{{locations}} locations · {{orders}} orders today",
     "loadingBrand": "Loading {{brand}}...",
     "newBrandTitle": "Create new brand",
@@ -39,7 +44,7 @@
     "newBrandSubmit": "Create brand",
     "newBrandOk": "Brand created successfully",
     "newBrandExists": "That subdomain already exists",
-    "subtitle": "Choose your brand"
+    "subtitle": "Select a brand to manage or create a new one"
   },
   "brands": {
     "pacifico": "Pacific Cevichería",
@@ -73,6 +78,7 @@
     "marketing": "Mkt",
     "locations": "Locations",
     "alerts": "Alerts",
+    "statusMenu": "Agent and alerts",
     "profile": "Profile",
     "kitchen": "Kitchen",
     "dashboard": "Dash",

@@ -25,6 +25,7 @@ export interface Brand {
   initials: string;
   nameKey: string;
   displayName?: string;
+  logoUrl?: string;
   locations: number;
   ordersToday: number;
 }

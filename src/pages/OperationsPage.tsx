@@ -11,6 +11,7 @@ import { OrderDetailSheet } from '../components/OrderDetailSheet';
 import { useApp } from '../context/AppContext';
 import { getKanbanGroup, getKanbanSubState } from '../services/apiMock';
 import { useAppNavigation } from '../hooks/useAppNavigation';
+import { useViewport } from '../hooks/useViewport';
 import type { KanbanSubState, Order } from '../types';
 
 const NEW_SUBSTATES: KanbanSubState[] = ['starting', 'ordering', 'human'];
@@ -28,6 +29,8 @@ const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
   const { orders } = useApp();
   const { go } = useAppNavigation();
+  const { isTablet } = useViewport();
+  const pageRef = useRef<HTMLElement>(null);
   const [query, setQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
@@ -56,8 +59,8 @@ const OperationsPage: React.FC = () => {
   const deliveredOrdersRef = useRef<HTMLElement>(null);
   const lastScrollTopRef = useRef(0);
 
-  const handleOperationsScroll = (event: CustomEvent<ScrollDetail>) => {
-    const nextScrollTop = Math.max(0, event.detail.scrollTop);
+  const applyScrollTop = (nextScrollTopRaw: number) => {
+    const nextScrollTop = Math.max(0, nextScrollTopRaw);
     const previousScrollTop = lastScrollTopRef.current;
     setIsPageScrolled(nextScrollTop > 8);
     if (Math.abs(nextScrollTop - previousScrollTop) > 4) {
@@ -66,6 +69,19 @@ const OperationsPage: React.FC = () => {
     }
     if (nextScrollTop <= 8) setIsScrollingUp(true);
   };
+
+  const handleOperationsScroll = (event: CustomEvent<ScrollDetail>) => {
+    applyScrollTop(event.detail.scrollTop);
+  };
+
+  useEffect(() => {
+    if (!isTablet) return;
+    const main = pageRef.current?.querySelector('.ag-app-shell-main');
+    if (!main) return;
+    const onScroll = () => applyScrollTop((main as HTMLElement).scrollTop);
+    main.addEventListener('scroll', onScroll, { passive: true });
+    return () => main.removeEventListener('scroll', onScroll);
+  }, [isTablet]);
 
   const scrollToOrders = (
     state: 'new' | 'processing' | 'delivered',
@@ -259,12 +275,16 @@ const OperationsPage: React.FC = () => {
   };
 
   return (
-    <IonPage className={`operations-page${isPageScrolled ? ' operations-page--scrolled' : ''}${isScrollingUp ? ' operations-page--scroll-up' : ' operations-page--scroll-down'}`}>
-      <IonContent className="ag-screen" scrollEvents onIonScroll={handleOperationsScroll}>
+    <IonPage
+      ref={pageRef}
+      className={`operations-page${isPageScrolled ? ' operations-page--scrolled' : ''}${isScrollingUp ? ' operations-page--scroll-up' : ' operations-page--scroll-down'}`}
+    >
+      <IonContent className="ag-screen" scrollEvents={!isTablet} onIonScroll={isTablet ? undefined : handleOperationsScroll}>
         <AppShell>
           <AppHeader
             centeredCompact
             title={t('ops.title')}
+            showAlerts
             secondaryAction={{
               label: dateEnd
                 ? `${dateStart.slice(8)}–${dateEnd.slice(8)}`

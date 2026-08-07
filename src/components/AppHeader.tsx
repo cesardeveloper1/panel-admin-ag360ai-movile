@@ -1,12 +1,12 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
-import { chevronBackOutline, notificationsOutline } from 'ionicons/icons';
+import { chevronBackOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
-import { AgentToggle } from './AgentToggle';
+import { PROFILE_PATH } from '../navigation/navConfig';
+import { HeaderStatusMenu } from './HeaderStatusMenu';
 
 interface AppHeaderProps {
   title: string;
@@ -51,8 +51,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
-  const { notifications, session } = useApp();
-  const unread = notifications.filter((n) => n.unread).length;
+  const { session } = useApp();
   const isSub = Boolean(onBack);
 
   const openProfile = () => {
@@ -121,20 +120,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               {action.iconOnly ? null : action.label}
             </button>
           ) : null}
-          {showAlerts ? (
-            <>
-              {!isSub ? <AgentToggle /> : null}
-              <button
-                type="button"
-                className="ag-header-bell"
-                aria-label={t('nav.alerts')}
-                onClick={() => go(NOTIFICATIONS_PATH)}
-              >
-                <IonIcon icon={notificationsOutline} />
-                {unread > 0 ? <span className="ag-header-bell-badge">{unread}</span> : null}
-              </button>
-            </>
-          ) : null}
+          {showAlerts ? <HeaderStatusMenu /> : null}
         </div>
       </div>
       {search ? (

@@ -6,6 +6,7 @@ import { useModuleNav } from '../../hooks/useModuleNav';
 import {
   isBusinessModulePath,
   normalizePath,
+  NOTIFICATIONS_PATH,
 } from '../../navigation/appRouteRegistry';
 
 type HeaderSearch = {
@@ -55,7 +56,12 @@ export function StackLayout({
   const routePath = useRef(
     normalizePath(typeof window !== 'undefined' ? window.location.pathname : ''),
   ).current;
-  const hideMobileMenu = useRef(isBusinessModulePath(routePath)).current;
+  const isBusinessModule = useRef(isBusinessModulePath(routePath)).current;
+  const hideMobileMenu =
+    isBusinessModule ||
+    routePath === NOTIFICATIONS_PATH ||
+    routePath.startsWith(`${NOTIFICATIONS_PATH}/`);
+  const alertsVisible = isBusinessModule ? false : showAlerts;
 
   return (
     <IonPage data-ag-route={routePath}>
@@ -64,7 +70,7 @@ export function StackLayout({
           <AppHeader
             title={title}
             onBack={onBack}
-            showAlerts={showAlerts}
+            showAlerts={alertsVisible}
             profileFromAvatar={profileFromAvatar}
             search={search}
             action={action}

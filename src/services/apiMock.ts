@@ -1,6 +1,7 @@
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import type {
   BranchLocation,
+  Brand,
   CatalogProduct,
   CrmClient,
   DashboardKpi,
@@ -216,7 +217,7 @@ function saveLocations(next: BranchLocation[]) {
   localStorage.setItem('ag360-locations-v1', JSON.stringify(next));
 }
 
-const seedBrands = [
+const seedBrands: Brand[] = [
   { id: 'pacifico', initials: 'CP', nameKey: 'brands.pacifico', locations: 3, ordersToday: 12 },
   { id: 'anticuchos', initials: 'AB', nameKey: 'brands.anticuchos', locations: 1, ordersToday: 4 },
 ];
@@ -224,12 +225,12 @@ const seedBrands = [
 function loadBrands() {
   try {
     const raw = localStorage.getItem(BRANDS_KEY);
-    if (raw) return JSON.parse(raw) as typeof seedBrands;
+    if (raw) return JSON.parse(raw) as Brand[];
   } catch { /* ignore */ }
   return structuredClone(seedBrands);
 }
 
-function saveBrands(next: typeof seedBrands) {
+function saveBrands(next: Brand[]) {
   localStorage.setItem(BRANDS_KEY, JSON.stringify(next));
 }
 
@@ -592,7 +593,14 @@ export const apiMock = {
 
   async getBrands() {
     await delay(180);
-    return structuredClone(loadBrands());
+    const configs = loadBrandConfigs();
+    return structuredClone(loadBrands()).map((brand) => {
+      const config = configs.find((item) => item.brandId === brand.id);
+      return {
+        ...brand,
+        logoUrl: brand.logoUrl || config?.logoUrl || '',
+      };
+    });
   },
 
   async getOrders(brandId: string) {
@@ -705,6 +713,7 @@ export const apiMock = {
       initials: brandInitials(input.name),
       nameKey: 'brands.custom',
       displayName: input.name.trim(),
+      logoUrl: '',
       locations: 1,
       ordersToday: 0,
     };
@@ -724,7 +733,7 @@ export const apiMock = {
     const configs = loadBrandConfigs();
     configs.push({
       brandId: id,
-      logoUrl: LOGO_COLOR_LOCAL,
+      logoUrl: '',
       primaryColor: '#8746FF',
       secondaryColor: '#141A32',
       instagram: id,
