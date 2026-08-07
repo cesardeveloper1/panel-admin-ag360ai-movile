@@ -6,11 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH, isNavActive, mobileNavItems } from '../navigation/navConfig';
+import { LOGO_COLOR_LOCAL } from '../constants/assets';
+import { brandLabel } from '../utils/brandLabel';
 
 export function MobileSideNav() {
   const { t } = useTranslation();
   const { go, goRoot } = useAppNavigation();
-  const { session, startBrandSwitch } = useApp();
+  const { brand, session, startBrandSwitch } = useApp();
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -55,7 +57,14 @@ export function MobileSideNav() {
         />
         <aside id="mobile-module-nav" className="ag-mobile-side-nav" aria-label={t('nav.sidebar')}>
           <div className="ag-mobile-side-nav__head">
-            <strong>{t('app.name')}</strong>
+            <div className="ag-mobile-side-nav__brand">
+              <img src={LOGO_COLOR_LOCAL} alt={t('app.name')} className="ag-mobile-side-nav__logo" />
+              {brand ? (
+                <span className="ag-mobile-side-nav__brand-name">{brandLabel(brand, t)}</span>
+              ) : (
+                <strong>{t('app.name')}</strong>
+              )}
+            </div>
             <button type="button" onClick={() => setOpen(false)} aria-label={t('common.close')}>
               <IonIcon icon={closeOutline} />
             </button>
