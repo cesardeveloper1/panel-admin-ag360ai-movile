@@ -8,7 +8,6 @@ import { useViewport } from '../hooks/useViewport';
 import {
   CHATS_PATH,
   PROFILE_PATH,
-  alertsNavItem,
   isNavActive,
   ownerNavItems,
 } from '../navigation/navConfig';
@@ -19,12 +18,10 @@ export function SideNav() {
   const { t } = useTranslation();
   const { go, goRoot } = useAppNavigation();
   const location = useLocation();
-  const { notifications, brand, session, startBrandSwitch } = useApp();
+  const { brand, session, startBrandSwitch } = useApp();
   const { isTablet } = useViewport();
 
   if (!isTablet) return null;
-
-  const unread = notifications.filter((n) => n.unread).length;
 
   const onChangeBrand = () => {
     startBrandSwitch();
@@ -62,15 +59,6 @@ export function SideNav() {
         >
           <IonIcon icon={logoWhatsapp} />
           <span>{t('nav.chats')}</span>
-        </button>
-        <button
-          type="button"
-          className={`ag-side-nav-item ag-side-nav-item--alerts${isNavActive(location.pathname, alertsNavItem) ? ' active' : ''}`}
-          onClick={() => go(alertsNavItem.path)}
-        >
-          <IonIcon icon={alertsNavItem.icon} />
-          <span>{t(alertsNavItem.labelKey)}</span>
-          {unread > 0 ? <span className="ag-side-nav-badge">{unread}</span> : null}
         </button>
       </nav>
 
