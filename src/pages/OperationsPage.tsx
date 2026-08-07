@@ -293,17 +293,19 @@ const OperationsPage: React.FC = () => {
                   : dateStart.slice(8)}
             </button>
 
-            <IonSearchbar
-              className="ops-search ag-enter"
-              value={query}
-              onIonInput={(e) => setQuery(e.detail.value ?? '')}
-              placeholder={t('ops.search')}
-              debounce={200}
-            />
+            <div className="ops-sticky-controls ag-enter">
+              <IonSearchbar
+                className="ops-search"
+                value={query}
+                onIonInput={(e) => setQuery(e.detail.value ?? '')}
+                placeholder={t('ops.search')}
+                debounce={200}
+              />
 
-            <div className="ops-view-switch ops-view-switch--sticky ag-enter" role="tablist" aria-label={t('ops.title')}>
-              <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
-              <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
+              <div className="ops-view-switch" role="tablist" aria-label={t('ops.title')}>
+                <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
+                <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
+              </div>
             </div>
 
             {viewMode === 'all' ? (

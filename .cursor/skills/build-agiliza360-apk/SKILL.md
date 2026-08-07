@@ -1,13 +1,15 @@
 ---
 name: build-agiliza360-apk
-description: Builds and refreshes the Agiliza360 mobile debug APK after code changes. Use when editing agiliza360-mobile, Capacitor/Android, Ionic UI, or when the user asks for APK, installable build, or desktop Agiliza360-debug.apk.
+description: Builds and refreshes the Agiliza360 mobile debug APK when the user asks for an APK or installable build. Do not run after routine UI changes — use web localhost for preview.
 ---
 
 # Build Agiliza360 Debug APK
 
 ## When to run
 
-After **any meaningful change** in `agiliza360-mobile` (UI, logic, assets, i18n, Capacitor config), rebuild the APK and copy it to the Desktop unless the user explicitly says not to.
+Rebuild the APK **only when the user asks** for an APK, installable build, or Desktop `Agiliza360-debug.apk`.
+
+Do **not** rebuild after routine UI/logic edits — prefer web localhost (`npm start` / Vite) for verifying changes.
 
 ## Output
 
@@ -50,9 +52,10 @@ sdk.dir=/mnt/c/Users/Sebastian/Android/Sdk
 
 ## Agent checklist
 
-1. Run `bash scripts/build-debug-apk.sh` from repo root.
-2. Confirm `BUILD SUCCESSFUL` and Desktop file updated (`ls -lh` ~5 MB).
-3. Tell the user: **APK lista en el Escritorio** → `Agiliza360-debug.apk`.
+1. Only run when the user explicitly asks for an APK / installable build.
+2. Run `bash scripts/build-debug-apk.sh` from repo root.
+3. Confirm `BUILD SUCCESSFUL` and Desktop file updated (`ls -lh` ~5 MB).
+4. Tell the user: **APK lista en el Escritorio** → `Agiliza360-debug.apk`.
 
 ## Failures
 
