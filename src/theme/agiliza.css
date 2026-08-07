@@ -2109,12 +2109,13 @@ body.ag-module-header-hidden .ag-mobile-menu-trigger {
 
 .ag-mobile-side-nav {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: min(82vw, 320px);
+  inset: 0;
+  width: 100%;
+  max-width: none;
   padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
   background: var(--ion-background-color, #fff);
   color: var(--ion-text-color, #172033);
-  box-shadow: 20px 0 48px rgba(15, 23, 42, 0.2);
+  box-shadow: none;
   transform: translateX(-102%);
   transition: transform 220ms ease;
   display: flex;
@@ -2396,11 +2397,16 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
   transform: translateY(0);
 }
 
-.operations-page--scrolled .ag-header,
-.operations-page--scrolled .ag-mobile-menu-trigger {
+.operations-page--scrolled.operations-page--scroll-down .ag-mobile-menu-trigger {
   opacity: 0;
   transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
   pointer-events: none;
+}
+
+.operations-page--scrolled.operations-page--scroll-up .ag-mobile-menu-trigger {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
 .ops-view-switch button,
