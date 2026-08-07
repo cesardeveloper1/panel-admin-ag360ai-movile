@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { StackLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
+import { brandLabel } from '../utils/brandLabel';
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -47,6 +48,7 @@ const SettingsPage: React.FC = () => {
     <StackLayout
       title={t('settings.title')}
       showAlerts
+      showBack={false}
       bodyClassName="ag-body settings-body"
       pageExtras={
         <IonAlert
@@ -69,7 +71,7 @@ const SettingsPage: React.FC = () => {
           {brand ? (
             <span className="profile-hero-brand">
               <IonIcon icon={storefrontOutline} />
-              {t(brand.nameKey)}
+              {brandLabel(brand, t)}
             </span>
           ) : null}
         </div>
@@ -91,7 +93,7 @@ const SettingsPage: React.FC = () => {
       </div>
 
       <p className="settings-section-label">{t('settings.appearance')}</p>
-      <IonList className="settings-list" lines="full">
+      <IonList className="settings-list" lines="none">
         <IonItem className="settings-item">
           <IonIcon icon={moonOutline} slot="start" className="settings-icon" />
           <IonLabel>

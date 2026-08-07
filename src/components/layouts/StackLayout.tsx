@@ -3,6 +3,7 @@ import { IonContent, IonPage } from '@ionic/react';
 import { AppHeader } from '../AppHeader';
 import { AppShell } from '../AppShell';
 import { useModuleNav } from '../../hooks/useModuleNav';
+import { useAppNavigation } from '../../hooks/useAppNavigation';
 import {
   isBusinessModulePath,
   normalizePath,
@@ -25,6 +26,8 @@ type HeaderAction = {
 export interface StackLayoutProps {
   title: string;
   showAlerts?: boolean;
+  /** Si false, oculta la flecha de atrás (p. ej. Configuración). Default true. */
+  showBack?: boolean;
   profileFromAvatar?: boolean;
   search?: HeaderSearch;
   action?: HeaderAction;
@@ -43,6 +46,7 @@ export interface StackLayoutProps {
 export function StackLayout({
   title,
   showAlerts = true,
+  showBack = true,
   profileFromAvatar,
   search,
   action,
@@ -53,15 +57,18 @@ export function StackLayout({
   pageExtras,
 }: StackLayoutProps) {
   const { onBack } = useModuleNav();
+  const { back } = useAppNavigation();
   const routePath = useRef(
     normalizePath(typeof window !== 'undefined' ? window.location.pathname : ''),
   ).current;
   const isBusinessModule = useRef(isBusinessModulePath(routePath)).current;
-  const hideMobileMenu =
-    isBusinessModule ||
-    routePath === NOTIFICATIONS_PATH ||
-    routePath.startsWith(`${NOTIFICATIONS_PATH}/`);
+  const isNotifications =
+    routePath === NOTIFICATIONS_PATH || routePath.startsWith(`${NOTIFICATIONS_PATH}/`);
+  const hideMobileMenu = isBusinessModule || isNotifications;
   const alertsVisible = isBusinessModule ? false : showAlerts;
+
+  /** Alertas: pop al origen real (sin forzar hub Agilito/Pagos). */
+  const handleBack = isNotifications ? () => back() : onBack;
 
   return (
     <IonPage data-ag-route={routePath}>
@@ -69,7 +76,7 @@ export function StackLayout({
         <AppShell hideMobileMenu={hideMobileMenu}>
           <AppHeader
             title={title}
-            onBack={onBack}
+            onBack={showBack ? handleBack : undefined}
             showAlerts={alertsVisible}
             profileFromAvatar={profileFromAvatar}
             search={search}
