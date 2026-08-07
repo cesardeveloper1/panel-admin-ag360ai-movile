@@ -159,11 +159,15 @@ ion-page {
   color: var(--ag-text-secondary);
 }
 
-.ag-header--centered-compact .ag-header-row {
+.ag-header--centered-compact {
   position: relative;
+}
+
+.ag-header--centered-compact .ag-header-row {
   justify-content: flex-end;
 }
 
+/* Centrado al ancho completo del header (no de la fila con padding de hamburguesa) */
 .ag-header--centered-compact .ag-header-copy {
   position: absolute;
   left: 50%;
@@ -173,6 +177,7 @@ ion-page {
   max-width: min(52vw, 12rem);
   text-align: center;
   pointer-events: none;
+  z-index: 1;
 }
 
 .ag-header--centered-compact .ag-header-title {
@@ -200,12 +205,8 @@ ion-page {
     align-items: center;
   }
 
-  .ag-header--centered-compact {
-    position: relative;
-  }
-
-  .ag-header--centered-compact .ag-header-row {
-    justify-content: flex-end;
+  .ag-header--centered-compact .ag-header-copy {
+    top: calc(var(--ag-header-chrome-top) + (var(--ag-header-chrome-size) / 2));
   }
 
   .ag-header--centered-compact .ag-header-actions {
@@ -6221,7 +6222,7 @@ html.ag-native.ion-palette-dark .ag-header {
   --placeholder-color: var(--ag-muted);
   --clear-button-color: var(--ag-purple);
   padding: 0;
-  margin: 0;
+  margin: 0 0 0.75rem;
 }
 
 .ops-search .searchbar-input-container {

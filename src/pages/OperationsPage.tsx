@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
-import { chevronDownOutline, chevronUpOutline, searchOutline } from 'ionicons/icons';
+import { chevronDownOutline, chevronUpOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -35,7 +35,6 @@ const OperationsPage: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
   const [allStage, setAllStage] = useState<'starting' | 'ordering' | 'human' | 'orders'>('starting');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
   const [dateEnd, setDateEnd] = useState<string | null>(null);
@@ -53,7 +52,6 @@ const OperationsPage: React.FC = () => {
     human: 3,
     orders: 3,
   });
-  const searchRef = useRef<HTMLIonSearchbarElement>(null);
   const newOrdersRef = useRef<HTMLElement>(null);
   const processingOrdersRef = useRef<HTMLElement>(null);
   const deliveredOrdersRef = useRef<HTMLElement>(null);
@@ -241,11 +239,6 @@ const OperationsPage: React.FC = () => {
     );
   };
 
-  const openSearch = () => {
-    setSearchOpen((current) => !current);
-    window.setTimeout(() => searchRef.current?.setFocus(), 80);
-  };
-
   const openOrderChat = (order: Order) => {
     go(`/app/chats?customer=${encodeURIComponent(order.customerKey)}`);
   };
@@ -285,25 +278,28 @@ const OperationsPage: React.FC = () => {
             centeredCompact
             title={t('ops.title')}
             showAlerts
-            secondaryAction={{
-              label: dateEnd
+          />
+          <div className="ag-body module-body ops-body ag-page-stack">
+            <button
+              type="button"
+              className="reports-range-summary ag-enter"
+              onClick={openDatePicker}
+              aria-label={t('ops.selectDate')}
+            >
+              {dateEnd
                 ? `${dateStart.slice(8)}–${dateEnd.slice(8)}`
                 : dateStart === localIsoDate(new Date())
                   ? t('ops.dateToday')
-                  : dateStart.slice(8),
-              onClick: openDatePicker,
-            }}
-            action={{ label: t('ops.search'), icon: searchOutline, iconOnly: true, onClick: openSearch }}
-          />
-          <div className="ag-body module-body ops-body ag-page-stack">
-            {searchOpen ? <IonSearchbar
-              ref={searchRef}
+                  : dateStart.slice(8)}
+            </button>
+
+            <IonSearchbar
               className="ops-search ag-enter"
               value={query}
               onIonInput={(e) => setQuery(e.detail.value ?? '')}
               placeholder={t('ops.search')}
               debounce={200}
-            /> : null}
+            />
 
             <div className="ops-view-switch ops-view-switch--sticky ag-enter" role="tablist" aria-label={t('ops.title')}>
               <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
