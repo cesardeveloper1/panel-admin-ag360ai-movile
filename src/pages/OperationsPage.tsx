@@ -5,14 +5,19 @@ import { chevronDownOutline, chevronUpOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
-import { KanbanBoard } from '../components/KanbanBoard';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailSheet } from '../components/OrderDetailSheet';
 import { useApp } from '../context/AppContext';
 import { getKanbanGroup, getKanbanSubState } from '../services/apiMock';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useViewport } from '../hooks/useViewport';
-import type { KanbanSubState, Order } from '../types';
+import { CHATS_PATH, OPERATIONS_PATH } from '../navigation/navConfig';
+import { setChatNavFrom } from '../navigation/chatNavFrom';
+import type { KanbanGroup, KanbanSubState, Order } from '../types';
+import { sortOpsQueue } from '../utils/opsQueue';
+
+type OpsFocus = KanbanGroup;
+type OpsSubFilter = 'all' | KanbanSubState;
 
 const NEW_SUBSTATES: KanbanSubState[] = ['starting', 'ordering', 'human'];
 const PROCESSING_SUBSTATES: KanbanSubState[] = ['in_kitchen', 'ready', 'on_the_way'];
@@ -23,7 +28,14 @@ const OPS_SEGMENT_COLORS = {
   delivered: 'var(--ag-done)',
 } as const;
 
-const localIsoDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const FOCUS_LABEL_KEY: Record<OpsFocus, string> = {
+  new: 'ops.kanbanNew',
+  processing: 'ops.kanbanProcessing',
+  delivered: 'ops.kanbanDelivered',
+};
+
+const localIsoDate = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -33,28 +45,16 @@ const OperationsPage: React.FC = () => {
   const pageRef = useRef<HTMLElement>(null);
   const [query, setQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [viewMode, setViewMode] = useState<'orders' | 'all'>('orders');
-  const [allStage, setAllStage] = useState<'starting' | 'ordering' | 'human' | 'orders'>('starting');
+  const [activeFocus, setActiveFocus] = useState<OpsFocus>('new');
+  const [subFilter, setSubFilter] = useState<OpsSubFilter>('all');
   const [dateOpen, setDateOpen] = useState(false);
   const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
   const [dateEnd, setDateEnd] = useState<string | null>(null);
   const [dateClicks, setDateClicks] = useState(0);
   const [dateMode, setDateMode] = useState<'today' | 'range'>('today');
-  const [activeOrderState, setActiveOrderState] = useState<'new' | 'processing' | 'delivered'>('new');
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
-  const [visibleCards, setVisibleCards] = useState<Record<string, number>>({
-    new: 3,
-    processing: 3,
-    delivered: 3,
-    starting: 3,
-    ordering: 3,
-    human: 3,
-    orders: 3,
-  });
-  const newOrdersRef = useRef<HTMLElement>(null);
-  const processingOrdersRef = useRef<HTMLElement>(null);
-  const deliveredOrdersRef = useRef<HTMLElement>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
   const lastScrollTopRef = useRef(0);
 
   const applyScrollTop = (nextScrollTopRaw: number) => {
@@ -81,36 +81,16 @@ const OperationsPage: React.FC = () => {
     return () => main.removeEventListener('scroll', onScroll);
   }, [isTablet]);
 
-  const scrollToOrders = (
-    state: 'new' | 'processing' | 'delivered',
-    target: React.RefObject<HTMLElement | null>,
-  ) => {
-    setActiveOrderState(state);
-    target.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const selectFocus = (focus: OpsFocus) => {
+    setActiveFocus(focus);
+    setSubFilter('all');
+    setVisibleCount(6);
   };
 
-  useEffect(() => {
-    if (viewMode !== 'orders') return;
-    const sections = [
-      ['new', newOrdersRef.current],
-      ['processing', processingOrdersRef.current],
-      ['delivered', deliveredOrdersRef.current],
-    ] as const;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        const state = visible?.target.getAttribute('data-order-state');
-        if (state === 'new' || state === 'processing' || state === 'delivered') {
-          setActiveOrderState(state);
-        }
-      },
-      { rootMargin: '-96px 0px -58% 0px', threshold: [0, 0.1, 0.35, 0.6] },
-    );
-    sections.forEach(([, section]) => section && observer.observe(section));
-    return () => observer.disconnect();
-  }, [viewMode]);
+  const selectSubFilter = (next: OpsSubFilter) => {
+    setSubFilter(next);
+    setVisibleCount(6);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -147,13 +127,19 @@ const OperationsPage: React.FC = () => {
 
   const proportionTotal = proportionSegments.reduce((sum, seg) => sum + seg.count, 0);
 
-  const bySubState = (list: Order[], subState: KanbanSubState) =>
-    list.filter((o) => getKanbanSubState(o) === subState);
+  const inFocus = useMemo(() => groups[activeFocus], [groups, activeFocus]);
 
-  const allStageItems = allStage === 'orders'
-    ? filtered
-    : filtered.filter((order) => getKanbanSubState(order) === allStage);
-  const visibleAllStageItems = allStageItems.slice(0, visibleCards[allStage]);
+  const queueItems = useMemo(() => {
+    const scoped =
+      subFilter === 'all' ? inFocus : inFocus.filter((order) => getKanbanSubState(order) === subFilter);
+    return sortOpsQueue(scoped);
+  }, [inFocus, subFilter]);
+
+  const visibleItems = queueItems.slice(0, visibleCount);
+
+  const subChips: KanbanSubState[] =
+    activeFocus === 'new' ? NEW_SUBSTATES : activeFocus === 'processing' ? PROCESSING_SUBSTATES : [];
+
   const highlightedOperationDates = useMemo(() => {
     const end = dateEnd ?? dateStart;
     const cursor = new Date(`${dateStart}T12:00:00`);
@@ -162,28 +148,15 @@ const OperationsPage: React.FC = () => {
     while (cursor <= last) {
       const date = localIsoDate(cursor);
       const boundary = date === dateStart || date === end;
-      dates.push({ date, textColor: boundary ? '#ffffff' : '#5f2fc5', backgroundColor: boundary ? '#8746ff' : 'rgba(135, 70, 255, 0.16)' });
+      dates.push({
+        date,
+        textColor: boundary ? '#ffffff' : '#5f2fc5',
+        backgroundColor: boundary ? '#8746ff' : 'rgba(135, 70, 255, 0.16)',
+      });
       cursor.setDate(cursor.getDate() + 1);
     }
     return dates;
   }, [dateStart, dateEnd]);
-
-  const showThreeMore = (state: string) => {
-    setVisibleCards((current) => ({ ...current, [state]: (current[state] ?? 3) + 3 }));
-  };
-
-  const hideThree = (state: string) => {
-    setVisibleCards((current) => ({ ...current, [state]: Math.max(3, (current[state] ?? 3) - 3) }));
-  };
-
-  const cardToggleButtons = (state: string, visible: number, total: number) => (
-    visible > 3 || visible < total ? (
-      <div className="ops-load-controls">
-        {visible > 3 ? <button type="button" className="ops-load-more" aria-label="Contraer 3 tarjetas" onClick={() => hideThree(state)}><IonIcon icon={chevronUpOutline} /></button> : null}
-        {visible < total ? <button type="button" className="ops-load-more" aria-label={t('ops.showThreeMore')} onClick={() => showThreeMore(state)}><IonIcon icon={chevronDownOutline} /></button> : null}
-      </div>
-    ) : null
-  );
 
   const selectOperationDate = (rawValue: string | string[] | null | undefined) => {
     const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
@@ -240,31 +213,8 @@ const OperationsPage: React.FC = () => {
   };
 
   const openOrderChat = (order: Order) => {
-    go(`/app/chats?customer=${encodeURIComponent(order.customerKey)}`);
-  };
-
-  const renderSubSection = (subState: KanbanSubState, list: Order[]) => {
-    const items = bySubState(list, subState);
-    if (items.length === 0) return null;
-    return (
-      <div key={subState} className="kanban-subsection">
-        <h3 className="kanban-subsection-title">
-          {t(`ops.subStates.${subState}`)}
-          <span className="kanban-count">{items.length}</span>
-        </h3>
-        <div className="kanban-cards">
-          {items.map((order, idx) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              style={{ animationDelay: `${idx * 40}ms` }}
-              onClick={() => setSelectedOrder(order)}
-              onChat={() => openOrderChat(order)}
-            />
-          ))}
-        </div>
-      </div>
-    );
+    setChatNavFrom(OPERATIONS_PATH);
+    go(`${CHATS_PATH}?customer=${encodeURIComponent(order.customerKey)}`);
   };
 
   return (
@@ -272,13 +222,13 @@ const OperationsPage: React.FC = () => {
       ref={pageRef}
       className={`operations-page${isPageScrolled ? ' operations-page--scrolled' : ''}${isScrollingUp ? ' operations-page--scroll-up' : ' operations-page--scroll-down'}`}
     >
-      <IonContent className="ag-screen" scrollEvents={!isTablet} onIonScroll={isTablet ? undefined : handleOperationsScroll}>
+      <IonContent
+        className="ag-screen"
+        scrollEvents={!isTablet}
+        onIonScroll={isTablet ? undefined : handleOperationsScroll}
+      >
         <AppShell>
-          <AppHeader
-            centeredCompact
-            title={t('ops.title')}
-            showAlerts
-          />
+          <AppHeader centeredCompact title={t('ops.title')} showAlerts />
           <div className="ag-body module-body ops-body ag-page-stack">
             <button
               type="button"
@@ -294,11 +244,6 @@ const OperationsPage: React.FC = () => {
             </button>
 
             <div className="ops-sticky-controls ag-enter">
-              <div className="ops-view-switch" role="tablist" aria-label={t('ops.title')}>
-                <button type="button" className={viewMode === 'orders' ? 'active' : ''} onClick={() => setViewMode('orders')}>{t('ops.ordersView')}</button>
-                <button type="button" className={viewMode === 'all' ? 'active' : ''} onClick={() => setViewMode('all')}>{t('ops.allView')}</button>
-              </div>
-
               <IonSearchbar
                 className="ops-search"
                 value={query}
@@ -308,40 +253,41 @@ const OperationsPage: React.FC = () => {
               />
             </div>
 
-            {viewMode === 'all' ? (
-              <>
-                <div className="ops-all-stages ag-enter">
-                  {(['starting', 'ordering', 'human', 'orders'] as const).map((stage) => (
-                    <button key={stage} type="button" className={allStage === stage ? 'active' : ''} onClick={() => setAllStage(stage)}>
-                      {stage === 'orders' ? t('ops.ordersStage') : t(`ops.subStates.${stage}`)}
-                    </button>
-                  ))}
-                </div>
-                <section className="kanban-section ops-all-results ag-enter">
-                  <header className="kanban-section-head">
-                    <h2>{allStage === 'orders' ? t('ops.ordersStage') : t(`ops.subStates.${allStage}`)}</h2>
-                    <span className="kanban-count">{allStageItems.length}</span>
-                  </header>
-                  <div className="kanban-cards">
-                    {visibleAllStageItems.map((order, idx) => <OrderCard key={order.id} order={order} style={{ animationDelay: `${idx * 40}ms` }} onClick={() => setSelectedOrder(order)} onChat={() => openOrderChat(order)} />)}
-                  </div>
-                  {allStageItems.length === 0 ? <p className="kanban-empty">{t('ops.emptyColumn')}</p> : null}
-                  {cardToggleButtons(allStage, visibleAllStageItems.length, allStageItems.length)}
-                </section>
-              </>
-            ) : (
-              <>
-
-            <div className="ops-summary ag-enter">
-              <button type="button" aria-pressed={activeOrderState === 'new'} className={`ops-summary-card ops-summary-card--new${activeOrderState === 'new' ? ' active' : ''}`} onClick={() => scrollToOrders('new', newOrdersRef)}>
+            <div
+              className="ops-summary ag-enter"
+              role="tablist"
+              aria-label={t('ops.focusAria')}
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeFocus === 'new'}
+                aria-pressed={activeFocus === 'new'}
+                className={`ops-summary-card ops-summary-card--new${activeFocus === 'new' ? ' active' : ''}`}
+                onClick={() => selectFocus('new')}
+              >
                 <strong>{groups.new.length}</strong>
                 <span>{t('ops.kanbanNew')}</span>
               </button>
-              <button type="button" aria-pressed={activeOrderState === 'processing'} className={`ops-summary-card ops-summary-card--hot${activeOrderState === 'processing' ? ' active' : ''}`} onClick={() => scrollToOrders('processing', processingOrdersRef)}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeFocus === 'processing'}
+                aria-pressed={activeFocus === 'processing'}
+                className={`ops-summary-card ops-summary-card--hot${activeFocus === 'processing' ? ' active' : ''}`}
+                onClick={() => selectFocus('processing')}
+              >
                 <strong>{groups.processing.length}</strong>
                 <span>{t('ops.kanbanProcessing')}</span>
               </button>
-              <button type="button" aria-pressed={activeOrderState === 'delivered'} className={`ops-summary-card ops-summary-card--done${activeOrderState === 'delivered' ? ' active' : ''}`} onClick={() => scrollToOrders('delivered', deliveredOrdersRef)}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeFocus === 'delivered'}
+                aria-pressed={activeFocus === 'delivered'}
+                className={`ops-summary-card ops-summary-card--done${activeFocus === 'delivered' ? ' active' : ''}`}
+                onClick={() => selectFocus('delivered')}
+              >
                 <strong>{groups.delivered.length}</strong>
                 <span>{t('ops.kanbanDelivered')}</span>
               </button>
@@ -350,20 +296,24 @@ const OperationsPage: React.FC = () => {
             <div className="ops-proportion ag-enter" aria-hidden={proportionTotal === 0}>
               <div
                 className="ops-proportion-bar"
-                role="img"
+                role="group"
                 aria-label={t('ops.proportionAria', { total: proportionTotal })}
               >
                 {proportionTotal > 0 ? (
                   proportionSegments.map((seg) =>
                     seg.count > 0 ? (
-                      <span
+                      <button
                         key={seg.id}
-                        className="ops-proportion-segment"
+                        type="button"
+                        className={`ops-proportion-segment ops-proportion-segment--btn${activeFocus === seg.id ? ' is-active' : ''}`}
                         style={{
                           flex: seg.count,
                           background: OPS_SEGMENT_COLORS[seg.id],
                         }}
                         title={`${seg.label}: ${seg.count}`}
+                        aria-label={`${seg.label}: ${seg.count}`}
+                        aria-pressed={activeFocus === seg.id}
+                        onClick={() => selectFocus(seg.id)}
                       />
                     ) : null,
                   )
@@ -373,54 +323,98 @@ const OperationsPage: React.FC = () => {
               </div>
             </div>
 
-            <KanbanBoard>
-              <section ref={newOrdersRef} data-order-state="new" className={`kanban-section kanban-section--new${activeOrderState === 'new' ? ' is-active' : ''}`}>
-                {NEW_SUBSTATES.map((sub) => renderSubSection(sub, groups.new.slice(0, visibleCards.new)))}
-                {groups.new.length === 0 ? (
-                  <p className="kanban-empty">{t('ops.emptyColumn')}</p>
-                ) : null}
-                {cardToggleButtons('new', Math.min(visibleCards.new, groups.new.length), groups.new.length)}
-              </section>
+            {subChips.length > 0 ? (
+              <div
+                className="ops-subfilter ag-enter"
+                role="tablist"
+                aria-label={t(FOCUS_LABEL_KEY[activeFocus])}
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={subFilter === 'all'}
+                  className={subFilter === 'all' ? 'active' : ''}
+                  onClick={() => selectSubFilter('all')}
+                >
+                  {t('ops.allView')}
+                </button>
+                {subChips.map((sub) => (
+                  <button
+                    key={sub}
+                    type="button"
+                    role="tab"
+                    aria-selected={subFilter === sub}
+                    className={subFilter === sub ? 'active' : ''}
+                    onClick={() => selectSubFilter(sub)}
+                  >
+                    {t(`ops.subStates.${sub}`)}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
-              <section ref={processingOrdersRef} data-order-state="processing" className={`kanban-section kanban-section--processing${activeOrderState === 'processing' ? ' is-active' : ''}`}>
-                {PROCESSING_SUBSTATES.map((sub) => renderSubSection(sub, groups.processing.slice(0, visibleCards.processing)))}
-                {groups.processing.length === 0 ? (
-                  <p className="kanban-empty">{t('ops.emptyColumn')}</p>
-                ) : null}
-                {cardToggleButtons('processing', Math.min(visibleCards.processing, groups.processing.length), groups.processing.length)}
-              </section>
+            <section
+              className="ops-queue ag-enter"
+              aria-label={t('ops.queueAria', { focus: t(FOCUS_LABEL_KEY[activeFocus]) })}
+            >
+              <header className="ops-queue__head">
+                <h2>
+                  {subFilter === 'all'
+                    ? t(FOCUS_LABEL_KEY[activeFocus])
+                    : t(`ops.subStates.${subFilter}`)}
+                </h2>
+                <span className="kanban-count">{queueItems.length}</span>
+              </header>
 
-              <section ref={deliveredOrdersRef} data-order-state="delivered" className={`kanban-section kanban-section--delivered${activeOrderState === 'delivered' ? ' is-active' : ''}`}>
-                <div className="kanban-cards">
-                  {groups.delivered.slice(0, visibleCards.delivered).map((order, idx) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      style={{ animationDelay: `${idx * 40}ms` }}
-                      onClick={() => setSelectedOrder(order)}
-                      onChat={() => openOrderChat(order)}
-                    />
-                  ))}
+              <div className="ops-queue__cards">
+                {visibleItems.map((order) => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onClick={() => setSelectedOrder(order)}
+                    onChat={() => openOrderChat(order)}
+                  />
+                ))}
+              </div>
+
+              {queueItems.length === 0 ? (
+                <p className="kanban-empty">{t('ops.queueEmpty')}</p>
+              ) : null}
+
+              {visibleCount > 6 || visibleCount < queueItems.length ? (
+                <div className="ops-load-controls">
+                  {visibleCount > 6 ? (
+                    <button
+                      type="button"
+                      className="ops-load-more"
+                      aria-label={t('ops.collapseThree')}
+                      onClick={() => setVisibleCount((n) => Math.max(6, n - 3))}
+                    >
+                      <IonIcon icon={chevronUpOutline} />
+                    </button>
+                  ) : null}
+                  {visibleCount < queueItems.length ? (
+                    <button
+                      type="button"
+                      className="ops-load-more"
+                      aria-label={t('ops.showThreeMore')}
+                      onClick={() => setVisibleCount((n) => n + 3)}
+                    >
+                      <IonIcon icon={chevronDownOutline} />
+                    </button>
+                  ) : null}
                 </div>
-                {groups.delivered.length === 0 ? (
-                  <p className="kanban-empty">{t('ops.emptyColumn')}</p>
-                ) : null}
-                {cardToggleButtons('delivered', Math.min(visibleCards.delivered, groups.delivered.length), groups.delivered.length)}
-              </section>
-            </KanbanBoard>
-              </>
-            )}
+              ) : null}
+            </section>
           </div>
+
           <OrderDetailSheet
             order={selectedOrder}
             open={!!selectedOrder}
             onClose={() => setSelectedOrder(null)}
           />
-          <IonModal
-            isOpen={dateOpen}
-            onDidDismiss={() => setDateOpen(false)}
-            className="ops-date-modal"
-          >
+
+          <IonModal isOpen={dateOpen} onDidDismiss={() => setDateOpen(false)} className="ops-date-modal">
             <div className="ops-date-picker">
               <div className="ops-date-picker__modes" role="tablist" aria-label={t('ops.selectDate')}>
                 <button
@@ -458,11 +452,7 @@ const OperationsPage: React.FC = () => {
                 onIonChange={(event) => selectOperationDate(event.detail.value)}
               />
 
-              <button
-                className="ops-date-picker__apply"
-                type="button"
-                onClick={() => setDateOpen(false)}
-              >
+              <button className="ops-date-picker__apply" type="button" onClick={() => setDateOpen(false)}>
                 {t('ops.dateApply')}
               </button>
             </div>

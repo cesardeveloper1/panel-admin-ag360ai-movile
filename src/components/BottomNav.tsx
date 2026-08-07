@@ -13,6 +13,7 @@ import {
   ownerNavLeft,
   ownerNavRight,
 } from '../navigation/navConfig';
+import { clearChatNavFrom } from '../navigation/chatNavFrom';
 
 function NavButton({
   active,
@@ -63,7 +64,10 @@ export function BottomNav() {
           <button
             type="button"
             className={`ag-bottom-nav-fab ag-bottom-nav-fab--wa${chatActive ? ' active' : ''}`}
-            onClick={() => go(CHATS_PATH)}
+            onClick={() => {
+              clearChatNavFrom();
+              go(CHATS_PATH);
+            }}
             aria-current={chatActive ? 'page' : undefined}
             aria-label={t('nav.chats')}
           >

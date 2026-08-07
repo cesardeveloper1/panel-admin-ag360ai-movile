@@ -121,7 +121,16 @@
     "proportionAria": "Distribution of {{total}} orders by status",
     "dateToday": "Today",
     "dateRange": "Range",
-    "dateApply": "Apply"
+    "dateApply": "Apply",
+    "allView": "All",
+    "ordersView": "Orders",
+    "ordersStage": "Orders list",
+    "showThreeMore": "Show 3 more",
+    "selectDate": "Select date or range",
+    "focusAria": "Operations focus",
+    "queueAria": "{{focus}} queue",
+    "queueEmpty": "No orders here",
+    "collapseThree": "Collapse 3 cards"
   },
   "kitchen": {
     "title": "Kitchen mode",

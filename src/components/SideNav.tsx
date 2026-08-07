@@ -12,6 +12,7 @@ import {
   isNavActive,
   ownerNavItems,
 } from '../navigation/navConfig';
+import { clearChatNavFrom } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { brandLabel } from '../utils/brandLabel';
 
@@ -91,7 +92,10 @@ export function SideNav() {
         <button
           type="button"
           className={`ag-side-nav-item ag-side-nav-item--chats${location.pathname.startsWith(CHATS_PATH) ? ' active' : ''}`}
-          onClick={() => go(CHATS_PATH)}
+          onClick={() => {
+            clearChatNavFrom();
+            go(CHATS_PATH);
+          }}
         >
           <IonIcon icon={logoWhatsapp} aria-hidden="true" />
           <span>{t('nav.chats')}</span>

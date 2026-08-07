@@ -132,7 +132,11 @@
     "proportionAria": "Distribución de {{total}} pedidos por estado",
     "dateToday": "Hoy",
     "dateRange": "Rango",
-    "dateApply": "Aplicar"
+    "dateApply": "Aplicar",
+    "focusAria": "Foco de operaciones",
+    "queueAria": "Cola de {{focus}}",
+    "queueEmpty": "Sin pedidos aquí",
+    "collapseThree": "Contraer 3 tarjetas"
   },
   "kitchen": {
     "title": "Modo cocina",

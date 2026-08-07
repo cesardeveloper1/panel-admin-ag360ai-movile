@@ -6,6 +6,12 @@ import { useLocation } from 'react-router-dom';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { useApp } from '../context/AppContext';
+import { useAppNavigation } from '../hooks/useAppNavigation';
+import {
+  clearChatNavFrom,
+  getChatNavFrom,
+  hasExternalChatOrigin,
+} from '../navigation/chatNavFrom';
 import { apiMock } from '../services/apiMock';
 import type { ChatConversation, ChatMessage } from '../types';
 import { avatarColor } from '../utils/avatarColor';
@@ -13,6 +19,7 @@ import { avatarColor } from '../utils/avatarColor';
 const ChatsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand } = useApp();
+  const { back } = useAppNavigation();
   const location = useLocation();
   const [items, setItems] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -22,7 +29,18 @@ const ChatsPage: React.FC = () => {
   const [draft, setDraft] = useState('');
   const [selected, setSelected] = useState<ChatConversation | null>(null);
   const [sending, setSending] = useState(false);
+  const [openedFromExternal, setOpenedFromExternal] = useState(() => hasExternalChatOrigin());
+  const [deepLinkSettled, setDeepLinkSettled] = useState(
+    () => !new URLSearchParams(window.location.search).get('customer'),
+  );
   const threadEndRef = useRef<HTMLDivElement>(null);
+
+  const customerKeyFromUrl = useMemo(
+    () => new URLSearchParams(location.search).get('customer'),
+    [location.search],
+  );
+  const awaitingDeepLink = Boolean(customerKeyFromUrl) && !selected && !deepLinkSettled;
+  const showThread = Boolean(selected) || awaitingDeepLink;
 
   useEffect(() => {
     if (!brand) return;
@@ -33,11 +51,23 @@ const ChatsPage: React.FC = () => {
   }, [brand]);
 
   useEffect(() => {
-    const customerKey = new URLSearchParams(location.search).get('customer');
-    if (!customerKey || items.length === 0) return;
-    const matchingChat = items.find((item) => item.nameKey === customerKey);
-    if (matchingChat) setSelected(matchingChat);
-  }, [items, location.search]);
+    if (!customerKeyFromUrl) {
+      setDeepLinkSettled(true);
+      return;
+    }
+    setDeepLinkSettled(false);
+    if (hasExternalChatOrigin()) setOpenedFromExternal(true);
+  }, [customerKeyFromUrl]);
+
+  useEffect(() => {
+    if (!customerKeyFromUrl || loading) return;
+    const matchingChat = items.find((item) => item.nameKey === customerKeyFromUrl);
+    if (matchingChat) {
+      setSelected(matchingChat);
+      if (hasExternalChatOrigin()) setOpenedFromExternal(true);
+    }
+    setDeepLinkSettled(true);
+  }, [items, customerKeyFromUrl, loading]);
 
   useEffect(() => {
     if (!selected) {
@@ -69,7 +99,16 @@ const ChatsPage: React.FC = () => {
     setDraft('');
   };
 
-  const onBackToInbox = () => {
+  const onBackFromThread = () => {
+    if (openedFromExternal) {
+      const origin = getChatNavFrom();
+      clearChatNavFrom();
+      setOpenedFromExternal(false);
+      setSelected(null);
+      setDraft('');
+      if (origin) back(origin);
+      return;
+    }
     setSelected(null);
     setDraft('');
   };
@@ -83,34 +122,42 @@ const ChatsPage: React.FC = () => {
     setSending(false);
   };
 
+  const threadTitle = selected
+    ? t(selected.nameKey)
+    : customerKeyFromUrl
+      ? t(customerKeyFromUrl)
+      : t('chats.title');
+  const threadSubtitle = selected?.phone ?? undefined;
   const threadBreadcrumbs = [
     { label: t('nav.chats') },
-    { label: selected ? t(selected.nameKey) : '' },
+    { label: threadTitle },
   ];
 
   return (
     <IonPage>
       <IonContent className="ag-screen">
         <AppShell>
-          {selected ? (
+          {showThread ? (
             <>
               <AppHeader
-                title={t(selected.nameKey)}
-                subtitle={selected.phone}
-                onBack={onBackToInbox}
+                title={threadTitle}
+                subtitle={threadSubtitle}
+                onBack={onBackFromThread}
                 breadcrumbs={threadBreadcrumbs}
                 showAlerts
               />
               <div className="ag-body module-body chats-body chats-body--thread">
-                <div className="chat-thread-meta ag-enter">
-                  <span className={`chat-row-bot${selected.botActive ? ' chat-row-bot--on' : ''}`}>
-                    {selected.botActive ? t('chats.botOn') : t('chats.botOff')}
-                  </span>
-                  <span className="chat-thread-meta__phone">{selected.phone}</span>
-                </div>
+                {selected ? (
+                  <div className="chat-thread-meta">
+                    <span className={`chat-row-bot${selected.botActive ? ' chat-row-bot--on' : ''}`}>
+                      {selected.botActive ? t('chats.botOn') : t('chats.botOff')}
+                    </span>
+                    <span className="chat-thread-meta__phone">{selected.phone}</span>
+                  </div>
+                ) : null}
 
-                <div className="chat-thread ag-enter">
-                  {threadLoading ? (
+                <div className="chat-thread">
+                  {awaitingDeepLink || threadLoading || !selected ? (
                     <div className="module-loading">
                       <IonSpinner name="crescent" />
                     </div>
@@ -136,11 +183,12 @@ const ChatsPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="chat-composer ag-enter">
+                <div className="chat-composer">
                   <input
                     className="chat-composer__input"
                     value={draft}
                     placeholder={t('chats.placeholder')}
+                    disabled={!selected || sending}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') void onSend();
@@ -149,7 +197,7 @@ const ChatsPage: React.FC = () => {
                   <button
                     type="button"
                     className="chat-composer__send"
-                    disabled={!draft.trim() || sending}
+                    disabled={!selected || !draft.trim() || sending}
                     aria-label={t('chats.send')}
                     onClick={() => void onSend()}
                   >
@@ -160,11 +208,7 @@ const ChatsPage: React.FC = () => {
             </>
           ) : (
             <>
-              <AppHeader
-                centeredCompact
-                title={t('chats.title')}
-                showAlerts
-              />
+              <AppHeader centeredCompact title={t('chats.title')} showAlerts />
               <div className="ag-body module-body chats-body ag-page-stack">
                 <div className="chats-status ag-enter">
                   <IonIcon icon={logoWhatsapp} className="chats-status-icon chats-status-icon--brand" />

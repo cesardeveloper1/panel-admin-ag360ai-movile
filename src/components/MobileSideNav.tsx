@@ -5,7 +5,8 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { PROFILE_PATH, isNavActive, mobileNavItems } from '../navigation/navConfig';
+import { PROFILE_PATH, isNavActive, mobileNavItems, CHATS_PATH } from '../navigation/navConfig';
+import { clearChatNavFrom } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { brandLabel } from '../utils/brandLabel';
 
@@ -25,6 +26,9 @@ export function MobileSideNav() {
 
   const selectModule = (path: string) => {
     setOpen(false);
+    if (path === CHATS_PATH || path.startsWith(`${CHATS_PATH}?`)) {
+      clearChatNavFrom();
+    }
     go(path);
   };
 

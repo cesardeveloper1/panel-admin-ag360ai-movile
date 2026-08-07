@@ -658,7 +658,7 @@ ion-page {
 
 .order-customer-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
 }
@@ -666,14 +666,51 @@ ion-page {
 .order-customer-identity {
   min-width: 0;
   display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
 }
 
 .order-customer-identity > span {
   color: var(--ag-muted);
   font-size: 0.6875rem;
   white-space: nowrap;
+}
+
+.order-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  max-width: 46%;
+}
+
+.order-card__state-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  font: 700 0.625rem var(--ag-font-body);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(135, 70, 255, 0.12);
+  color: var(--ag-pulse);
+}
+
+.order-card__state-badge--processing {
+  background: rgba(249, 80, 11, 0.12);
+  color: var(--ag-hot);
+}
+
+.order-card__state-badge--delivered {
+  background: rgba(4, 120, 87, 0.12);
+  color: var(--ag-done);
 }
 
 .order-lead-tag {
@@ -2327,7 +2364,7 @@ body.ag-mobile-nav-open {
 
 .order-card-actions button,
 .order-card-actions a {
-  min-height: 38px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2338,10 +2375,47 @@ body.ag-mobile-nav-open {
   color: var(--ag-ink);
   font: 700 0.6875rem var(--ag-font-body);
   text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.order-card-actions button:active,
+.order-card-actions a:active {
+  transform: scale(0.97);
+}
+
+.order-card-actions button.is-primary {
+  background: var(--ag-pulse);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(135, 70, 255, 0.28);
+}
+
+.order-card--hot .order-card-actions button.is-primary {
+  background: var(--ag-hot);
+  box-shadow: 0 4px 12px rgba(249, 80, 11, 0.28);
 }
 
 .order-card-actions ion-icon {
   font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .order-card {
+    padding: 1rem 1.1rem;
+  }
+
+  .order-card__state-badge {
+    font-size: 0.6875rem;
+    padding: 0.32rem 0.65rem;
+  }
+
+  .order-card-actions {
+    gap: 0.5rem;
+  }
+
+  .order-card-actions button,
+  .order-card-actions a {
+    font-size: 0.75rem;
+  }
 }
 
 .order-handling-mode {
@@ -2511,6 +2585,125 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
 .ops-all-stages button {
   padding: 0 0.25rem;
   font-size: 0.6875rem;
+}
+
+/* PRP 005 — cola por foco */
+.ops-subfilter {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0.5rem;
+  padding: 0.15rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ops-subfilter::-webkit-scrollbar {
+  display: none;
+}
+
+.ops-subfilter button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--ag-line);
+  border-radius: 999px;
+  background: var(--ag-paper);
+  color: var(--ag-muted);
+  font: 600 0.8125rem var(--ag-font-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.ops-subfilter button.active {
+  background: var(--ag-pulse);
+  border-color: var(--ag-pulse);
+  color: #fff;
+}
+
+.ops-subfilter button:active {
+  transform: scale(0.97);
+}
+
+.ops-queue {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ops-queue__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0;
+}
+
+.ops-queue__head h2 {
+  margin: 0;
+  font: 700 1.0625rem var(--ag-font-display);
+  color: var(--ag-ink);
+  letter-spacing: -0.01em;
+}
+
+.ops-queue__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ops-proportion-segment--btn {
+  display: block;
+  min-width: 0;
+  min-height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.ops-proportion-segment--btn.is-active {
+  opacity: 1;
+  filter: brightness(1.05);
+}
+
+.ops-proportion-segment--btn:focus-visible {
+  outline: 2px solid rgba(135, 70, 255, 0.45);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .ops-subfilter {
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .ops-subfilter button {
+    min-height: 44px;
+    padding: 0.55rem 1.05rem;
+    font-size: 0.875rem;
+  }
+
+  .ops-queue {
+    margin-top: 0.5rem;
+    gap: 1rem;
+  }
+
+  .ops-queue__head h2 {
+    font-size: 1.2rem;
+  }
+
+  .ops-queue__cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -6710,7 +6903,16 @@ html.ag-native.ion-palette-dark .ag-header {
 
 @media (min-width: 768px) {
   .ops-body {
-    padding-top: 1.25rem;
+    padding-top: 1.5rem;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    max-width: 1100px;
+    margin-inline: auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ops-summary {
+    gap: 0.85rem;
   }
 }
 /* === Notifications v2 (Agiliza-style types + contrast) === */
