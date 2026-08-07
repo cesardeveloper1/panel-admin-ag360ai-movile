@@ -91,7 +91,9 @@
     "chats": "Chats",
     "payments": "Payments",
     "agilito": "Agilito",
-    "profileHint": "Open profile"
+    "profileHint": "Open profile",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
   },
   "ops": {
     "title": "Operations",

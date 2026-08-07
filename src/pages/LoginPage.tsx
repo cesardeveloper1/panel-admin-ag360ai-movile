@@ -94,7 +94,6 @@ const LoginPage: React.FC = () => {
 
             <div className="login-links">
               <a href="#">{t('auth.forgot')}</a>
-              <a href="#">{t('auth.signup')}</a>
             </div>
 
             <button type="submit" className="login-submit" disabled={loading}>
