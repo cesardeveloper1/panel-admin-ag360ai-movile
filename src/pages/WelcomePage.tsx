@@ -117,20 +117,20 @@ const WelcomePage: React.FC = () => {
       setAwaitingAutoPick(false);
       return;
     }
-    if (brands.length === 1 && !localStorage.getItem(BRAND_KEY)) {
-      setAwaitingAutoPick(true);
-    }
     if (autoStartedRef.current || brandLoading) return;
-    if (sessionStorage.getItem(PICK_BRAND_KEY) === '1') return;
 
+    // Solo reanudar marca ya guardada en esta sesión (p. ej. refresh).
+    // Una sola marca NO se elige sola: el usuario debe tocar la tarjeta.
     const savedId = localStorage.getItem(BRAND_KEY);
     const savedBrand = savedId ? brands.find((b) => b.id === savedId) : undefined;
-    const target = savedBrand ?? (brands.length === 1 ? brands[0] : null);
-
-    if (target) {
-      autoStartedRef.current = true;
-      void handleSelect(target);
+    if (!savedBrand) {
+      setAwaitingAutoPick(false);
+      return;
     }
+
+    setAwaitingAutoPick(true);
+    autoStartedRef.current = true;
+    void handleSelect(savedBrand);
   }, [loading, brands, brandLoading, handleSelect]);
 
   const handleCreateBrand = async (values: { name: string; subdomain: string }) => {
