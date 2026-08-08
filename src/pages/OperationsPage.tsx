@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar } from '@ionic/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
 import { chevronDownOutline, chevronUpOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +8,7 @@ import { AppShell } from '../components/AppShell';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailSheet } from '../components/OrderDetailSheet';
 import { useApp } from '../context/AppContext';
-import { getKanbanGroup, getKanbanSubState } from '../services/apiMock';
+import { getKanbanGroup, getKanbanSubState } from '../utils/orderKanban';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useViewport } from '../hooks/useViewport';
 import { CHATS_PATH, OPERATIONS_PATH } from '../navigation/navConfig';
@@ -39,7 +39,7 @@ const localIsoDate = (date: Date) =>
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { orders } = useApp();
+  const { orders, loading, setOrdersFilters } = useApp();
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
@@ -56,6 +56,32 @@ const OperationsPage: React.FC = () => {
   const [isScrollingUp, setIsScrollingUp] = useState(true);
   const [visibleCount, setVisibleCount] = useState(6);
   const lastScrollTopRef = useRef(0);
+  const searchBootstrapped = useRef(false);
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      const search = query.trim();
+      if (!searchBootstrapped.current) {
+        searchBootstrapped.current = true;
+        if (!search) return;
+      }
+      void setOrdersFilters({ search: search || undefined });
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [query, setOrdersFilters]);
+
+  const applyOrdersDateFilters = useCallback(() => {
+    const today = localIsoDate(new Date());
+    const end = dateEnd ?? dateStart;
+    const isTodayOnly = dateMode === 'today' || (!dateEnd && dateStart === today);
+    void setOrdersFilters({
+      dateMode: isTodayOnly ? 'today' : 'range',
+      dateFrom: dateStart,
+      dateTo: end,
+      search: query.trim() || undefined,
+    });
+    setDateOpen(false);
+  }, [dateEnd, dateMode, dateStart, query, setOrdersFilters]);
 
   const applyScrollTop = (nextScrollTopRaw: number) => {
     const nextScrollTop = Math.max(0, nextScrollTopRaw);
@@ -94,18 +120,16 @@ const OperationsPage: React.FC = () => {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const byDate = orders.filter((order) => {
-      const date = order.createdAt ?? localIsoDate(new Date());
-      return date >= dateStart && date <= (dateEnd ?? dateStart);
-    });
-    if (!q) return byDate;
-    return byDate.filter(
+    // Fecha viene del servidor (setOrdersFilters); search local como refuerzo inmediato.
+    if (!q) return orders;
+    return orders.filter(
       (o) =>
         o.id.toLowerCase().includes(q) ||
+        o.orderNumber?.toLowerCase().includes(q) ||
         o.customerName?.toLowerCase().includes(q) ||
         t(o.customerKey).toLowerCase().includes(q),
     );
-  }, [orders, query, t, dateStart, dateEnd]);
+  }, [orders, query, t]);
 
   const groups = useMemo(
     () => ({
@@ -367,17 +391,23 @@ const OperationsPage: React.FC = () => {
               </header>
 
               <div className="ops-queue__cards">
-                {visibleItems.map((order) => (
-                  <OrderCard
-                    key={order.id}
-                    order={order}
-                    onClick={() => setSelectedOrder(order)}
-                    onChat={() => openOrderChat(order)}
-                  />
-                ))}
+                {loading ? (
+                  <div className="module-loading">
+                    <IonSpinner name="crescent" />
+                  </div>
+                ) : (
+                  visibleItems.map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      onClick={() => setSelectedOrder(order)}
+                      onChat={() => openOrderChat(order)}
+                    />
+                  ))
+                )}
               </div>
 
-              {queueItems.length === 0 ? (
+              {!loading && queueItems.length === 0 ? (
                 <p className="kanban-empty">{t('ops.queueEmpty')}</p>
               ) : null}
 
@@ -452,7 +482,7 @@ const OperationsPage: React.FC = () => {
                 onIonChange={(event) => selectOperationDate(event.detail.value)}
               />
 
-              <button className="ops-date-picker__apply" type="button" onClick={() => setDateOpen(false)}>
+              <button className="ops-date-picker__apply" type="button" onClick={applyOrdersDateFilters}>
                 {t('ops.dateApply')}
               </button>
             </div>

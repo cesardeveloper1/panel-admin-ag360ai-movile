@@ -16,6 +16,13 @@ import type {
   ChatMessage,
 } from '../types';
 
+export {
+  getKanbanGroup,
+  getKanbanSubState,
+  getKitchenAction,
+} from '../utils/orderKanban';
+import type { OrdersListFilters } from './ordersQuery';
+
 const STORAGE_KEY = 'ag360-orders-v1';
 const PRODUCTS_KEY = 'ag360-products-v1';
 const BRANDS_KEY = 'ag360-brands-v1';
@@ -556,31 +563,6 @@ function delay(ms = 280) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function getKanbanGroup(status: OrderStatus) {
-  if (status === 'delivered') return 'delivered';
-  if (status === 'in_kitchen' || status === 'ready' || status === 'on_the_way') return 'processing';
-  if (status === 'accepted' || status === 'pre_order') return 'new';
-  return null;
-}
-
-export function getKanbanSubState(order: Order) {
-  if (order.status === 'delivered') return 'delivered';
-  if (order.status === 'in_kitchen') return 'in_kitchen';
-  if (order.status === 'ready') return 'ready';
-  if (order.status === 'on_the_way') return 'on_the_way';
-  if (order.status === 'pre_order') return 'starting';
-  if (order.needsHuman) return 'human';
-  if (order.status === 'accepted') return 'ordering';
-  return 'starting';
-}
-
-export function getKitchenAction(status: OrderStatus): OrderStatus | null {
-  if (status === 'accepted') return 'in_kitchen';
-  if (status === 'in_kitchen') return 'ready';
-  if (status === 'ready') return 'on_the_way';
-  return null;
-}
-
 export const apiMock = {
   async login(email: string, password: string): Promise<UserSession | null> {
     await delay();
@@ -603,9 +585,27 @@ export const apiMock = {
     });
   },
 
-  async getOrders(brandId: string) {
+  async getOrders(brandId: string, filters?: OrdersListFilters) {
     await delay();
-    return loadOrders().filter((o) => o.brandId === brandId);
+    let list = loadOrders().filter((o) => o.brandId === brandId);
+    if (filters?.dateMode !== 'last12Hours' && filters?.dateFrom) {
+      const from = filters.dateFrom;
+      const to = filters.dateTo ?? from;
+      list = list.filter((o) => {
+        const date = o.createdAt ?? from;
+        return date >= from && date <= to;
+      });
+    }
+    const search = filters?.search?.trim().toLowerCase();
+    if (search) {
+      list = list.filter(
+        (o) =>
+          o.id.toLowerCase().includes(search) ||
+          o.customerName?.toLowerCase().includes(search) ||
+          o.customerKey.toLowerCase().includes(search),
+      );
+    }
+    return list;
   },
 
   async updateOrderStatus(orderId: string, status: OrderStatus) {

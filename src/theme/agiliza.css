@@ -5672,36 +5672,47 @@ html.ag-native.ion-palette-dark .ag-header {
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.1);
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  /* Tono sólido equivalente al vidrio; lo usa el autofill para no pintar un bloque distinto */
+  --login-field-fill: #716496;
 }
 
 .login-field__control:focus-within {
   border-color: rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.14);
   box-shadow: 0 0 0 3px rgba(135, 70, 255, 0.38);
+  --login-field-fill: #7a6ea0;
 }
 
 .login-field__leading {
-  margin-left: 1rem;
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.72);
-  flex-shrink: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .login-field__input {
   flex: 1;
+  width: 100%;
   min-width: 0;
+  min-height: inherit;
   border: none;
+  border-radius: inherit;
   background: transparent;
-  padding: 1rem 0.9rem;
+  padding: 1rem 0.9rem 1rem 2.85rem;
   font-family: var(--ag-font-body);
   font-size: 1rem;
   font-weight: 500;
   color: #fff;
   caret-color: #fff;
+  color-scheme: dark;
 }
 
 .login-field__input--password {
-  padding-right: 0.25rem;
+  padding-right: 3.1rem;
 }
 
 .login-field__input::placeholder {
@@ -5715,26 +5726,36 @@ html.ag-native.ion-palette-dark .ag-header {
 
 .login-field__input:-webkit-autofill,
 .login-field__input:-webkit-autofill:hover,
-.login-field__input:-webkit-autofill:focus {
-  -webkit-text-fill-color: #fff;
-  -webkit-box-shadow: 0 0 0 1000px rgba(30, 22, 52, 0.95) inset;
-  transition: background-color 9999s ease-out 0s;
+.login-field__input:-webkit-autofill:focus,
+.login-field__input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff;
+  border-radius: inherit;
+  /* Cubre todo el control (mismo radio) con el mismo tono del vidrio */
+  -webkit-box-shadow: 0 0 0 1000px var(--login-field-fill) inset !important;
+  box-shadow: 0 0 0 1000px var(--login-field-fill) inset !important;
+  background-color: var(--login-field-fill) !important;
+  background-image: none !important;
+  transition: background-color 99999s ease-in-out 0s;
 }
 
 .login-field__toggle {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
-  margin-right: 0.35rem;
   border: none;
   border-radius: 50%;
   background: transparent;
   color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
+  z-index: 1;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .login-field__toggle ion-icon {
@@ -5747,7 +5768,7 @@ html.ag-native.ion-palette-dark .ag-header {
 }
 
 .login-field__toggle:active {
-  transform: scale(0.94);
+  transform: translateY(-50%) scale(0.94);
   background: rgba(255, 255, 255, 0.16);
 }
 
@@ -5851,7 +5872,11 @@ html.ag-native.ion-palette-dark .ag-header {
   }
 
   .login-field__input {
-    padding: 1.05rem 1rem;
+    padding: 1.05rem 1rem 1.05rem 2.95rem;
+  }
+
+  .login-field__input--password {
+    padding-right: 3.2rem;
   }
 
   .login-title {

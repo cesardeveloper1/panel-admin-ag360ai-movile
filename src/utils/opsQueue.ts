@@ -1,4 +1,4 @@
-import { getKanbanSubState } from '../services/apiMock';
+import { getKanbanSubState } from './orderKanban';
 import type { Order } from '../types';
 
 /** Lower = higher urgency. Display labels stay on ops.subStates.* */

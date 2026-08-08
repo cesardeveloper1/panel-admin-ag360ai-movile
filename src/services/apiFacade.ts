@@ -6,6 +6,12 @@ import { authService } from './authService';
 import { brandService } from './brandService';
 import { dashboardService } from './dashboardService';
 import { orderService } from './orderService';
+import {
+  defaultOrdersFilters,
+  type OrdersListFilters,
+} from './ordersQuery';
+
+export type { OrdersListFilters } from './ordersQuery';
 
 export interface GetDashboardFacadeParams {
   brand: Brand;
@@ -55,11 +61,14 @@ export const apiFacade = {
     return brandService.getAll();
   },
 
-  async getOrders(brand: Brand): Promise<Order[]> {
+  async getOrders(
+    brand: Brand,
+    filters: OrdersListFilters = defaultOrdersFilters(),
+  ): Promise<Order[]> {
     if (config.useApiMock) {
-      return apiMock.getOrders(brand.id);
+      return apiMock.getOrders(brand.id, filters);
     }
-    return orderService.getOrders(brand);
+    return orderService.getOrders(brand, filters);
   },
 
   async updateOrderStatus(

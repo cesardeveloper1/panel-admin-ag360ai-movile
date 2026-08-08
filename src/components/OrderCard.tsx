@@ -3,7 +3,7 @@ import { IonIcon } from '@ionic/react';
 import { callOutline, chatbubbleEllipsesOutline, openOutline } from 'ionicons/icons';
 import type { CSSProperties } from 'react';
 import type { Order } from '../types';
-import { getKanbanGroup, getKanbanSubState } from '../services/apiMock';
+import { getKanbanGroup, getKanbanSubState } from '../utils/orderKanban';
 
 interface OrderCardProps {
   order: Order;

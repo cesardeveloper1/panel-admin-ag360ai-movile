@@ -4,6 +4,10 @@ import { useTranslation } from 'react-i18next';
 import type { Brand, NotificationItem, Order, UserSession } from '../types';
 import { apiFacade } from '../services/apiFacade';
 import { apiMock } from '../services/apiMock';
+import {
+  defaultOrdersFilters,
+  type OrdersListFilters,
+} from '../services/ordersQuery';
 import { onSessionExpired } from '../utils/authSession';
 
 export const BRAND_KEY = 'ag360-brand-id';
@@ -16,6 +20,7 @@ interface AppContextValue {
   session: UserSession | null;
   brand: Brand | null;
   orders: Order[];
+  ordersFilters: OrdersListFilters;
   notifications: NotificationItem[];
   loading: boolean;
   brandLoading: boolean;
@@ -31,6 +36,8 @@ interface AppContextValue {
   startBrandSwitch: () => void;
   selectBrandAndLoad: (brand: Brand) => Promise<boolean>;
   refreshOrders: () => Promise<void>;
+  /** Actualiza filtros de listado y refetch (fecha / search). */
+  setOrdersFilters: (patch: Partial<OrdersListFilters>) => Promise<void>;
   advanceOrder: (orderId: string) => void;
   setKitchenMode: (value: boolean) => void;
   setDarkMode: (value: boolean) => void;
@@ -71,6 +78,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [session, setSession] = useState<UserSession | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersFilters, setOrdersFiltersState] = useState<OrdersListFilters>(defaultOrdersFilters);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [brandLoading, setBrandLoading] = useState(false);
@@ -84,6 +92,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const ordersRequestId = useRef(0);
   const brandSelectPromise = useRef<Promise<boolean> | null>(null);
   const brandTransitionTimer = useRef<number | null>(null);
+  const ordersFiltersRef = useRef(ordersFilters);
+  ordersFiltersRef.current = ordersFilters;
 
   useEffect(() => {
     document.documentElement.classList.toggle('ion-palette-dark', darkMode);
@@ -122,25 +132,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, [showToast]);
 
-  const loadOrdersForBrand = useCallback(async (nextBrand: Brand): Promise<Order[]> => {
-    const requestId = ++ordersRequestId.current;
-    const data = await apiFacade.getOrders(nextBrand);
-    if (requestId !== ordersRequestId.current) return data;
-    setOrders(data);
-    return data;
-  }, []);
+  const loadOrdersForBrand = useCallback(
+    async (nextBrand: Brand, filters?: OrdersListFilters): Promise<Order[]> => {
+      const requestId = ++ordersRequestId.current;
+      const resolved = filters ?? ordersFiltersRef.current;
+      const data = await apiFacade.getOrders(nextBrand, resolved);
+      if (requestId !== ordersRequestId.current) return data;
+      setOrders(data);
+      return data;
+    },
+    [],
+  );
 
   const refreshOrders = useCallback(async () => {
     if (!brand) return;
     setLoading(true);
     try {
-      await loadOrdersForBrand(brand);
+      await loadOrdersForBrand(brand, ordersFiltersRef.current);
     } catch {
       showToast('toast.ordersLoadError');
     } finally {
       setLoading(false);
     }
   }, [brand, loadOrdersForBrand, showToast]);
+
+  const setOrdersFilters = useCallback(
+    async (patch: Partial<OrdersListFilters>) => {
+      const next: OrdersListFilters = {
+        ...ordersFiltersRef.current,
+        ...patch,
+      };
+      if (next.dateMode === 'today' || next.dateMode === 'range') {
+        const from = next.dateFrom ?? defaultOrdersFilters().dateFrom;
+        next.dateFrom = from;
+        next.dateTo = next.dateTo ?? from;
+      }
+      ordersFiltersRef.current = next;
+      setOrdersFiltersState(next);
+
+      if (!brand) return;
+      setLoading(true);
+      try {
+        await loadOrdersForBrand(brand, next);
+      } catch {
+        showToast('toast.ordersLoadError');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [brand, loadOrdersForBrand, showToast],
+  );
 
   useEffect(() => {
     void apiMock.getNotifications().then(setNotifications);
@@ -151,6 +192,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     brandSelectPromise.current = null;
     setBrand(null);
     setOrders([]);
+    const resetFilters = defaultOrdersFilters();
+    ordersFiltersRef.current = resetFilters;
+    setOrdersFiltersState(resetFilters);
     setKitchenMode(false);
     setBrandLoading(false);
     setLoading(false);
@@ -232,7 +276,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.setItem(BRAND_KEY, next.id);
           sessionStorage.removeItem(PICK_BRAND_KEY);
 
-          const data = await apiFacade.getOrders(next);
+          const data = await apiFacade.getOrders(next, ordersFiltersRef.current);
           if (requestId !== ordersRequestId.current) return false;
 
           flushSync(() => {
@@ -342,6 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       session,
       brand,
       orders,
+      ordersFilters,
       notifications,
       loading,
       brandLoading,
@@ -357,6 +402,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       startBrandSwitch,
       selectBrandAndLoad,
       refreshOrders,
+      setOrdersFilters,
       advanceOrder,
       setKitchenMode,
       setDarkMode,
@@ -372,6 +418,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       session,
       brand,
       orders,
+      ordersFilters,
       notifications,
       loading,
       brandLoading,
@@ -387,6 +434,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       startBrandSwitch,
       selectBrandAndLoad,
       refreshOrders,
+      setOrdersFilters,
       advanceOrder,
       setDarkMode,
       toggleAgent,
