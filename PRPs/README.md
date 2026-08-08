@@ -44,6 +44,7 @@ Detalle: [README-ssgg-connection.md](./README-ssgg-connection.md)
 | 007 | [ssgg-api-client-auth](./007--ssgg-api-client-auth.md) | Completed | Cliente HTTP + JWT; flag mock |
 | 008 | [ssgg-brands-orders](./008--ssgg-brands-orders.md) | Completed | Marcas + órdenes; depende de 007 |
 | 009 | [ssgg-orders-events-sockets](./009--ssgg-orders-events-sockets.md) | Completed | Socket.IO /orders + /events |
+| 010 | [ssgg-reports-dashboard](./010--ssgg-reports-dashboard.md) | Completed | Reportes ← Dashboard OrderFood |
 
 **Backend hermano:** `ssgg` PRP [200--mobile-admin-cors-origins](../../ssgg/PRPs/200--mobile-admin-cors-origins.md) + [epic](../../ssgg/PRPs/README--mobile-admin-connection-epic.md).
 

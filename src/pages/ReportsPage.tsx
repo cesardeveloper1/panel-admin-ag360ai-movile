@@ -3,11 +3,9 @@ import { IonDatetime, IonModal, IonSpinner } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
 import { TabLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
-import { apiMock } from '../services/apiMock';
+import { apiFacade } from '../services/apiFacade';
 import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../types';
 
-const CHART_HOURS = ['10', '12', '14', '16', '18', '20', '22'];
-const CHART_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 type ReportPeriod = 'today' | 'range';
 
 function toLocalIsoDate(date: Date) {
@@ -50,7 +48,26 @@ function VerticalBars({ data, valueKey, format }: { data: ChartPoint[]; valueKey
 }
 
 
-function RankingBlock({ title, items, t, showCategory }: { title: string; items: RankItem[]; t: (k: string) => string; showCategory?: boolean }) {
+function displayLabel(raw: string | undefined, t: (k: string) => string) {
+  if (!raw) return '—';
+  // Claves i18n del mock (locations.*, menu.*) vs nombres literales de la API.
+  if (raw.includes('.')) return t(raw);
+  return raw;
+}
+
+function RankingBlock({
+  title,
+  items,
+  t,
+  showCategory,
+  currencySymbol = 'S/',
+}: {
+  title: string;
+  items: RankItem[];
+  t: (k: string) => string;
+  showCategory?: boolean;
+  currencySymbol?: string;
+}) {
   const max = maxOf(items.map((i) => i.sales));
   return (
     <section className="reports-panel ag-enter">
@@ -62,17 +79,24 @@ function RankingBlock({ title, items, t, showCategory }: { title: string; items:
           <article key={item.id} className="reports-rank-row">
             <span className="reports-rank-pos">{idx + 1}</span>
             <div className="reports-rank-copy">
-              <strong>{t(item.nameKey)}</strong>
-              {showCategory && item.categoryKey ? <small>{t(item.categoryKey)}</small> : null}
+              <strong>{displayLabel(item.nameKey, t)}</strong>
+              {showCategory && item.categoryKey ? (
+                <small>{displayLabel(item.categoryKey, t)}</small>
+              ) : null}
               <div className="reports-rank-bar">
                 <div className="reports-rank-bar-fill" style={{ width: `${Math.max(8, (item.sales / max) * 100)}%` }} />
               </div>
             </div>
             <div className="reports-rank-stats">
-              <span>S/ {item.sales.toLocaleString()}</span>
+              <span>
+                {currencySymbol} {item.sales.toLocaleString()}
+              </span>
               <small>{item.orders} ped.</small>
               {typeof item.growth === 'number' ? (
-                <em className={item.growth < 0 ? 'down' : ''}>{item.growth > 0 ? '+' : ''}{item.growth}%</em>
+                <em className={item.growth < 0 ? 'down' : ''}>
+                  {item.growth > 0 ? '+' : ''}
+                  {item.growth}%
+                </em>
               ) : null}
             </div>
           </article>
@@ -84,7 +108,7 @@ function RankingBlock({ title, items, t, showCategory }: { title: string; items:
 
 const ReportsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand } = useApp();
+  const { brand, showToast } = useApp();
   const [period, setPeriod] = useState<ReportPeriod>('today');
   const [reports, setReports] = useState<Partial<Record<ReportPeriod, DashboardReport>>>({});
   const [loading, setLoading] = useState(true);
@@ -97,15 +121,28 @@ const ReportsPage: React.FC = () => {
 
   useEffect(() => {
     if (!brand) return;
+    let alive = true;
     setLoading(true);
     void Promise.all([
-      apiMock.getDashboard(brand.id, 'today'),
-      apiMock.getDashboard(brand.id, 'range', 7),
-    ]).then(([today, range]) => {
-      setReports({ today, range });
-      setLoading(false);
-    });
-  }, [brand]);
+      apiFacade.getDashboard({ brand, period: 'today' }),
+      apiFacade.getDashboard({ brand, period: 'range', rangeDays: 7 }),
+    ])
+      .then(([today, range]) => {
+        if (!alive) return;
+        setReports({ today, range });
+      })
+      .catch(() => {
+        if (!alive) return;
+        showToast('toast.reportsLoadError');
+        setReports({});
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [brand, showToast]);
 
   useEffect(() => {
     if (!rangeOpen) return;
@@ -212,27 +249,44 @@ const ReportsPage: React.FC = () => {
         return;
       }
       if (!brand) return;
-      void apiMock.getDashboard(brand.id, 'range', 1, selected, selected).then((range) => {
-        updateWithTransition(() => {
-          setReports((current) => ({ ...current, range }));
-          setPeriod('range');
-          setRangeEnd(selected);
-          setRangeOpen(false);
-        });
-      });
+      void apiFacade
+        .getDashboard({
+          brand,
+          period: 'range',
+          rangeStart: selected,
+          rangeEnd: selected,
+        })
+        .then((range) => {
+          updateWithTransition(() => {
+            setReports((current) => ({ ...current, range }));
+            setPeriod('range');
+            setRangeEnd(selected);
+            setRangeOpen(false);
+          });
+        })
+        .catch(() => showToast('toast.reportsLoadError'));
       return;
     }
 
     if (!brand || !rangeStart) return;
     const effectiveEnd = rangeEnd ?? rangeStart;
     const days = rangeDays(rangeStart, effectiveEnd);
-    void apiMock.getDashboard(brand.id, 'range', days, rangeStart, effectiveEnd).then((range) => {
-      updateWithTransition(() => {
-        setReports((current) => ({ ...current, range }));
-        setPeriod('range');
-        setRangeOpen(false);
-      });
-    });
+    void apiFacade
+      .getDashboard({
+        brand,
+        period: 'range',
+        rangeDays: days,
+        rangeStart,
+        rangeEnd: effectiveEnd,
+      })
+      .then((range) => {
+        updateWithTransition(() => {
+          setReports((current) => ({ ...current, range }));
+          setPeriod('range');
+          setRangeOpen(false);
+        });
+      })
+      .catch(() => showToast('toast.reportsLoadError'));
   };
 
   const highlightedRangeDates = useMemo(() => {
@@ -259,31 +313,41 @@ const ReportsPage: React.FC = () => {
   const sales = report?.kpis.find((k) => k.id === 'sales');
   const cancelled = report?.kpis.find((k) => k.id === 'cancelled');
   const ticket = report?.kpis.find((k) => k.id === 'ticket');
-  const recurringPaymentMethod = report?.paymentMethods.reduce((mostUsed, method) => (
-    method.pct > mostUsed.pct ? method : mostUsed
-  ));
+  const currencySymbol = report?.currencySymbol ?? 'S/';
+  const recurringPaymentMethod = report?.paymentMethods.reduce(
+    (mostUsed, method) => (method.pct > mostUsed.pct ? method : mostUsed),
+    report?.paymentMethods[0],
+  );
   const insights = [
-    { id: 'complaints', labelKey: 'reports.complaintsHuman', value: 8, delta: 7, down: true },
-    { id: 'cancelled', labelKey: 'reports.cancelled', value: cancelled?.value ?? 0, delta: 3, down: true },
-    { id: 'scheduled', labelKey: 'reports.scheduledOrders', value: 23, delta: 12 },
-    { id: 'delivery', labelKey: 'reports.deliveryOrdersPct', value: '68%', delta: 8 },
-    { id: 'pickup', labelKey: 'reports.pickupOrdersPct', value: '32%', delta: 5 },
+    {
+      id: 'cancelled',
+      labelKey: 'reports.cancelled',
+      value: cancelled?.value ?? 0,
+      delta: cancelled?.deltaValue,
+      down: true,
+    },
     {
       id: 'payment',
       labelKey: 'reports.recurringPaymentMethod',
-      value: recurringPaymentMethod ? `${recurringPaymentMethod.pct}% ${t(recurringPaymentMethod.labelKey)}` : '—',
-      delta: 6,
+      value: recurringPaymentMethod
+        ? `${recurringPaymentMethod.pct}% ${
+            recurringPaymentMethod.labelKey.includes('.')
+              ? t(recurringPaymentMethod.labelKey)
+              : recurringPaymentMethod.labelKey
+          }`
+        : '—',
+      delta: undefined,
     },
   ];
   const maxBar = useMemo(() => maxOf(report?.hourlySales ?? [1]), [report]);
 
   const formatValue = (kpi: DashboardKpi) => {
-    if (kpi.id === 'sales') return `S/ ${kpi.value.toLocaleString()}`;
-    if (kpi.id === 'ticket') return `S/ ${kpi.value}`;
+    if (kpi.id === 'sales') return `${currencySymbol} ${kpi.value.toLocaleString()}`;
+    if (kpi.id === 'ticket') return `${currencySymbol} ${kpi.value}`;
     return String(kpi.value);
   };
 
-  const chartLabels = period === 'range' ? CHART_DAYS : CHART_HOURS;
+  const chartLabels = report?.salesTrend.map((p) => p.label) ?? [];
 
   const payMax = maxOf(report?.paymentMethods.map((p) => p.amount) ?? [1]);
 
@@ -390,8 +454,14 @@ const ReportsPage: React.FC = () => {
                   </article>
                   <article className="reports-metric-card">
                     <span>{t('reports.orders')}</span>
-                    <strong>{report.channelMetrics.ordersNoHuman}</strong>
-                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: report.channelMetrics.deltas?.ordersNoHuman ?? 0 })}</small> : null}
+                    <strong>{report.kpis.find((k) => k.id === 'orders')?.value ?? 0}</strong>
+                    {period === 'range' ? (
+                      <small>
+                        {t('reports.vsPreviousMonth', {
+                          value: report.channelMetrics.deltas?.ordersNoHuman ?? 0,
+                        })}
+                      </small>
+                    ) : null}
                   </article>
                   <article className="reports-metric-card">
                     <span>{t('reports.repurchase')}</span>
@@ -400,13 +470,17 @@ const ReportsPage: React.FC = () => {
                   </article>
                   <article className="reports-metric-card">
                     <span>{t('reports.avgTicket')}</span>
-                    <strong>S/ {ticket?.value ?? 0}</strong>
-                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: ticket?.deltaValue ?? 4 })}</small> : null}
+                    <strong>
+                      {currencySymbol} {ticket?.value ?? 0}
+                    </strong>
+                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: ticket?.deltaValue ?? 0 })}</small> : null}
                   </article>
                   <article className="reports-metric-card">
                     <span>{t('reports.generatedReservations')}</span>
                     <strong>{report.reservations.total}</strong>
-                    {period === 'range' ? <small>{t('reports.vsPreviousMonth', { value: 8 })}</small> : null}
+                    {period === 'range' && report.reservations.total > 0 ? (
+                      <small>{t('reports.vsPreviousMonth', { value: 0 })}</small>
+                    ) : null}
                   </article>
                 </section>
 
@@ -419,11 +493,13 @@ const ReportsPage: React.FC = () => {
                       <article key={insight.id} className="reports-kpi-card">
                         <span className="reports-kpi-label">{t(insight.labelKey)}</span>
                         <strong className="reports-kpi-value">{insight.value}</strong>
-                        <span className={`reports-kpi-delta${insight.down ? ' reports-kpi-delta--down' : ''}`}>
-                          {period === 'range'
-                            ? t('reports.vsPreviousMonth', { value: insight.delta })
-                            : `+${insight.delta}%`}
-                        </span>
+                        {typeof insight.delta === 'number' ? (
+                          <span className={`reports-kpi-delta${insight.down ? ' reports-kpi-delta--down' : ''}`}>
+                            {period === 'range'
+                              ? t('reports.vsPreviousMonth', { value: insight.delta })
+                              : `+${insight.delta}%`}
+                          </span>
+                        ) : null}
                       </article>
                     ))}
                   </div>
@@ -438,26 +514,34 @@ const ReportsPage: React.FC = () => {
 
                 <section className="reports-chart ag-enter">
                   <div className="reports-chart-head">
-                    <h2>{t(period === 'range' ? 'reports.chartTitleRange' : 'reports.chartTitle')}</h2>
+                    <h2>{t(period === 'range' ? 'reports.chartTitleRange' : 'reports.ordersTrend')}</h2>
                   </div>
-                  <div className="reports-chart-bars" aria-hidden="true">
-                    {report.hourlySales.map((height, idx) => (
-                      <div key={idx} className="reports-chart-col">
-                        <div
-                          className="reports-chart-bar"
-                          style={{ height: `${Math.max(12, (height / maxBar) * 100)}%` }}
-                        />
-                        <span className="reports-chart-hour">{chartLabels[idx] ?? ''}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {report.hourlySales.length > 0 ? (
+                    <div className="reports-chart-bars" aria-hidden="true">
+                      {report.hourlySales.map((height, idx) => (
+                        <div key={idx} className="reports-chart-col">
+                          <div
+                            className="reports-chart-bar"
+                            style={{ height: `${Math.max(12, (height / maxBar) * 100)}%` }}
+                          />
+                          <span className="reports-chart-hour">{chartLabels[idx] ?? ''}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="welcome-desc">{t('app.loading')}</p>
+                  )}
                 </section>
 
                 <section className="reports-panel ag-enter">
                   <div className="reports-chart-head">
                     <h2>{t('reports.channelComparison')}</h2>
                   </div>
-                  <VerticalBars data={report.channelComparison} valueKey="sales" format={(v) => `S/ ${v}`} />
+                  <VerticalBars
+                    data={report.channelComparison}
+                    valueKey="sales"
+                    format={(v) => `${currencySymbol} ${v}`}
+                  />
                 </section>
 
                 <section className="reports-panel ag-enter">
@@ -468,20 +552,33 @@ const ReportsPage: React.FC = () => {
                     {report.paymentMethods.map((item) => (
                       <div key={item.id} className="reports-hbar-row">
                         <div className="reports-hbar-meta">
-                          <span>{t(item.labelKey)}</span>
+                          <span>{displayLabel(item.labelKey, t)}</span>
                           <small>{item.pct}%</small>
                         </div>
                         <div className="reports-hbar-track">
                           <div className="reports-hbar-fill" style={{ width: `${Math.max(6, (item.amount / payMax) * 100)}%` }} />
                         </div>
-                        <strong className="reports-hbar-amount">S/ {item.amount.toLocaleString()}</strong>
+                        <strong className="reports-hbar-amount">
+                          {item.amount.toLocaleString()}
+                        </strong>
                       </div>
                     ))}
                   </div>
                 </section>
 
-                <RankingBlock title={t('reports.restaurantRanking')} items={report.restaurantRanking} t={t} />
-                <RankingBlock title={t('reports.productRanking')} items={report.productRanking} t={t} showCategory />
+                <RankingBlock
+                  title={t('reports.restaurantRanking')}
+                  items={report.restaurantRanking}
+                  t={t}
+                  currencySymbol={currencySymbol}
+                />
+                <RankingBlock
+                  title={t('reports.productRanking')}
+                  items={report.productRanking}
+                  t={t}
+                  showCategory
+                  currencySymbol={currencySymbol}
+                />
 
                 <section className="reports-panel ag-enter">
                   <div className="reports-chart-head">
@@ -495,6 +592,7 @@ const ReportsPage: React.FC = () => {
                   </div>
                 </section>
 
+                {report.agentConnectivity.length > 0 ? (
                 <section className="reports-panel ag-enter">
                   <div className="reports-chart-head">
                     <h2>{t('reports.agentConnectivity')}</h2>
@@ -516,6 +614,7 @@ const ReportsPage: React.FC = () => {
                     })}
                   </div>
                 </section>
+                ) : null}
               </>
             )}
     </TabLayout>

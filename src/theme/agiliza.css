@@ -2320,12 +2320,6 @@ body.ag-mobile-nav-open {
   }
 }
 
-@media (max-width: 767px) {
-  .agilito-top-avatar {
-    display: none;
-  }
-}
-
 .ag-header-actions {
   display: flex;
   align-items: center;
@@ -6027,13 +6021,6 @@ html.ag-native.ion-palette-dark .ag-header {
 
 .agilito-top-bell ion-icon {
   font-size: 1.2rem;
-}
-
-.agilito-top-avatar {
-  width: 34px;
-  height: 34px;
-  font-size: 0.75rem;
-  flex-shrink: 0;
 }
 
 .agilito-body {

@@ -12,7 +12,7 @@ import { AppShell } from '../components/AppShell';
 import { AgentToggle } from '../components/AgentToggle';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { AGILITO_PATH, NOTIFICATIONS_PATH, PROFILE_PATH } from '../navigation/navConfig';
+import { AGILITO_PATH, NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 
@@ -27,8 +27,7 @@ interface AgilitoMessage {
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
-  const { brand, session, notifications, showToast } = useApp();
-  const avatar = session?.initials ?? brand?.initials ?? '?';
+  const { notifications, showToast } = useApp();
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
@@ -153,14 +152,6 @@ const AgilitoPage: React.FC = () => {
                   >
                     <IonIcon icon={notificationsOutline} />
                     {unread > 0 ? <span className="ag-header-bell-badge">{unread}</span> : null}
-                  </button>
-                  <button
-                    type="button"
-                    className="ag-avatar ag-avatar--btn agilito-top-avatar"
-                    onClick={() => go(PROFILE_PATH)}
-                    aria-label={t('nav.profile')}
-                  >
-                    {avatar}
                   </button>
                 </div>
               </div>

@@ -284,6 +284,7 @@
     "brandSaved": "Marca actualizada",
     "brandsLoadError": "No se pudieron cargar las marcas",
     "ordersLoadError": "No se pudieron cargar los pedidos",
+    "reportsLoadError": "No se pudieron cargar los reportes",
     "orderUpdateError": "No se pudo actualizar el pedido",
     "socketNewOrder": "Nuevo pedido recibido"
   },

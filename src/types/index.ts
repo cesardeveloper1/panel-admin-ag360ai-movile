@@ -188,6 +188,8 @@ export interface AgentConnectivityDay {
 }
 
 export interface DashboardReport {
+  /** Símbolo de moneda (API); default UI `S/`. */
+  currencySymbol?: string;
   kpis: DashboardKpi[];
   hourlySales: number[];
   salesTrend: ChartPoint[];

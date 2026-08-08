@@ -2,7 +2,7 @@
 
 > **Project:** agiliza360-mobile (`panel-admin-ag360ai-movile`)  
 > **Backend:** `ssgg`  
-> **Estado:** In Progress (007–009 + ssgg 200 Completed; chats pendientes)  
+> **Estado:** In Progress (007–010 + ssgg 200 Completed; chats pendientes)  
 > **Branch target:** `develop`
 
 ## Objetivo
@@ -16,7 +16,8 @@ Reemplazar `apiMock` por el mismo backend Nest (`ssgg`, prefijo `api/v3`) que us
 | 007 | [ssgg-api-client-auth](./007--ssgg-api-client-auth.md) | Completed | Cliente HTTP + env + proxy + login |
 | 008 | [ssgg-brands-orders](./008--ssgg-brands-orders.md) | Completed | Marcas + órdenes + status; mappers UI |
 | 009 | [ssgg-orders-events-sockets](./009--ssgg-orders-events-sockets.md) | Completed | Socket.IO `/orders` + `/events` |
-| 010+ | (futuro) | — | Chats socket; notificaciones inbox; productos |
+| 010 | [ssgg-reports-dashboard](./010--ssgg-reports-dashboard.md) | Completed | Reportes ← Dashboard OrderFood |
+| 011+ | (futuro) | — | Chats socket; notificaciones inbox; productos |
 
 ## Backend hermano
 
@@ -31,7 +32,8 @@ Reemplazar `apiMock` por el mismo backend Nest (`ssgg`, prefijo `api/v3`) que us
 ssgg 200 (CORS) ──► 007 (api + signin)
 007 ─────────────► 008 (brands + orders)
 008 ─────────────► 009 (sockets orders/events)
-009 ─────────────► chats / notificaciones (010+)
+009 ─────────────► 010 (reportes dashboard)
+010 ─────────────► chats / notificaciones (011+)
 ```
 
 ## Query params de órdenes (PRP 008)

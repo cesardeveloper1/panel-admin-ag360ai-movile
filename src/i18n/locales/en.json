@@ -244,6 +244,7 @@
     "brandSaved": "Brand updated",
     "brandsLoadError": "Could not load brands",
     "ordersLoadError": "Could not load orders",
+    "reportsLoadError": "Could not load reports",
     "orderUpdateError": "Could not update order",
     "socketNewOrder": "New order received"
   },
