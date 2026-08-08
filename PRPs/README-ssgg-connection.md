@@ -2,7 +2,7 @@
 
 > **Project:** agiliza360-mobile (`panel-admin-ag360ai-movile`)  
 > **Backend:** `ssgg`  
-> **Estado:** In Progress (007–010 Completed; 011 Ready; chats pendientes)  
+> **Estado:** In Progress (007–011 + ssgg 200 Completed; chats pendientes)  
 > **Branch target:** `develop`
 
 ## Objetivo
@@ -17,7 +17,7 @@ Reemplazar `apiMock` por el mismo backend Nest (`ssgg`, prefijo `api/v3`) que us
 | 008 | [ssgg-brands-orders](./008--ssgg-brands-orders.md) | Completed | Marcas + órdenes + status; mappers UI |
 | 009 | [ssgg-orders-events-sockets](./009--ssgg-orders-events-sockets.md) | Completed | Socket.IO `/orders` + `/events` |
 | 010 | [ssgg-reports-dashboard](./010--ssgg-reports-dashboard.md) | Completed | Reportes ← Dashboard OrderFood |
-| 011 | [ssgg-operaciones-orders-parity](./011--ssgg-operaciones-orders-parity.md) | In Progress | Fase A: filtros fecha/search server |
+| 011 | [ssgg-operaciones-orders-parity](./011--ssgg-operaciones-orders-parity.md) | Completed | Filtros + status + bot vs panel |
 | 012+ | (futuro) | — | Chats socket; notificaciones inbox; productos |
 
 ## Backend hermano

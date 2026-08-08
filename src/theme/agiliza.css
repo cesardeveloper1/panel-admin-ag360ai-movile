@@ -367,6 +367,17 @@ ion-page {
   flex-shrink: 0;
 }
 
+.ag-agent-toggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ag-agent-toggle.is-locked {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 .ag-agent-bot-icon {
   width: 18px;
   height: 18px;

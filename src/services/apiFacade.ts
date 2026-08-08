@@ -6,12 +6,14 @@ import { authService } from './authService';
 import { brandService } from './brandService';
 import { dashboardService } from './dashboardService';
 import { orderService } from './orderService';
+import { botService, type BotCtxState } from './botService';
 import {
   defaultOrdersFilters,
   type OrdersListFilters,
 } from './ordersQuery';
 
 export type { OrdersListFilters } from './ordersQuery';
+export type { BotCtxState } from './botService';
 
 export interface GetDashboardFacadeParams {
   brand: Brand;
@@ -75,11 +77,12 @@ export const apiFacade = {
     orderId: string,
     status: OrderStatus,
     orderNumber?: string,
+    reason?: string,
   ): Promise<Order | null> {
     if (config.useApiMock) {
       return apiMock.updateOrderStatus(orderId, status);
     }
-    await orderService.updateOrderStatus(orderId, status, orderNumber);
+    await orderService.updateOrderStatus(orderId, status, orderNumber, reason);
     return null;
   },
 
@@ -115,5 +118,26 @@ export const apiFacade = {
       dateTo,
       period: resolvedPeriod,
     });
+  },
+
+  async getBotState(subDomain: string): Promise<BotCtxState> {
+    if (config.useApiMock) {
+      return {
+        subDomain,
+        isOn: typeof localStorage !== 'undefined' && localStorage.getItem('ag360-agent-enabled') === 'true',
+        lockedBySuperadmin: false,
+      };
+    }
+    return botService.getState(subDomain);
+  },
+
+  async setBotEnabled(subDomain: string, isOn: boolean): Promise<BotCtxState> {
+    if (config.useApiMock) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('ag360-agent-enabled', String(isOn));
+      }
+      return { subDomain, isOn, lockedBySuperadmin: false };
+    }
+    return botService.setEnabled(subDomain, isOn);
   },
 };

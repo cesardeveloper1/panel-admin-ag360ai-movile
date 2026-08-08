@@ -3,7 +3,7 @@
 > **Project:** agiliza360-mobile  
 > **Version:** 1.0  
 > **Created:** 2026-08-08  
-> **Status:** In Progress (Fase A done)  
+> **Status:** Completed  
 > **Depends on:** [007](./007--ssgg-api-client-auth.md), [008](./008--ssgg-brands-orders.md), [009](./009--ssgg-orders-events-sockets.md)  
 > **UX previa (ya hecha):** [005](./005--ops-attention-queue.md), [006](./006--ops-order-card-urgency.md)  
 > **Branch target:** `develop`  
@@ -18,7 +18,18 @@
 - `ordersQuery.ts`: `dateMode=today|range|last12Hours`, default **hoy calendario**, limit 150.
 - `orderService` / `apiFacade` / `AppContext.setOrdersFilters` + `refreshOrders` usan filtros activos (sockets incluidos).
 - `OperationsPage`: Aplicar fecha → refetch server; search debounce 400 ms.
-- Pendiente Fase B/C: status canónico `/orders/:id/status`, bot global.
+
+## Implementation notes (Fase B — 2026-08-08)
+
+- Status primario: `PUT /orders/:canonicalId/status` (igual que panel `ordersService.updateStatus`).
+- `resolveCanonicalOrderId` + `isMongoObjectId`; detalle orquestación solo si el id no es ObjectId.
+- Body `{ newStatus, reason? }`; path orchestration deprecado como primario.
+
+## Implementation notes (Fase C — 2026-08-08)
+
+- `botService`: `GET /bot-ctx/:subDomain`, `PUT /bot-ctx/is-on`.
+- Al elegir marca se sincroniza ON/OFF + `lockedBySuperadmin`.
+- `AgentToggle` deshabilitado si locked/busy; toasts `agent.*`.
 
 ---
 
@@ -122,15 +133,15 @@ Referencia: `panel-admin-ag360ai/src/pages/Orders/services/ordersService.ts` (`r
 
 ### Success Criteria
 
-- [ ] Mock off + marca Smash: Operaciones muestra las mismas órdenes del día que el panel (Órdenes) para el mismo `dateFrom`/`dateTo` (tolerancia: limit/paginación).
-- [ ] Cambiar pill Hoy → otro día: Network muestra nuevo `GET /orders` con fechas; lista actualiza.
-- [ ] Rango multi-día: query con `dateFrom`≠`dateTo`.
-- [ ] Cambio de estado desde sheet/card persiste y se ve en panel web (o Network 2xx + refetch).
-- [ ] Socket de pedido nuevo refresca con filtros actuales.
-- [ ] `getKanbanGroup` ya no depende conceptualmente de “mock”.
-- [ ] Toggle agente llama API real (o documentado skip si endpoint no accesible al rol).
-- [ ] Mock on: demo Operaciones sin regresiones 005/006.
-- [ ] lint + tsc + tests kanban/mapper verdes.
+- [x] Mock off + marca Smash: Operaciones muestra las mismas órdenes del día que el panel (Órdenes) para el mismo `dateFrom`/`dateTo` (tolerancia: limit/paginación).
+- [x] Cambiar pill Hoy → otro día: Network muestra nuevo `GET /orders` con fechas; lista actualiza.
+- [x] Rango multi-día: query con `dateFrom`≠`dateTo`.
+- [x] Cambio de estado desde sheet/card persiste y se ve en panel web (o Network 2xx + refetch).
+- [x] Socket de pedido nuevo refresca con filtros actuales.
+- [x] `getKanbanGroup` ya no depende conceptualmente de “mock”.
+- [x] Toggle agente llama API real (o documentado skip si endpoint no accesible al rol).
+- [x] Mock on: demo Operaciones sin regresiones 005/006.
+- [x] lint + tsc + tests kanban/mapper verdes.
 
 ### Out of scope (explícito)
 
@@ -291,8 +302,6 @@ npx eslint src/pages/OperationsPage.tsx src/services/orderService.ts src/context
 
 ## Notes / post-implementación
 
-_Rellenar al completar:_
-
-- Default de fecha elegido: …
-- Status path final (`/orders/...` vs orchestration): …
-- Bot endpoint exacto usado: …
+- Default de fecha elegido: **hoy calendario** (`dateMode=today`)
+- Status path final: **`PUT /orders/:id/status`** (+ resolve ObjectId)
+- Bot endpoint: **`GET /bot-ctx/:subDomain`**, **`PUT /bot-ctx/is-on`**

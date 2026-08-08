@@ -97,6 +97,16 @@
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar"
   },
+  "agent": {
+    "on": "AGENT ON",
+    "off": "AGENT OFF",
+    "turnOn": "Turn agent on",
+    "turnOff": "Turn agent off",
+    "locked": "Agent locked by superadmin",
+    "activated": "Agent activated",
+    "deactivated": "Agent deactivated",
+    "updateError": "Could not update agent"
+  },
   "ops": {
     "title": "Operations",
     "search": "Search order or customer",

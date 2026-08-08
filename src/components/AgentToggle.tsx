@@ -3,15 +3,23 @@ import { useApp } from '../context/AppContext';
 
 export function AgentToggle() {
   const { t } = useTranslation();
-  const { agentEnabled, toggleAgent } = useApp();
+  const { agentEnabled, agentLocked, agentBusy, toggleAgent } = useApp();
+  const disabled = agentBusy || agentLocked;
 
   return (
     <button
       type="button"
-      className={`ag-agent-toggle${agentEnabled ? ' is-on' : ' is-off'}`}
-      aria-label={t(agentEnabled ? 'agent.turnOff' : 'agent.turnOn')}
+      className={`ag-agent-toggle${agentEnabled ? ' is-on' : ' is-off'}${agentLocked ? ' is-locked' : ''}`}
+      aria-label={
+        agentLocked
+          ? t('agent.locked')
+          : t(agentEnabled ? 'agent.turnOff' : 'agent.turnOn')
+      }
       aria-pressed={agentEnabled}
-      onClick={toggleAgent}
+      aria-busy={agentBusy}
+      disabled={disabled}
+      title={agentLocked ? t('agent.locked') : undefined}
+      onClick={() => void toggleAgent()}
     >
       <svg className="ag-agent-bot-icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 3v3" />

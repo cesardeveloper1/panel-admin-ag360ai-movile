@@ -45,7 +45,7 @@ Detalle: [README-ssgg-connection.md](./README-ssgg-connection.md)
 | 008 | [ssgg-brands-orders](./008--ssgg-brands-orders.md) | Completed | Marcas + órdenes; depende de 007 |
 | 009 | [ssgg-orders-events-sockets](./009--ssgg-orders-events-sockets.md) | Completed | Socket.IO /orders + /events |
 | 010 | [ssgg-reports-dashboard](./010--ssgg-reports-dashboard.md) | Completed | Reportes ← Dashboard OrderFood |
-| 011 | [ssgg-operaciones-orders-parity](./011--ssgg-operaciones-orders-parity.md) | In Progress | Fase A: filtros fecha/search |
+| 011 | [ssgg-operaciones-orders-parity](./011--ssgg-operaciones-orders-parity.md) | Completed | Filtros + status + bot vs panel |
 
 **Backend hermano:** `ssgg` PRP [200--mobile-admin-cors-origins](../../ssgg/PRPs/200--mobile-admin-cors-origins.md) + [epic](../../ssgg/PRPs/README--mobile-admin-connection-epic.md).
 

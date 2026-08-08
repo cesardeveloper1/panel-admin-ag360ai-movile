@@ -101,7 +101,11 @@
     "on": "AGENTE ON",
     "off": "AGENTE OFF",
     "turnOn": "Encender agente",
-    "turnOff": "Apagar agente"
+    "turnOff": "Apagar agente",
+    "locked": "Agente bloqueado por superadmin",
+    "activated": "Agente activado",
+    "deactivated": "Agente desactivado",
+    "updateError": "No se pudo actualizar el agente"
   },
   "ops": {
     "title": "Operaciones",

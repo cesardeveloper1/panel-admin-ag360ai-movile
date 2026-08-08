@@ -28,6 +28,8 @@ interface AppContextValue {
   kitchenMode: boolean;
   darkMode: boolean;
   agentEnabled: boolean;
+  agentLocked: boolean;
+  agentBusy: boolean;
   authEpoch: number;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -41,7 +43,7 @@ interface AppContextValue {
   advanceOrder: (orderId: string) => void;
   setKitchenMode: (value: boolean) => void;
   setDarkMode: (value: boolean) => void;
-  toggleAgent: () => void;
+  toggleAgent: () => Promise<void>;
   toast: string | null;
   showToast: (key: string, params?: Record<string, string | number>) => void;
   completeOnboarding: () => void;
@@ -86,6 +88,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [kitchenMode, setKitchenMode] = useState(false);
   const [darkMode, setDarkModeState] = useState(readDarkMode);
   const [agentEnabled, setAgentEnabled] = useState(readAgentEnabled);
+  const [agentLocked, setAgentLocked] = useState(false);
+  const [agentBusy, setAgentBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [authEpoch, setAuthEpoch] = useState(0);
 
@@ -187,6 +191,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     void apiMock.getNotifications().then(setNotifications);
   }, []);
 
+  const syncAgentForBrand = useCallback(async (nextBrand: Brand) => {
+    const subdomain = nextBrand.subdomain?.trim();
+    if (!subdomain) {
+      setAgentLocked(false);
+      return;
+    }
+    setAgentBusy(true);
+    try {
+      const state = await apiFacade.getBotState(subdomain);
+      setAgentEnabled(state.isOn);
+      setAgentLocked(state.lockedBySuperadmin);
+      localStorage.setItem(AGENT_KEY, String(state.isOn));
+    } catch {
+      // Soft-fail: conservar toggle local
+    } finally {
+      setAgentBusy(false);
+    }
+  }, []);
+
   const clearBrand = useCallback(() => {
     ordersRequestId.current += 1;
     brandSelectPromise.current = null;
@@ -198,6 +221,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setKitchenMode(false);
     setBrandLoading(false);
     setLoading(false);
+    setAgentLocked(false);
+    setAgentBusy(false);
     localStorage.removeItem(BRAND_KEY);
   }, []);
 
@@ -285,6 +310,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setBrandLoading(false);
           });
 
+          void syncAgentForBrand(next);
           return true;
         } catch {
           if (requestId === ordersRequestId.current) {
@@ -309,20 +335,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         brandSelectPromise.current = null;
       }
     },
-    [session, showToast],
+    [session, showToast, syncAgentForBrand],
   );
 
   const setDarkMode = useCallback((value: boolean) => {
     setDarkModeState(value);
   }, []);
 
-  const toggleAgent = useCallback(() => {
-    setAgentEnabled((current) => {
-      const next = !current;
-      localStorage.setItem(AGENT_KEY, String(next));
-      return next;
-    });
-  }, []);
+  const toggleAgent = useCallback(async () => {
+    if (agentBusy) return;
+    if (agentLocked) {
+      showToast('agent.locked');
+      return;
+    }
+
+    const subdomain = brand?.subdomain?.trim();
+    if (!subdomain || apiFacade.useMock) {
+      setAgentEnabled((current) => {
+        const next = !current;
+        localStorage.setItem(AGENT_KEY, String(next));
+        return next;
+      });
+      return;
+    }
+
+    const previous = agentEnabled;
+    const next = !previous;
+    setAgentEnabled(next);
+    setAgentBusy(true);
+    try {
+      const state = await apiFacade.setBotEnabled(subdomain, next);
+      setAgentEnabled(state.isOn);
+      setAgentLocked(state.lockedBySuperadmin);
+      localStorage.setItem(AGENT_KEY, String(state.isOn));
+      showToast(state.isOn ? 'agent.activated' : 'agent.deactivated');
+    } catch {
+      setAgentEnabled(previous);
+      showToast('agent.updateError');
+    } finally {
+      setAgentBusy(false);
+    }
+  }, [agentBusy, agentEnabled, agentLocked, brand?.subdomain, showToast]);
 
   const completeOnboarding = useCallback(() => {
     if (!brand) return;
@@ -394,6 +447,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       kitchenMode,
       darkMode,
       agentEnabled,
+      agentLocked,
+      agentBusy,
       authEpoch,
       login,
       logout,
@@ -426,6 +481,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       kitchenMode,
       darkMode,
       agentEnabled,
+      agentLocked,
+      agentBusy,
       authEpoch,
       login,
       logout,
