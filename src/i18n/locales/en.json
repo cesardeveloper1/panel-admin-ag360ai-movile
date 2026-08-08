@@ -20,7 +20,8 @@
     "welcomeTitle": "Welcome back",
     "welcomeSubtitle": "Manage orders, chats and your business in one place.",
     "emailPlaceholder": "you@restaurant.com",
-    "passwordPlaceholder": "Enter your password"
+    "passwordPlaceholder": "Enter your password",
+    "loginFailed": "Incorrect email or password"
   },
   "welcome": {
     "title": "Choose your brand",
@@ -64,7 +65,8 @@
     "lucia": "Lucía Mendoza",
     "carlos": "Carlos Ruiz",
     "ana": "Ana Torres",
-    "pedro": "Pedro Soto"
+    "pedro": "Pedro Soto",
+    "generic": "Customer"
   },
   "products": {
     "ceviche": "Classic ceviche",
@@ -199,7 +201,9 @@
       "web": "Web",
       "phone": "Phone"
     },
-    "motorized": "Driver on the way"
+    "motorized": "Driver on the way",
+    "consumo": "Order total",
+    "item": "Item"
   },
   "notifications": {
     "title": "Alerts",
@@ -227,6 +231,7 @@
   },
   "toast": {
     "loginOk": "Signed in",
+    "sessionExpired": "Session expired. Please sign in again",
     "brandSelected": "Brand selected",
     "orderUpdated": "Order updated",
     "sentToKitchen": "Sent to kitchen",
@@ -236,10 +241,15 @@
     "productEnabled": "Product enabled on menu",
     "productDisabled": "Product hidden from menu",
     "comingSoon": "Available in the next release",
-    "brandSaved": "Brand updated"
+    "brandSaved": "Brand updated",
+    "brandsLoadError": "Could not load brands",
+    "ordersLoadError": "Could not load orders",
+    "orderUpdateError": "Could not update order",
+    "socketNewOrder": "New order received"
   },
   "users": {
-    "maria": "María González"
+    "maria": "María González",
+    "laura": "Laura Support"
   },
   "settings": {
     "title": "Settings",

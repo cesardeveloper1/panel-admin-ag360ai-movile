@@ -80,7 +80,7 @@ export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps
             {order.items.map((item, idx) => (
               <li key={idx}>
                 <span>
-                  {item.qty}× {t(item.nameKey)}
+                  {item.qty}× {item.name?.trim() || t(item.nameKey)}
                 </span>
                 <span>S/ {(item.qty * item.price).toFixed(2)}</span>
               </li>

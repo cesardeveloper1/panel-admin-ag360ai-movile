@@ -5,14 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { LOGO_WHITE_LOCAL } from '../constants/assets';
+import { config } from '../config/env';
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const { goRoot } = useAppNavigation();
-  const { session, login, loading } = useApp();
-  const [email, setEmail] = useState(t('auth.demoOwner'));
-  const [password, setPassword] = useState('demo');
+  const { session, login, loading, showToast } = useApp();
+  const [email, setEmail] = useState(config.useApiMock ? t('auth.demoOwner') : '');
+  const [password, setPassword] = useState(config.useApiMock ? 'demo' : '');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const emailId = useId();
   const passwordId = useId();
 
@@ -21,8 +23,15 @@ const LoginPage: React.FC = () => {
   }, [session, goRoot]);
 
   const onSubmit = async () => {
+    setError(null);
     const ok = await login(email, password);
-    if (ok) goRoot('/welcome');
+    if (ok) {
+      goRoot('/welcome');
+      return;
+    }
+    const message = t('auth.loginFailed');
+    setError(message);
+    showToast('auth.loginFailed');
   };
 
   return (
@@ -60,7 +69,10 @@ const LoginPage: React.FC = () => {
                     inputMode="email"
                     autoComplete="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError(null);
+                    }}
                     placeholder={t('auth.emailPlaceholder')}
                   />
                 </span>
@@ -76,7 +88,10 @@ const LoginPage: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError(null);
+                    }}
                     placeholder={t('auth.passwordPlaceholder')}
                   />
                   <button
@@ -91,6 +106,12 @@ const LoginPage: React.FC = () => {
                 </span>
               </label>
             </div>
+
+            {error ? (
+              <p className="login-error" role="alert">
+                {error}
+              </p>
+            ) : null}
 
             <div className="login-links">
               <a href="#">{t('auth.forgot')}</a>

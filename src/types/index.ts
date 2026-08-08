@@ -25,6 +25,8 @@ export interface Brand {
   initials: string;
   nameKey: string;
   displayName?: string;
+  /** Subdominio ssgg (filtro GET /orders?subdomains=). */
+  subdomain?: string;
   logoUrl?: string;
   locations: number;
   ordersToday: number;
@@ -33,11 +35,15 @@ export interface Brand {
 export interface OrderItem {
   qty: number;
   nameKey: string;
+  /** Texto literal del producto (API); si existe, la UI lo prioriza sobre nameKey i18n. */
+  name?: string;
   price: number;
 }
 
 export interface Order {
   id: string;
+  /** orderNumber del backend (orquestación / detalle). */
+  orderNumber?: string;
   customerKey: string;
   customerName?: string;
   leadTag?: 'new' | 'recurring' | 'vip';
@@ -67,6 +73,8 @@ export interface DashboardKpi {
 export interface UserSession {
   email: string;
   nameKey: string;
+  /** Nombre real del usuario (API); si existe, la UI lo prioriza sobre nameKey i18n. */
+  displayName?: string;
   initials: string;
   role: UserRole;
   brandId?: string;

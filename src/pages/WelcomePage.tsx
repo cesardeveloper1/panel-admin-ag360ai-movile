@@ -10,9 +10,10 @@ import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
 import { BRAND_KEY, PICK_BRAND_KEY, useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { apiMock } from '../services/apiMock';
+import { apiFacade } from '../services/apiFacade';
 import type { Brand } from '../types';
 import { brandLabel } from '../utils/brandLabel';
+import { sessionDisplayName } from '../utils/sessionDisplayName';
 
 const WelcomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -47,10 +48,16 @@ const WelcomePage: React.FC = () => {
   });
 
   const reloadBrands = useCallback(async () => {
-    const data = await apiMock.getBrands();
-    setBrands(data);
-    return data;
-  }, []);
+    try {
+      const data = await apiFacade.getBrands();
+      setBrands(data);
+      return data;
+    } catch {
+      showToast('toast.brandsLoadError');
+      setBrands([]);
+      return [] as Brand[];
+    }
+  }, [showToast]);
 
   useLayoutEffect(() => {
     if (sessionStorage.getItem(PICK_BRAND_KEY) !== '1' || !brand) return;
@@ -127,8 +134,13 @@ const WelcomePage: React.FC = () => {
   }, [loading, brands, brandLoading, handleSelect]);
 
   const handleCreateBrand = async (values: { name: string; subdomain: string }) => {
+    if (!apiFacade.useMock) {
+      showToast('toast.comingSoon');
+      return;
+    }
     setCreatingBrand(true);
     try {
+      const { apiMock } = await import('../services/apiMock');
       const created = await apiMock.createBrand(values);
       if (!created) {
         showToast('welcome.newBrandExists');
@@ -150,7 +162,7 @@ const WelcomePage: React.FC = () => {
 
   const busy = brandLoading || !!selectingId || creatingBrand || leaving || awaitingAutoPick;
   const activeBrand = selectingId ? brands.find((b) => b.id === selectingId) : null;
-  const userName = t(session?.nameKey ?? 'users.maria');
+  const userName = sessionDisplayName(session, t);
 
   const locationLabel = (count: number) =>
     t(count === 1 ? 'welcome.locationOne' : 'welcome.locationMany', { count });

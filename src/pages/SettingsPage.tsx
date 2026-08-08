@@ -20,6 +20,7 @@ import { StackLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { brandLabel } from '../utils/brandLabel';
+import { sessionDisplayName } from '../utils/sessionDisplayName';
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -66,7 +67,7 @@ const SettingsPage: React.FC = () => {
       <section className="profile-hero ag-enter">
         <div className="profile-hero-avatar">{session?.initials ?? '?'}</div>
         <div className="profile-hero-copy">
-          <h2>{t(session?.nameKey ?? 'users.maria')}</h2>
+          <h2>{sessionDisplayName(session, t) || t('users.maria')}</h2>
           <p>{session?.email}</p>
           {brand ? (
             <span className="profile-hero-brand">

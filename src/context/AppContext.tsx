@@ -2,7 +2,9 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { Brand, NotificationItem, Order, UserSession } from '../types';
+import { apiFacade } from '../services/apiFacade';
 import { apiMock } from '../services/apiMock';
+import { onSessionExpired } from '../utils/authSession';
 
 export const BRAND_KEY = 'ag360-brand-id';
 export const PICK_BRAND_KEY = 'ag360-pick-brand';
@@ -54,6 +56,7 @@ function readAgentEnabled() {
 }
 
 function resetAuthStorage() {
+  apiFacade.logout();
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(BRAND_KEY);
   }
@@ -95,9 +98,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [t],
   );
 
-  const loadOrdersForBrand = useCallback(async (brandId: string): Promise<Order[]> => {
+  useEffect(() => {
+    return onSessionExpired(() => {
+      ordersRequestId.current += 1;
+      brandSelectPromise.current = null;
+      flushSync(() => {
+        setSession(null);
+        setBrand(null);
+        setOrders([]);
+        setKitchenMode(false);
+        setBrandLoading(false);
+        setLoading(false);
+        setAuthEpoch((n) => n + 1);
+      });
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(BRAND_KEY);
+      }
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(PICK_BRAND_KEY);
+        sessionStorage.removeItem('ag360-session');
+      }
+      showToast('toast.sessionExpired');
+    });
+  }, [showToast]);
+
+  const loadOrdersForBrand = useCallback(async (nextBrand: Brand): Promise<Order[]> => {
     const requestId = ++ordersRequestId.current;
-    const data = await apiMock.getOrders(brandId);
+    const data = await apiFacade.getOrders(nextBrand);
     if (requestId !== ordersRequestId.current) return data;
     setOrders(data);
     return data;
@@ -107,11 +134,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!brand) return;
     setLoading(true);
     try {
-      await loadOrdersForBrand(brand.id);
+      await loadOrdersForBrand(brand);
+    } catch {
+      showToast('toast.ordersLoadError');
     } finally {
       setLoading(false);
     }
-  }, [brand, loadOrdersForBrand]);
+  }, [brand, loadOrdersForBrand, showToast]);
 
   useEffect(() => {
     void apiMock.getNotifications().then(setNotifications);
@@ -152,7 +181,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     async (email: string, password: string) => {
       setLoading(true);
       try {
-        const user = await apiMock.login(email, password);
+        const user = await apiFacade.login(email, password);
         if (!user) return false;
         ordersRequestId.current += 1;
         brandSelectPromise.current = null;
@@ -164,6 +193,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         showToast('toast.loginOk');
         return true;
+      } catch {
+        return false;
       } finally {
         setLoading(false);
       }
@@ -201,7 +232,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.setItem(BRAND_KEY, next.id);
           sessionStorage.removeItem(PICK_BRAND_KEY);
 
-          const data = await apiMock.getOrders(next.id);
+          const data = await apiFacade.getOrders(next);
           if (requestId !== ordersRequestId.current) return false;
 
           flushSync(() => {
@@ -217,6 +248,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setOrders([]);
             localStorage.removeItem(BRAND_KEY);
             setBrandLoading(false);
+            showToast('toast.ordersLoadError');
           }
           return false;
         } finally {
@@ -233,7 +265,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         brandSelectPromise.current = null;
       }
     },
-    [session],
+    [session, showToast],
   );
 
   const setDarkMode = useCallback((value: boolean) => {
@@ -270,7 +302,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     async (orderId: string) => {
       const order = orders.find((o) => o.id === orderId);
       if (!order) return;
-      const transitions: Record<string, string> = {
+      const transitions: Record<string, Order['status']> = {
         accepted: 'in_kitchen',
         in_kitchen: 'ready',
         ready: 'on_the_way',
@@ -278,15 +310,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       const next = transitions[order.status];
       if (!next) return;
-      const updated = await apiMock.updateOrderStatus(orderId, next as Order['status']);
-      if (updated) {
-        setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+
+      try {
+        const updated = await apiFacade.updateOrderStatus(orderId, next, order.orderNumber);
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? updated ?? {
+                  ...o,
+                  status: next,
+                  minutesInKitchen: next === 'in_kitchen' ? 0 : o.minutesInKitchen,
+                }
+              : o,
+          ),
+        );
         const toastKeys: Record<string, string> = {
           in_kitchen: 'toast.sentToKitchen',
           ready: 'toast.markedReady',
           on_the_way: 'toast.handedOff',
         };
         showToast(toastKeys[next] ?? 'toast.orderUpdated');
+      } catch {
+        showToast('toast.orderUpdateError');
       }
     },
     [orders, showToast],

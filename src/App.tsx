@@ -17,6 +17,7 @@ import LocationsPage from './pages/LocationsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import { AppProvider, useApp } from './context/AppContext';
+import { OrdersSocketProvider } from './context/OrdersSocketProvider';
 import { ToastUx } from './components/ToastUx';
 import { BrandTransitionOverlay } from './components/BrandTransitionOverlay';
 import { AppLaunchSplash } from './components/AppLaunchSplash';
@@ -98,11 +99,13 @@ const App: React.FC = () => (
   <IonApp>
     <AppLaunchSplash />
     <AppProvider>
-      <IonReactRouter>
-        <AppRoutes />
-        <BrandTransitionOverlay />
-        <ToastUx />
-      </IonReactRouter>
+      <OrdersSocketProvider>
+        <IonReactRouter>
+          <AppRoutes />
+          <BrandTransitionOverlay />
+          <ToastUx />
+        </IonReactRouter>
+      </OrdersSocketProvider>
     </AppProvider>
   </IonApp>
 );

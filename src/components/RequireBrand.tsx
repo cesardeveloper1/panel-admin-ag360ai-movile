@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { BRAND_KEY, PICK_BRAND_KEY, useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { apiMock } from '../services/apiMock';
+import { apiFacade } from '../services/apiFacade';
 import { BrandBootShell } from './BrandBootShell';
 
 interface RequireBrandProps {
@@ -35,7 +35,7 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
     hydratingRef.current = true;
     void (async () => {
       try {
-        const brands = await apiMock.getBrands();
+        const brands = await apiFacade.getBrands();
         const found = brands.find((b) => b.id === pendingBrand);
         if (found) {
           const ok = await selectBrandAndLoad(found);

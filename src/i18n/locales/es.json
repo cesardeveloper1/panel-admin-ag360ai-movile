@@ -20,7 +20,8 @@
     "welcomeTitle": "Bienvenido de nuevo",
     "welcomeSubtitle": "Gestiona pedidos, chats y tu negocio en un solo lugar.",
     "emailPlaceholder": "tu@restaurante.com",
-    "passwordPlaceholder": "Ingresa tu contraseña"
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "loginFailed": "Correo o contraseña incorrectos"
   },
   "welcome": {
     "title": "Elige tu marca",
@@ -64,7 +65,8 @@
     "lucia": "Lucía Mendoza",
     "carlos": "Carlos Ruiz",
     "ana": "Ana Torres",
-    "pedro": "Pedro Soto"
+    "pedro": "Pedro Soto",
+    "generic": "Cliente"
   },
   "products": {
     "ceviche": "Ceviche clásico",
@@ -239,7 +241,9 @@
       "web": "Web",
       "phone": "Tel"
     },
-    "motorized": "Motorizado en camino"
+    "motorized": "Motorizado en camino",
+    "consumo": "Consumo",
+    "item": "Producto"
   },
   "notifications": {
     "title": "Alertas",
@@ -267,6 +271,7 @@
   },
   "toast": {
     "loginOk": "Sesión iniciada",
+    "sessionExpired": "Sesión expirada. Vuelve a iniciar sesión",
     "brandSelected": "Marca seleccionada",
     "orderUpdated": "Pedido actualizado",
     "sentToKitchen": "Enviado a cocina",
@@ -276,10 +281,15 @@
     "productEnabled": "Producto activado en carta",
     "productDisabled": "Producto oculto en carta",
     "comingSoon": "Disponible en la próxima versión",
-    "brandSaved": "Marca actualizada"
+    "brandSaved": "Marca actualizada",
+    "brandsLoadError": "No se pudieron cargar las marcas",
+    "ordersLoadError": "No se pudieron cargar los pedidos",
+    "orderUpdateError": "No se pudo actualizar el pedido",
+    "socketNewOrder": "Nuevo pedido recibido"
   },
   "users": {
-    "maria": "María González"
+    "maria": "María González",
+    "laura": "Laura Soporte"
   },
   "settings": {
     "title": "Configuración",

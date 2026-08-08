@@ -35,6 +35,20 @@ Detalle: [README-ops.md](./README-ops.md)
 
 ---
 
+## Epic C: Conexión a ssgg (API real)
+
+Detalle: [README-ssgg-connection.md](./README-ssgg-connection.md)
+
+| # | PRP | Status | Notas |
+|---|-----|--------|--------|
+| 007 | [ssgg-api-client-auth](./007--ssgg-api-client-auth.md) | Completed | Cliente HTTP + JWT; flag mock |
+| 008 | [ssgg-brands-orders](./008--ssgg-brands-orders.md) | Completed | Marcas + órdenes; depende de 007 |
+| 009 | [ssgg-orders-events-sockets](./009--ssgg-orders-events-sockets.md) | Completed | Socket.IO /orders + /events |
+
+**Backend hermano:** `ssgg` PRP [200--mobile-admin-cors-origins](../../ssgg/PRPs/200--mobile-admin-cors-origins.md) + [epic](../../ssgg/PRPs/README--mobile-admin-connection-epic.md).
+
+---
+
 ## Cómo ejecutar un PRP
 
 En Agent mode: *“Execute PRP 005”* o *“Implementa PRPs/005--ops-attention-queue.md”*.
