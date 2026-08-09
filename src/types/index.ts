@@ -206,13 +206,19 @@ export interface ChatConversation {
   id: string;
   phone: string;
   nameKey: string;
+  /** Nombre visible (API); prioriza sobre nameKey i18n. */
+  displayName?: string;
+  agentStateId?: string;
+  clientBsuid?: string;
+  subDomain?: string;
   lastMessageKey: string;
+  /** Preview literal del último mensaje (API). */
+  lastMessage?: string;
   time: string;
   unread: number;
   botActive: boolean;
   brandId: string;
 }
-
 
 export type ChatMessageRole = 'customer' | 'agent' | 'bot';
 
@@ -223,4 +229,10 @@ export interface ChatMessage {
   textKey?: string;
   text?: string;
   time: string;
+  createdAt?: string;
+  status?: string;
+  mediaUrl?: string;
+  mediaType?: string;
+  /** Sender crudo del backend (user | ai | device). */
+  senderRaw?: 'user' | 'ai' | 'device';
 }

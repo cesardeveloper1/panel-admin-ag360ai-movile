@@ -1,16 +1,32 @@
 import { config } from '../config/env';
-import type { Brand, DashboardReport, Order, OrderStatus, UserSession } from '../types';
+import type {
+  Brand,
+  ChatConversation,
+  ChatMessage,
+  DashboardReport,
+  Order,
+  OrderStatus,
+  UserSession,
+} from '../types';
+import type { ContactListResult, ListContactsParams } from '../types/contact';
 import { clearAuthTokens } from '../utils/authSession';
 import { apiMock } from './apiMock';
 import { authService } from './authService';
 import { brandService } from './brandService';
+import { chatService, type SendChatAttachment, type SendChatMessageInput } from './chatService';
+import { contactService } from './contactService';
 import { dashboardService } from './dashboardService';
+import { mapContactToConversation } from './mappers/chatMapper';
 import { orderService } from './orderService';
 import { botService, type BotCtxState } from './botService';
+import { quickMessageService, type QuickMessage } from './quickMessageService';
 import {
   defaultOrdersFilters,
   type OrdersListFilters,
 } from './ordersQuery';
+
+export type { QuickMessage } from './quickMessageService';
+export type { SendChatAttachment } from './chatService';
 
 export type { OrdersListFilters } from './ordersQuery';
 export type { BotCtxState } from './botService';
@@ -139,5 +155,138 @@ export const apiFacade = {
       return { subDomain, isOn, lockedBySuperadmin: false };
     }
     return botService.setEnabled(subDomain, isOn);
+  },
+
+  async listContacts(params: ListContactsParams): Promise<ContactListResult> {
+    if (config.useApiMock) {
+      return apiMock.getContacts(params.subDomain, params.search);
+    }
+    return contactService.list(params);
+  },
+
+  async getChatConversations(
+    brand: Brand,
+    search?: string,
+  ): Promise<ChatConversation[]> {
+    if (config.useApiMock) {
+      return apiMock.getChats(brand.id);
+    }
+    const subDomain = brand.subdomain?.trim();
+    if (!subDomain) return [];
+    const result = await contactService.list({
+      subDomain,
+      page: 1,
+      limit: 150,
+      search,
+    });
+    return result.data.map((c) => mapContactToConversation(c, brand.id));
+  },
+
+  async getChatMessages(params: {
+    chatId: string;
+    phone?: string;
+    agentStateId?: string;
+    subDomain?: string;
+  }): Promise<ChatMessage[]> {
+    if (config.useApiMock) {
+      return apiMock.getChatMessages(params.chatId);
+    }
+    if (params.agentStateId?.trim()) {
+      return chatService.getHistoryByAgentStateId(params.agentStateId);
+    }
+    if (params.phone?.trim() && params.subDomain?.trim()) {
+      return chatService.getHistoryByPhone(params.phone, params.subDomain);
+    }
+    return [];
+  },
+
+  async listQuickMessages(brandId: string): Promise<QuickMessage[]> {
+    if (config.useApiMock) {
+      return [
+        {
+          _id: 'qm-1',
+          brandId,
+          shortcut: 'hola',
+          text: '¡Hola! ¿En qué te puedo ayudar?',
+          isActive: true,
+        },
+        {
+          _id: 'qm-2',
+          brandId,
+          shortcut: 'menu',
+          text: 'Te comparto nuestro menú del día 😊',
+          isActive: true,
+        },
+      ];
+    }
+    const result = await quickMessageService.list(brandId, {
+      page: 1,
+      limit: 100,
+      isActive: true,
+    });
+    return result.data;
+  },
+
+  async sendChatMessage(
+    chat: ChatConversation,
+    text: string,
+    subDomain: string,
+    attachments?: SendChatAttachment[],
+  ): Promise<ChatMessage | null> {
+    if (config.useApiMock) {
+      const first = attachments?.[0];
+      const preview =
+        text.trim() ||
+        (first?.type === 'image'
+          ? '[Imagen]'
+          : first?.type === 'audio'
+            ? '[Audio]'
+            : attachments?.length
+              ? '[Archivo]'
+              : '');
+      return apiMock.sendChatMessage(chat.id, preview || '…');
+    }
+    const input: SendChatMessageInput = {
+      subDomain,
+      clientPhone: chat.phone || undefined,
+      clientBsuid: chat.clientBsuid,
+      message: text.trim() || undefined,
+      provider: 'meta',
+      attachments,
+    };
+    await chatService.sendMessage(input);
+    const firstImage = attachments?.find((a) => a.type === 'image');
+    const firstAudio = attachments?.find((a) => a.type === 'audio');
+    const mediaUrl = firstImage?.url || firstAudio?.url;
+    const mediaType = firstImage ? 'image' : firstAudio ? 'audio' : undefined;
+    return {
+      id: `local-${Date.now()}`,
+      chatId: chat.id,
+      role: 'agent',
+      text:
+        text.trim() ||
+        (firstImage
+          ? 'Imagen'
+          : firstAudio
+            ? 'Audio'
+            : attachments?.[0]?.filename || 'Archivo'),
+      time: new Date().toLocaleTimeString('es-PE', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      createdAt: new Date().toISOString(),
+      senderRaw: 'device',
+      mediaUrl,
+      mediaType,
+    };
+  },
+
+  async markChatAsRead(params: {
+    clientPhone: string;
+    subDomain: string;
+    messageIds?: string[];
+  }): Promise<void> {
+    if (config.useApiMock) return;
+    await chatService.markAsRead(params);
   },
 };

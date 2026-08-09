@@ -608,6 +608,97 @@ export const apiMock = {
     return list;
   },
 
+  /** Contactos demo para embudo (PRP 012). */
+  async getContacts(subDomain: string, search?: string) {
+    await delay(160);
+    const now = new Date().toISOString();
+    const seed = [
+      {
+        _id: 'mock-c-1',
+        subDomain,
+        clientPhone: '+51999888777',
+        clientName: 'Lucía Demo',
+        currentAgent: 'artemis',
+        isActive: true,
+        lastActivity: now,
+        clientType: 'client',
+        conversationState: 'starting',
+        sessionData: { conversationState: 'starting' },
+        lastMessageContent: 'Hola, quiero ver el menú',
+        unreadMessages: 1,
+      },
+      {
+        _id: 'mock-c-2',
+        subDomain,
+        clientPhone: '+51912345678',
+        clientName: 'Carlos Demo',
+        currentAgent: 'artemis',
+        isActive: true,
+        lastActivity: now,
+        clientType: 'client',
+        conversationState: 'searching',
+        sessionData: { conversationState: 'searching' },
+        lastMessageContent: '¿Tienen ceviche?',
+        unreadMessages: 0,
+      },
+      {
+        _id: 'mock-c-3',
+        subDomain,
+        clientPhone: '+51955111222',
+        clientName: 'Pedro Demo',
+        currentAgent: 'human',
+        isActive: false,
+        lastActivity: now,
+        clientType: 'client',
+        conversationState: 'starting',
+        sessionData: { conversationState: 'starting' },
+        lastMessageContent: 'Necesito hablar con alguien',
+        unreadMessages: 2,
+      },
+      {
+        _id: 'mock-c-4',
+        subDomain,
+        clientPhone: '+51988777666',
+        clientName: 'Ana Demo',
+        currentAgent: 'artemis',
+        isActive: true,
+        lastActivity: now,
+        clientType: 'client',
+        conversationState: 'order_placed',
+        sessionData: { conversationState: 'order_placed' },
+        lastMessageContent: 'Pedido confirmado',
+        lastOrderNumber: '1001',
+        unreadMessages: 0,
+      },
+    ];
+    const q = search?.trim().toLowerCase();
+    const data = q
+      ? seed.filter(
+          (c) =>
+            c.clientName.toLowerCase().includes(q) ||
+            c.clientPhone.includes(q) ||
+            (c.lastMessageContent?.toLowerCase().includes(q) ?? false),
+        )
+      : seed;
+    return {
+      data,
+      meta: {
+        totalAgentStates: data.length,
+        activeAgentStates: data.filter((c) => c.isActive).length,
+        inactiveAgentStates: data.filter((c) => !c.isActive).length,
+        conversationStateCounts: {},
+        pagination: {
+          currentPage: 1,
+          limit: 150,
+          totalPages: 1,
+          totalItems: data.length,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      },
+    };
+  },
+
   async updateOrderStatus(orderId: string, status: OrderStatus) {
     await delay(120);
     const orders = loadOrders();

@@ -17,6 +17,7 @@ import LocationsPage from './pages/LocationsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import { AppProvider, useApp } from './context/AppContext';
+import { ChatSocketProvider } from './context/ChatSocketProvider';
 import { OrdersSocketProvider } from './context/OrdersSocketProvider';
 import { ToastUx } from './components/ToastUx';
 import { BrandTransitionOverlay } from './components/BrandTransitionOverlay';
@@ -100,11 +101,13 @@ const App: React.FC = () => (
     <AppLaunchSplash />
     <AppProvider>
       <OrdersSocketProvider>
-        <IonReactRouter>
-          <AppRoutes />
-          <BrandTransitionOverlay />
-          <ToastUx />
-        </IonReactRouter>
+        <ChatSocketProvider>
+          <IonReactRouter>
+            <AppRoutes />
+            <BrandTransitionOverlay />
+            <ToastUx />
+          </IonReactRouter>
+        </ChatSocketProvider>
       </OrdersSocketProvider>
     </AppProvider>
   </IonApp>

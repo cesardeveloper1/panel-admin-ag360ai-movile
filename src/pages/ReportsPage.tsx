@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonDatetime, IonModal, IonSpinner } from '@ionic/react';
+import { IonDatetime, IonIcon, IonModal, IonSpinner } from '@ionic/react';
+import { cubeOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { TabLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
@@ -60,12 +61,14 @@ function RankingBlock({
   items,
   t,
   showCategory,
+  emptyLabel,
   currencySymbol = 'S/',
 }: {
   title: string;
   items: RankItem[];
   t: (k: string) => string;
   showCategory?: boolean;
+  emptyLabel: string;
   currencySymbol?: string;
 }) {
   const max = maxOf(items.map((i) => i.sales));
@@ -75,7 +78,12 @@ function RankingBlock({
         <h2>{title}</h2>
       </div>
       <div className="reports-ranking">
-        {items.map((item, idx) => (
+        {items.length === 0 ? (
+          <div className="reports-ranking-empty" role="status">
+            <IonIcon icon={cubeOutline} aria-hidden="true" />
+            <p>{emptyLabel}</p>
+          </div>
+        ) : items.map((item, idx) => (
           <article key={item.id} className="reports-rank-row">
             <span className="reports-rank-pos">{idx + 1}</span>
             <div className="reports-rank-copy">
@@ -570,6 +578,7 @@ const ReportsPage: React.FC = () => {
                   title={t('reports.restaurantRanking')}
                   items={report.restaurantRanking}
                   t={t}
+                  emptyLabel={t('reports.restaurantRankingEmpty')}
                   currencySymbol={currencySymbol}
                 />
                 <RankingBlock
@@ -577,6 +586,7 @@ const ReportsPage: React.FC = () => {
                   items={report.productRanking}
                   t={t}
                   showCategory
+                  emptyLabel={t('reports.productRankingEmpty')}
                   currencySymbol={currencySymbol}
                 />
 
