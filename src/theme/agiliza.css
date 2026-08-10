@@ -2709,6 +2709,11 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
   }
+
+  .ops-queue__cards > .module-loading {
+    grid-column: 1 / -1;
+    min-height: clamp(10rem, 28vh, 16rem);
+  }
 }
 
 @media (min-width: 768px) {
