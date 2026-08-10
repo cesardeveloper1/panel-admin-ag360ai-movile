@@ -7087,6 +7087,11 @@ html.ag-native.ion-palette-dark .ag-header {
   opacity: 0.45;
 }
 
+.chat-composer__tool--recording {
+  background: color-mix(in srgb, var(--ag-hot) 14%, var(--ag-paper));
+  color: var(--ag-hot);
+}
+
 .chat-composer__input {
   flex: 1;
   border: none;

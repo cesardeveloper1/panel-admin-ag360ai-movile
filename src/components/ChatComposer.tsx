@@ -57,8 +57,12 @@ export function ChatComposer({
   const [fileCaption, setFileCaption] = useState('');
   const [quickPreview, setQuickPreview] = useState<QuickMessage | null>(null);
   const [quickCaption, setQuickCaption] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const isDisabled = Boolean(disabled) || !chat;
 
@@ -69,6 +73,15 @@ export function ChatComposer({
     setEmojiOpen(false);
     setQuickOpen(false);
   }, [chat?.id]);
+
+  const stopMedia = useCallback(() => {
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+    mediaRecorderRef.current = null;
+    audioChunksRef.current = [];
+  }, []);
+
+  useEffect(() => () => stopMedia(), [stopMedia]);
 
   const loadQuickMessages = useCallback(async () => {
     if (!brandId) return;
@@ -216,6 +229,73 @@ export function ChatComposer({
     void sendPayload(quickCaption.trim(), attachments);
   };
 
+  const sendRecordedAudio = async (blob: Blob) => {
+    if (!chat || !brandId || blob.size === 0) return;
+    setUploading(true);
+    try {
+      const extension = blob.type.includes('mp4') ? 'm4a' : 'webm';
+      const file = new File([blob], `audio-${Date.now()}.${extension}`, {
+        type: blob.type || 'audio/webm',
+      });
+      const url = config.useApiMock
+        ? URL.createObjectURL(file)
+        : await fileUploadService.uploadAudio(file, brandId);
+      await sendPayload('', [{ type: 'audio', url, filename: file.name }]);
+    } catch {
+      onError('chats.uploadError');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') {
+      setIsRecording(false);
+      stopMedia();
+      return;
+    }
+    recorder.stop();
+  }, [stopMedia]);
+
+  const startRecording = async () => {
+    if (isDisabled || busy || isRecording) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      onError('chats.micUnavailable');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+      const preferredMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : undefined;
+      const recorder = preferredMime
+        ? new MediaRecorder(stream, { mimeType: preferredMime })
+        : new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || 'audio/webm';
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        setIsRecording(false);
+        stopMedia();
+        void sendRecordedAudio(blob);
+      };
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+      stopMedia();
+      onError('chats.micDenied');
+    }
+  };
+
   const showSend = Boolean(draft.trim()) || uploading || sending;
   const busy = sending || uploading;
 
@@ -346,7 +426,7 @@ export function ChatComposer({
           <button
             type="button"
             className="chat-composer__tool"
-            disabled={isDisabled || busy}
+            disabled={isDisabled || busy || isRecording}
             aria-label={t('chats.emojiAria')}
             onClick={() => {
               setQuickOpen(false);
@@ -358,7 +438,7 @@ export function ChatComposer({
           <button
             type="button"
             className="chat-composer__tool"
-            disabled={isDisabled || busy}
+            disabled={isDisabled || busy || isRecording}
             aria-label={t('chats.attachAria')}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -379,7 +459,7 @@ export function ChatComposer({
           value={draft}
           rows={1}
           placeholder={t('chats.placeholder')}
-          disabled={isDisabled || busy || Boolean(filePreview) || Boolean(quickPreview)}
+          disabled={isDisabled || busy || isRecording || Boolean(filePreview) || Boolean(quickPreview)}
           onChange={(e) => {
             const value = e.target.value;
             setDraft(value);
@@ -409,7 +489,7 @@ export function ChatComposer({
           <button
             type="button"
             className="chat-composer__tool"
-            disabled={isDisabled || busy}
+            disabled={isDisabled || busy || isRecording}
             aria-label={t('chats.quickAria')}
             title={t('chats.quickAria')}
             onClick={() => {
@@ -434,12 +514,18 @@ export function ChatComposer({
           ) : (
             <button
               type="button"
-              className="chat-composer__tool"
+              className={`chat-composer__tool${isRecording ? ' chat-composer__tool--recording' : ''}`}
               disabled={isDisabled || busy}
-              aria-label={t('chats.audioAria')}
-              onClick={() => onError('chats.audioComingSoon')}
+              aria-label={t(isRecording ? 'chats.stopRecording' : 'chats.recordAudio')}
+              onClick={() => {
+                if (isRecording) {
+                  stopRecording();
+                } else {
+                  void startRecording();
+                }
+              }}
             >
-              <IonIcon icon={micOutline} />
+              {isRecording ? <IonSpinner name="crescent" /> : <IonIcon icon={micOutline} />}
             </button>
           )}
         </div>
