@@ -724,6 +724,13 @@ export const apiMock = {
     return structuredClone(chatSeed.filter((c) => c.brandId === brandId));
   },
 
+  async setConversationBotState(chatId: string, isActive: boolean) {
+    await delay(120);
+    const chat = chatSeed.find((item) => item.id === chatId);
+    if (!chat) throw new Error('Conversación no encontrada');
+    chat.botActive = isActive;
+  },
+
   async getChatMessages(chatId: string) {
     await delay(180);
     return structuredClone(chatMessagesStore.filter((m) => m.chatId === chatId));

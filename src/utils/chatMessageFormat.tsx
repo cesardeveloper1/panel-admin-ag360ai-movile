@@ -48,6 +48,30 @@ function shouldRenderAsAudio(url: string, mediaType?: string): boolean {
 }
 
 /** Negrita estilo WhatsApp (`*texto*`) + `/n` como salto de línea. */
+function renderTextPart(part: string, key: string): ReactNode {
+  if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+    return <strong key={key}>{part.slice(1, -1)}</strong>;
+  }
+
+  const urlPattern = /(https?:\/\/[^\s]+)/g;
+  return part.split(urlPattern).map((piece, index) => {
+    if (!piece.startsWith('http://') && !piece.startsWith('https://')) {
+      return <span key={`${key}-${index}`}>{piece}</span>;
+    }
+
+    const url = piece.replace(/[.,;:!?\)\]\}]+$/, '');
+    const trailing = piece.slice(url.length);
+    return (
+      <span key={`${key}-${index}`}>
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          {url}
+        </a>
+        {trailing}
+      </span>
+    );
+  });
+}
+
 export function formatTextWithMarkdown(text: string): ReactNode {
   const textWithLineBreaks = text.replace(/\/n/g, '\n');
   const lines = textWithLineBreaks.split('\n');
@@ -55,10 +79,7 @@ export function formatTextWithMarkdown(text: string): ReactNode {
   return lines.map((line, lineIndex) => {
     const parts = line.split(/(\*[^*]+\*)/g);
     const formattedParts = parts.map((part, partIndex) => {
-      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-        return <strong key={`${lineIndex}-${partIndex}`}>{part.slice(1, -1)}</strong>;
-      }
-      return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
+      return renderTextPart(part, `${lineIndex}-${partIndex}`);
     });
 
     if (lineIndex < lines.length - 1) {

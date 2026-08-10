@@ -182,6 +182,22 @@ export const apiFacade = {
     return result.data.map((c) => mapContactToConversation(c, brand.id));
   },
 
+  async setConversationBotState(
+    chat: ChatConversation,
+    isActive: boolean,
+  ): Promise<void> {
+    if (config.useApiMock) {
+      return apiMock.setConversationBotState(chat.id, isActive);
+    }
+
+    await contactService.setConversationBotState({
+      subDomain: chat.subDomain || '',
+      agentStateId: chat.agentStateId,
+      clientPhone: chat.phone,
+      isActive,
+    });
+  },
+
   async getChatMessages(params: {
     chatId: string;
     phone?: string;

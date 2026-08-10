@@ -77,4 +77,27 @@ export const contactService = {
     const raw = await api.get(`/contact/list?${qs.toString()}`);
     return parseContactListResponse(raw);
   },
+
+  /** Activa o pausa el bot únicamente para una conversación. */
+  async setConversationBotState(params: {
+    subDomain: string;
+    agentStateId?: string;
+    clientPhone?: string;
+    isActive: boolean;
+  }): Promise<void> {
+    const subDomain = params.subDomain.trim();
+    const agentStateId = params.agentStateId?.trim();
+    const clientPhone = params.clientPhone?.trim();
+
+    if (!subDomain || (!agentStateId && !clientPhone)) {
+      throw new Error('Falta la identidad de la conversación');
+    }
+
+    const encodedSubDomain = encodeURIComponent(subDomain);
+    const endpoint = agentStateId
+      ? `/alfred-ai/agent-status/by-id/${encodedSubDomain}/${encodeURIComponent(agentStateId)}`
+      : `/alfred-ai/agent-status/${encodedSubDomain}/${encodeURIComponent(clientPhone!)}`;
+
+    await api.put(endpoint, { isActive: params.isActive });
+  },
 };

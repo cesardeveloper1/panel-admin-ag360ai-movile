@@ -52,6 +52,7 @@ const ChatsPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [threadLoading, setThreadLoading] = useState(false);
+  const [botStateUpdating, setBotStateUpdating] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<ChatConversation | null>(null);
   const [openedFromExternal, setOpenedFromExternal] = useState(() => hasExternalChatOrigin());
@@ -356,6 +357,29 @@ const ChatsPage: React.FC = () => {
     setSelected(null);
   };
 
+  const onToggleConversationBot = async () => {
+    if (!selected || botStateUpdating) return;
+
+    const chatId = selected.id;
+    const nextState = !selected.botActive;
+    setBotStateUpdating(true);
+    try {
+      await apiFacade.setConversationBotState(selected, nextState);
+      setSelected((current) =>
+        current?.id === chatId ? { ...current, botActive: nextState } : current,
+      );
+      setItems((current) =>
+        current.map((chat) =>
+          chat.id === chatId ? { ...chat, botActive: nextState } : chat,
+        ),
+      );
+    } catch {
+      showToast('chats.botStateError');
+    } finally {
+      setBotStateUpdating(false);
+    }
+  };
+
   const onComposerSent = (sent: ChatMessage) => {
     setMessages((prev) => {
       if (prev.some((m) => m.id === sent.id)) return prev;
@@ -380,32 +404,37 @@ const ChatsPage: React.FC = () => {
     ? conversationLabel(selected, t)
     : phoneFromUrl ||
       (customerKeyFromUrl ? t(customerKeyFromUrl) : t('chats.title'));
-  const threadSubtitle = selected?.phone ?? phoneFromUrl ?? undefined;
   const threadBreadcrumbs = [{ label: t('nav.chats') }, { label: threadTitle }];
 
   return (
     <IonPage>
-      <IonContent className="ag-screen">
-        <AppShell>
+      <IonContent className="ag-screen" scrollY={!showThread}>
+        <AppShell lockScroll={showThread} hideMobileMenu={showThread}>
           {showThread ? (
             <>
               <AppHeader
                 title={threadTitle}
-                subtitle={threadSubtitle}
                 onBack={onBackFromThread}
                 breadcrumbs={threadBreadcrumbs}
-                showAlerts
+                trailing={
+                  selected ? (
+                    <div className="chat-header-meta">
+                      <span className="chat-header-meta__phone">{selected.phone}</span>
+                      <button
+                        type="button"
+                        className={`chat-header-bot-toggle${selected.botActive ? ' chat-header-bot-toggle--on' : ''}`}
+                        onClick={() => void onToggleConversationBot()}
+                        disabled={botStateUpdating}
+                        aria-pressed={selected.botActive}
+                        aria-label={selected.botActive ? t('chats.pauseBot') : t('chats.activateBot')}
+                      >
+                        {botStateUpdating ? <IonSpinner name="crescent" /> : selected.botActive ? t('chats.botOn') : t('chats.botOff')}
+                      </button>
+                    </div>
+                  ) : null
+                }
               />
               <div className="ag-body module-body chats-body chats-body--thread">
-                {selected ? (
-                  <div className="chat-thread-meta">
-                    <span className={`chat-row-bot${selected.botActive ? ' chat-row-bot--on' : ''}`}>
-                      {selected.botActive ? t('chats.botOn') : t('chats.botOff')}
-                    </span>
-                    <span className="chat-thread-meta__phone">{selected.phone}</span>
-                  </div>
-                ) : null}
-
                 <div className="chat-thread">
                   {awaitingDeepLink || threadLoading || !selected ? (
                     <div className="module-loading">

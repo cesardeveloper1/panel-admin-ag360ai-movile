@@ -12,6 +12,8 @@ interface AppShellProps {
    * Necesario en módulos stack: al Volver la URL cambia antes de desmontar la página.
    */
   hideMobileMenu?: boolean;
+  /** Bloquea el scroll exterior cuando una vista administra su propio scroll interno. */
+  lockScroll?: boolean;
   /** @deprecated BottomNav desactivado; se mantiene por compatibilidad con AgilitoPage. */
   agilitoChrome?: boolean;
 }
@@ -20,6 +22,7 @@ export function AppShell({
   children,
   hideNav = false,
   hideMobileMenu = false,
+  lockScroll = false,
 }: AppShellProps) {
   const { isTablet } = useViewport();
   const shellRef = useRef<HTMLDivElement>(null);
@@ -32,13 +35,18 @@ export function AppShell({
     const content = shellRef.current?.closest('ion-content') as HTMLIonContentElement | null;
     if (!content) return;
     // Tablet+: scroll en la columna main; ion-content no debe mover sidebar/header.
-    content.scrollY = !isTablet;
-  }, [isTablet]);
+    content.scrollY = !isTablet && !lockScroll;
+  }, [isTablet, lockScroll]);
 
   useEffect(() => {
     const content = shellRef.current?.closest('ion-content');
     const main = shellRef.current?.querySelector('.ag-app-shell-main');
     if (!content && !main) return;
+
+    if (lockScroll) {
+      document.body.classList.remove('ag-module-header-hidden');
+      return;
+    }
 
     let lastScrollTop = 0;
 
@@ -78,7 +86,7 @@ export function AppShell({
       content.removeEventListener('ionScroll', onIonScroll);
       document.body.classList.remove('ag-module-header-hidden');
     };
-  }, [isTablet]);
+  }, [isTablet, lockScroll]);
 
   return (
     <div

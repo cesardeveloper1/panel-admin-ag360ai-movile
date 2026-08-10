@@ -33,6 +33,7 @@ interface AppHeaderProps {
     label: string;
     onClick: () => void;
   };
+  trailing?: React.ReactNode;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -48,6 +49,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   search,
   action,
   secondaryAction,
+  trailing,
 }) => {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
@@ -120,6 +122,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               {action.iconOnly ? null : action.label}
             </button>
           ) : null}
+          {trailing ? <div className="ag-header-trailing">{trailing}</div> : null}
           {showAlerts ? <HeaderStatusMenu /> : null}
         </div>
       </div>
