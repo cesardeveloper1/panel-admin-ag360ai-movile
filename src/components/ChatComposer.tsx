@@ -13,6 +13,7 @@ import { apiFacade, type QuickMessage, type SendChatAttachment } from '../servic
 import { fileUploadService } from '../services/fileUploadService';
 import type { ChatConversation } from '../types';
 import { config } from '../config/env';
+import { useViewport } from '../hooks/useViewport';
 
 const EMOJI_SET = [
   '😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🤩', '🥳',
@@ -45,6 +46,7 @@ export function ChatComposer({
   onError,
 }: ChatComposerProps) {
   const { t } = useTranslation();
+  const { isTablet } = useViewport();
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -421,7 +423,7 @@ export function ChatComposer({
         </div>
       ) : null}
 
-      <div className={`chat-composer${isDisabled ? ' chat-composer--disabled' : ''}`}>
+      <div className={`chat-composer${isDisabled ? ' chat-composer--disabled' : ''}${draft.trim() ? ' chat-composer--typing' : ''}`}>
         <div className="chat-composer__tools">
           <button
             type="button"
@@ -458,7 +460,7 @@ export function ChatComposer({
           className="chat-composer__input"
           value={draft}
           rows={1}
-          placeholder={t('chats.placeholder')}
+          placeholder={isTablet ? t('chats.placeholder') : t('chats.messagePlaceholder')}
           disabled={isDisabled || busy || isRecording || Boolean(filePreview) || Boolean(quickPreview)}
           onChange={(e) => {
             const value = e.target.value;
@@ -488,7 +490,7 @@ export function ChatComposer({
         <div className="chat-composer__actions">
           <button
             type="button"
-            className="chat-composer__tool"
+            className="chat-composer__tool chat-composer__tool--quick"
             disabled={isDisabled || busy || isRecording}
             aria-label={t('chats.quickAria')}
             title={t('chats.quickAria')}
@@ -514,7 +516,7 @@ export function ChatComposer({
           ) : (
             <button
               type="button"
-              className={`chat-composer__tool${isRecording ? ' chat-composer__tool--recording' : ''}`}
+              className={`chat-composer__tool chat-composer__tool--mic${isRecording ? ' chat-composer__tool--recording' : ''}`}
               disabled={isDisabled || busy}
               aria-label={t(isRecording ? 'chats.stopRecording' : 'chats.recordAudio')}
               onClick={() => {

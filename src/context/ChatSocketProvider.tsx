@@ -28,6 +28,15 @@ export interface ContactInfoUpdatedPayload {
 
 type MessageListener = (payload: ChatNewMessagePayload) => void;
 type ContactListener = (payload: ContactInfoUpdatedPayload) => void;
+type HistoryRoomOptions = {
+  subDomain: string;
+  phoneNumber?: string;
+  agentStateId?: string;
+};
+
+function emitHistoryRoom(socket: Socket, room: HistoryRoomOptions): void {
+  socket.emit('joinChatHistoryRoom', room);
+}
 
 interface ChatSocketContextValue {
   subscribeNewMessage: (listener: MessageListener) => () => void;
@@ -37,6 +46,7 @@ interface ChatSocketContextValue {
     phoneNumber?: string;
     agentStateId?: string;
   }) => void;
+  clearHistoryRoom: () => void;
 }
 
 const ChatSocketContext = createContext<ChatSocketContextValue | null>(null);
@@ -49,6 +59,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { session, brand } = useApp();
   const socketRef = useRef<Socket | null>(null);
+  const historyRoomRef = useRef<HistoryRoomOptions | null>(null);
   const messageListeners = useRef(new Set<MessageListener>());
   const contactListeners = useRef(new Set<ContactListener>());
 
@@ -72,6 +83,8 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnection: true,
       reconnectionAttempts: 8,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      randomizationFactor: 0.5,
     });
 
     socketRef.current = socket;
@@ -79,6 +92,10 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     const onConnect = () => {
       socket.emit('join', subDomain);
       socket.emit('joinAgentStatesRoom', { subDomain });
+      const historyRoom = historyRoomRef.current;
+      if (historyRoom?.subDomain === subDomain) {
+        emitHistoryRoom(socket, historyRoom);
+      }
       if (config.environment === 'development') {
         console.log('[mobile] /chat socket conectado', { subDomain });
       }
@@ -113,6 +130,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       socket.off('contactInfoUpdated', onContactUpdated);
       socket.disconnect();
       socketRef.current = null;
+      historyRoomRef.current = null;
     };
   }, [session, brand?.id, brand?.subdomain]);
 
@@ -132,22 +150,29 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const joinHistoryRoom = useCallback(
     (opts: { subDomain: string; phoneNumber?: string; agentStateId?: string }) => {
+      const subDomain = opts.subDomain.trim();
+      const phoneNumber = opts.phoneNumber?.trim() || undefined;
+      const agentStateId = opts.agentStateId?.trim() || undefined;
+      if (!subDomain || (!agentStateId && !phoneNumber)) return;
+
+      const room = { subDomain, phoneNumber, agentStateId };
+      historyRoomRef.current = room;
       const socket = socketRef.current;
       if (!socket?.connected) return;
-      if (!opts.agentStateId && !opts.phoneNumber) return;
-      socket.emit('joinChatHistoryRoom', {
-        subDomain: opts.subDomain,
-        phoneNumber: opts.phoneNumber,
-        agentStateId: opts.agentStateId,
-      });
+      emitHistoryRoom(socket, room);
     },
     [],
   );
+
+  const clearHistoryRoom = useCallback(() => {
+    historyRoomRef.current = null;
+  }, []);
 
   const value: ChatSocketContextValue = {
     subscribeNewMessage,
     subscribeContactUpdated,
     joinHistoryRoom,
+    clearHistoryRoom,
   };
 
   return (
@@ -162,6 +187,7 @@ export function useChatSocket(): ChatSocketContextValue {
       subscribeNewMessage: () => () => undefined,
       subscribeContactUpdated: () => () => undefined,
       joinHistoryRoom: () => undefined,
+      clearHistoryRoom: () => undefined,
     };
   }
   return ctx;

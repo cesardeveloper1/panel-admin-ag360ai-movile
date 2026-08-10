@@ -15,6 +15,15 @@ import {
   hasExternalChatOrigin,
 } from '../navigation/chatNavFrom';
 import { apiFacade } from '../services/apiFacade';
+import {
+  applyInboxMessageUpdate,
+  cacheChatInbox,
+  createChatInboxCacheKey,
+  createChatInboxCacheScope,
+  getCachedChatInbox,
+  updateCachedChatInboxes,
+  upsertInboxConversation,
+} from '../services/chatInboxState';
 import { mapApiMessageToChatMessage, mapContactToConversation } from '../services/mappers/chatMapper';
 import type { ChatConversation, ChatMessage } from '../types';
 import { avatarColor } from '../utils/avatarColor';
@@ -43,15 +52,22 @@ function phonesMatch(a?: string | null, b?: string | null): boolean {
 
 const ChatsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, showToast } = useApp();
+  const { brand, session, showToast } = useApp();
   const { back } = useAppNavigation();
   const location = useLocation();
-  const { subscribeNewMessage, subscribeContactUpdated, joinHistoryRoom } = useChatSocket();
+  const {
+    subscribeNewMessage,
+    subscribeContactUpdated,
+    joinHistoryRoom,
+    clearHistoryRoom,
+  } = useChatSocket();
 
   const [items, setItems] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [threadLoading, setThreadLoading] = useState(false);
+  const [olderMessagesLoading, setOlderMessagesLoading] = useState(false);
+  const [nextHistoryCursor, setNextHistoryCursor] = useState<string | undefined>();
   const [botStateUpdating, setBotStateUpdating] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<ChatConversation | null>(null);
@@ -63,8 +79,19 @@ const ChatsPage: React.FC = () => {
       !new URLSearchParams(window.location.search).get('agentStateId'),
   );
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const threadMessagesRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<ChatConversation | null>(null);
+  const itemsRef = useRef<ChatConversation[]>([]);
+  const queryRef = useRef('');
+  const inboxRequestIdRef = useRef(0);
+  const inboxRefreshTimerRef = useRef<number | null>(null);
+  const seenMessageIdsRef = useRef(new Set<string>());
   selectedRef.current = selected;
+  queryRef.current = query;
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   const searchParams = useMemo(
     () => new URLSearchParams(location.search),
@@ -83,23 +110,67 @@ const ChatsPage: React.FC = () => {
   const showThread = Boolean(selected) || awaitingDeepLink;
 
   const searchBootstrapped = useRef(false);
+  const inboxCacheScope = useMemo(
+    () =>
+      brand
+        ? createChatInboxCacheScope({
+            brandId: brand.id,
+            sessionEmail: session?.email || 'anonymous',
+            subDomain: brand.subdomain,
+          })
+        : '',
+    [brand?.id, brand?.subdomain, session?.email],
+  );
 
   const loadInbox = useCallback(
     async (search?: string) => {
-      if (!brand) return;
-      setLoading(true);
+      if (!brand || !inboxCacheScope) return;
+      const cacheKey = createChatInboxCacheKey(inboxCacheScope, search);
+      const cached = getCachedChatInbox(cacheKey);
+      const requestId = ++inboxRequestIdRef.current;
+      if (cached) {
+        itemsRef.current = cached;
+        setItems(cached);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       try {
         const data = await apiFacade.getChatConversations(brand, search);
+        if (requestId !== inboxRequestIdRef.current) return;
+        cacheChatInbox(cacheKey, data);
+        itemsRef.current = data;
         setItems(data);
       } catch {
+        if (requestId !== inboxRequestIdRef.current) return;
+        if (cached) return;
+        itemsRef.current = [];
         setItems([]);
         showToast('chats.loadError');
       } finally {
-        setLoading(false);
+        if (requestId === inboxRequestIdRef.current) setLoading(false);
       }
     },
-    [brand, showToast],
+    [brand, inboxCacheScope, showToast],
   );
+
+  const scheduleInboxRefresh = useCallback(() => {
+    if (inboxRefreshTimerRef.current !== null) {
+      window.clearTimeout(inboxRefreshTimerRef.current);
+    }
+    inboxRefreshTimerRef.current = window.setTimeout(() => {
+      inboxRefreshTimerRef.current = null;
+      void loadInbox(queryRef.current.trim() || undefined);
+    }, 300);
+  }, [loadInbox]);
+
+  useEffect(() => {
+    return () => {
+      if (inboxRefreshTimerRef.current !== null) {
+        window.clearTimeout(inboxRefreshTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!brand) return;
@@ -201,19 +272,27 @@ const ChatsPage: React.FC = () => {
   const loadThread = useCallback(
     async (chat: ChatConversation) => {
       if (!brand) return;
+      const sub = chat.subDomain || brand.subdomain;
+      if (sub) {
+        joinHistoryRoom({
+          subDomain: sub,
+          phoneNumber: chat.phone || undefined,
+          agentStateId: chat.agentStateId || chat.id,
+        });
+      }
       setThreadLoading(true);
       try {
-        const data = await apiFacade.getChatMessages({
+        const page = await apiFacade.getChatMessagesPage({
           chatId: chat.id,
           phone: chat.phone,
           agentStateId: chat.agentStateId || chat.id,
           subDomain: chat.subDomain || brand.subdomain,
         });
-        setMessages(data);
+        setMessages(page.messages);
+        setNextHistoryCursor(page.nextCursor);
 
-        const sub = chat.subDomain || brand.subdomain;
         if (sub && chat.phone) {
-          const unreadIds = data
+          const unreadIds = page.messages
             .filter(
               (m) =>
                 m.senderRaw === 'user' &&
@@ -230,16 +309,9 @@ const ChatsPage: React.FC = () => {
             });
           }
         }
-
-        if (sub) {
-          joinHistoryRoom({
-            subDomain: sub,
-            phoneNumber: chat.phone || undefined,
-            agentStateId: chat.agentStateId || chat.id,
-          });
-        }
       } catch {
         setMessages([]);
+        setNextHistoryCursor(undefined);
         showToast('chats.historyError');
       } finally {
         setThreadLoading(false);
@@ -250,11 +322,42 @@ const ChatsPage: React.FC = () => {
 
   useEffect(() => {
     if (!selected) {
+      clearHistoryRoom();
       setMessages([]);
+      setNextHistoryCursor(undefined);
       return;
     }
     void loadThread(selected);
-  }, [selected, loadThread]);
+    return () => clearHistoryRoom();
+  }, [selected, loadThread, clearHistoryRoom]);
+
+  const loadOlderMessages = async () => {
+    if (!selected || !nextHistoryCursor || olderMessagesLoading || !brand) return;
+    const container = threadMessagesRef.current;
+    const previousHeight = container?.scrollHeight ?? 0;
+    setOlderMessagesLoading(true);
+    try {
+      const page = await apiFacade.getChatMessagesPage({
+        chatId: selected.id,
+        phone: selected.phone,
+        agentStateId: selected.agentStateId || selected.id,
+        subDomain: selected.subDomain || brand.subdomain,
+        cursor: nextHistoryCursor,
+      });
+      setMessages((current) => {
+        const existing = new Set(current.map((message) => message.id));
+        return [...page.messages.filter((message) => !existing.has(message.id)), ...current];
+      });
+      setNextHistoryCursor(page.nextCursor);
+      window.requestAnimationFrame(() => {
+        if (container) container.scrollTop += container.scrollHeight - previousHeight;
+      });
+    } catch {
+      showToast('chats.loadOlderError');
+    } finally {
+      setOlderMessagesLoading(false);
+    }
+  };
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -263,18 +366,38 @@ const ChatsPage: React.FC = () => {
   useEffect(() => {
     return subscribeNewMessage((payload) => {
       const current = selectedRef.current;
-      if (!current) {
-        void loadInbox(query.trim() || undefined);
-        return;
+      const eventId = payload._id || payload.id;
+      if (eventId) {
+        if (seenMessageIdsRef.current.has(eventId)) return;
+        seenMessageIdsRef.current.add(eventId);
+        if (seenMessageIdsRef.current.size > 300) {
+          seenMessageIdsRef.current.delete(seenMessageIdsRef.current.values().next().value!);
+        }
       }
-      const samePhone = phonesMatch(payload.phoneNumber, current.phone);
+
+      const samePhone = Boolean(current && phonesMatch(payload.phoneNumber, current.phone));
       const sameBsuid =
-        Boolean(payload.clientBsuid && current.clientBsuid) &&
-        payload.clientBsuid === current.clientBsuid;
-      if (!samePhone && !sameBsuid) {
-        void loadInbox(query.trim() || undefined);
-        return;
+        Boolean(current && payload.clientBsuid && current.clientBsuid) &&
+        payload.clientBsuid === current?.clientBsuid;
+      const isCurrentConversation = samePhone || sameBsuid;
+      const updateInbox = (chats: ChatConversation[]) =>
+        applyInboxMessageUpdate(
+          chats,
+          payload,
+          !isCurrentConversation && payload.sender === 'user',
+        );
+      const updatedInbox = updateInbox(itemsRef.current);
+      if (updatedInbox) {
+        itemsRef.current = updatedInbox;
+        setItems(updatedInbox);
       }
+      if (inboxCacheScope) {
+        updateCachedChatInboxes(inboxCacheScope, (chats) => updateInbox(chats) || chats);
+      }
+
+      if (!updatedInbox) scheduleInboxRefresh();
+      if (!current || !isCurrentConversation) return;
+
       const mapped = mapApiMessageToChatMessage(
         {
           _id: payload._id || payload.id,
@@ -299,25 +422,27 @@ const ChatsPage: React.FC = () => {
         });
       }
     });
-  }, [subscribeNewMessage, loadInbox, query, brand?.subdomain]);
+  }, [subscribeNewMessage, inboxCacheScope, scheduleInboxRefresh, brand?.subdomain]);
 
   useEffect(() => {
     return subscribeContactUpdated((payload) => {
       const info = payload.contactInfo;
       if (!info || !brand) return;
+      if (inboxRefreshTimerRef.current !== null) {
+        window.clearTimeout(inboxRefreshTimerRef.current);
+        inboxRefreshTimerRef.current = null;
+      }
       const mapped = mapContactToConversation(info, brand.id);
-      setItems((prev) => {
-        const idx = prev.findIndex(
-          (c) =>
-            c.id === mapped.id ||
-            phonesMatch(c.phone, mapped.phone) ||
-            (c.clientBsuid && c.clientBsuid === mapped.clientBsuid),
-        );
-        if (idx < 0) return [mapped, ...prev];
-        const next = [...prev];
-        next[idx] = { ...next[idx], ...mapped };
-        return next;
-      });
+      const updatedItems = upsertInboxConversation(itemsRef.current, mapped);
+      itemsRef.current = updatedItems;
+      setItems(updatedItems);
+      if (inboxCacheScope) {
+        const defaultCacheKey = createChatInboxCacheKey(inboxCacheScope);
+        updateCachedChatInboxes(inboxCacheScope, (chats, key) => {
+          const merged = upsertInboxConversation(chats, mapped);
+          return key === defaultCacheKey || merged.length === chats.length ? merged : chats;
+        });
+      }
       setSelected((prev) => {
         if (!prev) return prev;
         if (
@@ -330,7 +455,7 @@ const ChatsPage: React.FC = () => {
         return prev;
       });
     });
-  }, [subscribeContactUpdated, brand]);
+  }, [subscribeContactUpdated, brand, inboxCacheScope]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -441,7 +566,17 @@ const ChatsPage: React.FC = () => {
                       <IonSpinner name="crescent" />
                     </div>
                   ) : (
-                    <div className="chat-thread-messages">
+                    <div ref={threadMessagesRef} className="chat-thread-messages">
+                      {nextHistoryCursor ? (
+                        <button
+                          type="button"
+                          className="chat-thread__load-older"
+                          onClick={() => void loadOlderMessages()}
+                          disabled={olderMessagesLoading}
+                        >
+                          {olderMessagesLoading ? <IonSpinner name="crescent" /> : t('chats.loadOlder')}
+                        </button>
+                      ) : null}
                       {messages.map((msg) => {
                         const isOutbound = msg.role === 'agent' || msg.role === 'bot';
                         const body = msg.textKey ? t(msg.textKey) : msg.text ?? '';

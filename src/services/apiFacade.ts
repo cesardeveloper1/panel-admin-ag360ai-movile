@@ -216,6 +216,20 @@ export const apiFacade = {
     return [];
   },
 
+  async getChatMessagesPage(params: {
+    chatId: string;
+    phone?: string;
+    agentStateId?: string;
+    subDomain?: string;
+    cursor?: string;
+    limit?: number;
+  }): Promise<{ messages: ChatMessage[]; nextCursor?: string }> {
+    if (config.useApiMock) {
+      return { messages: await apiMock.getChatMessages(params.chatId) };
+    }
+    return chatService.getHistoryPage(params);
+  },
+
   async listQuickMessages(brandId: string): Promise<QuickMessage[]> {
     if (config.useApiMock) {
       return [

@@ -64,7 +64,43 @@ export function parseConversationHistory(
   return sortMessagesChronologically(mapped);
 }
 
+export function parseConversationHistoryPage(raw: unknown, chatId: string): {
+  messages: ChatMessage[];
+  nextCursor?: string;
+} {
+  const messages = parseConversationHistory(raw, chatId);
+  const root = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const metaSource = root.meta || (root.data as Record<string, unknown> | undefined)?.meta;
+  const meta = metaSource && typeof metaSource === 'object' ? (metaSource as Record<string, unknown>) : {};
+  return { messages, nextCursor: typeof meta.nextCursor === 'string' ? meta.nextCursor : undefined };
+}
+
 export const chatService = {
+  async getHistoryPage(params: {
+    chatId: string;
+    phone?: string;
+    subDomain?: string;
+    agentStateId?: string;
+    cursor?: string;
+    limit?: number;
+  }): Promise<{ messages: ChatMessage[]; nextCursor?: string }> {
+    const limit = Math.min(Math.max(params.limit ?? 40, 1), 200);
+    const qs = new URLSearchParams({ paginated: 'true', limit: String(limit) });
+    if (params.cursor) qs.set('cursor', params.cursor);
+    if (params.agentStateId?.trim()) {
+      const id = encodeURIComponent(params.agentStateId.trim());
+      const raw = await api.get(`/chats/history/agent-state/${id}?${qs.toString()}`);
+      return parseConversationHistoryPage(raw, params.chatId);
+    }
+    const phone = params.phone?.trim();
+    const subDomain = params.subDomain?.trim();
+    if (!phone || !subDomain) return { messages: [] };
+    const raw = await api.get(
+      `/chats/history/${encodeURIComponent(phone)}/${encodeURIComponent(subDomain)}?${qs.toString()}`,
+    );
+    return parseConversationHistoryPage(raw, params.chatId);
+  },
+
   async getHistoryByAgentStateId(agentStateId: string): Promise<ChatMessage[]> {
     const id = agentStateId.trim();
     if (!id) return [];

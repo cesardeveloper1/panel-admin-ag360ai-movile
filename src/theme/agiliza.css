@@ -7005,6 +7005,26 @@ html.ag-native.ion-palette-dark .ag-header {
   gap: 0.625rem;
 }
 
+.chat-thread__load-older {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  margin: 0.25rem auto 0.75rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--ag-line);
+  border-radius: 999px;
+  background: var(--ag-paper);
+  color: var(--ag-text-secondary);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.chat-thread__load-older:disabled { opacity: 0.65; }
+.chat-thread__load-older ion-spinner { width: 1rem; height: 1rem; }
+
 .chats-body--thread .chat-composer-wrap {
   position: static;
   flex-shrink: 0;
@@ -7427,6 +7447,43 @@ html.ag-native.ion-palette-dark .ag-header {
 .chat-composer__send:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .chat-composer {
+    min-height: 4rem;
+    height: auto;
+    align-items: center;
+  }
+
+  .chat-composer__input {
+    min-height: 2.5rem;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .chat-composer__tool--quick,
+  .chat-composer__tool--mic {
+    transform: scale(1);
+    transform-origin: center;
+    transition: width 180ms ease, opacity 150ms ease, transform 180ms ease;
+  }
+
+  .chat-composer--typing .chat-composer__tool--quick,
+  .chat-composer--typing .chat-composer__tool--mic {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.72);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-composer__tool--quick,
+  .chat-composer__tool--mic {
+    transition: none;
+  }
 }
 
 @media (min-width: 768px) {
