@@ -18,6 +18,7 @@ const AGENT_KEY = 'ag360-agent-enabled';
 
 interface AppContextValue {
   session: UserSession | null;
+  authRestoring: boolean;
   brand: Brand | null;
   orders: Order[];
   ordersFilters: OrdersListFilters;
@@ -65,7 +66,7 @@ function readAgentEnabled() {
 }
 
 function resetAuthStorage() {
-  apiFacade.logout();
+  void apiFacade.logout();
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(BRAND_KEY);
   }
@@ -78,6 +79,7 @@ function resetAuthStorage() {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
   const [session, setSession] = useState<UserSession | null>(null);
+  const [authRestoring, setAuthRestoring] = useState(true);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersFilters, setOrdersFiltersState] = useState<OrdersListFilters>(defaultOrdersFilters);
@@ -95,9 +97,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const ordersRequestId = useRef(0);
   const brandSelectPromise = useRef<Promise<boolean> | null>(null);
+  // En desarrollo, StrictMode vuelve a ejecutar el efecto de montaje. Ambas
+  // ejecuciones deben compartir la misma rotación del refresh token.
+  const restoreSessionPromise = useRef<Promise<UserSession | null> | null>(null);
   const brandTransitionTimer = useRef<number | null>(null);
   const ordersFiltersRef = useRef(ordersFilters);
   ordersFiltersRef.current = ordersFilters;
+
+  useEffect(() => {
+    let active = true;
+    if (!restoreSessionPromise.current) {
+      restoreSessionPromise.current = apiFacade.restoreSession();
+    }
+
+    void restoreSessionPromise.current
+      .then((restored) => {
+        if (active && restored) setSession(restored);
+      })
+      .finally(() => {
+        if (active) setAuthRestoring(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('ion-palette-dark', darkMode);
@@ -437,6 +458,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const value = useMemo(
     () => ({
       session,
+      authRestoring,
       brand,
       orders,
       ordersFilters,
@@ -471,6 +493,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }),
     [
       session,
+      authRestoring,
       brand,
       orders,
       ordersFilters,

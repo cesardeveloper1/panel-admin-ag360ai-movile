@@ -9,6 +9,7 @@ async function postFormData(url: string, formData: FormData): Promise<Record<str
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: formData,
+    credentials: 'include',
   });
 
   const responseData = (await response.json()) as Record<string, unknown>;

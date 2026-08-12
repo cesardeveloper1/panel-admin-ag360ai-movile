@@ -1,5 +1,6 @@
 import type { UserRole, UserSession } from '../types';
 import { persistAuthSession } from '../utils/authSession';
+import { clearNativeRefreshToken } from '../utils/nativeRefreshTokenStorage';
 import { api } from './api';
 
 interface LoginUserPayload {
@@ -14,6 +15,8 @@ interface LoginDataPayload {
   user: LoginUserPayload;
   accessToken: string;
 }
+
+type CurrentUserPayload = LoginUserPayload;
 
 function initialsFromName(name: string, email: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -72,24 +75,54 @@ function mapToUserSession(email: string, data: LoginDataPayload): UserSession {
   };
 }
 
+function unwrapCurrentUser(response: unknown): CurrentUserPayload | null {
+  if (!response || typeof response !== 'object') return null;
+  const root = response as Record<string, unknown>;
+  const data = root.data && typeof root.data === 'object' ? root.data as Record<string, unknown> : root;
+  const nested = data.data && typeof data.data === 'object' ? data.data as Record<string, unknown> : data;
+  if (typeof nested.email !== 'string' || typeof nested.role !== 'string') return null;
+  return nested as unknown as CurrentUserPayload;
+}
+
 export const authService = {
   login: async (email: string, password: string): Promise<UserSession | null> => {
     const response = await api.post('/auth/signin', { email, password });
     const data = unwrapLoginData(response);
     if (!data?.accessToken) return null;
 
-    const userId = data.user.id ?? data.user._id;
-    const role = normalizeRole(String(data.user.role ?? 'owner'));
-    const fullName = data.user.fullName?.trim();
-
     persistAuthSession({
       accessToken: data.accessToken,
-      email: data.user.email || email,
-      role,
-      userId,
-      fullName,
     });
 
     return mapToUserSession(email, data);
+  },
+
+  restoreSession: async (): Promise<UserSession | null> => {
+    const refreshResponse = await api.post('/auth/refresh');
+    const refreshData = unwrapLoginData(refreshResponse);
+    const accessToken = refreshData?.accessToken ?? (() => {
+      if (!refreshResponse || typeof refreshResponse !== 'object') return null;
+      const root = refreshResponse as Record<string, unknown>;
+      const data = root.data && typeof root.data === 'object' ? root.data as Record<string, unknown> : root;
+      return typeof data.accessToken === 'string' ? data.accessToken : null;
+    })();
+    if (!accessToken) return null;
+
+    persistAuthSession({ accessToken });
+    const user = unwrapCurrentUser(await api.get('/auth/me'));
+    if (!user) return null;
+    return mapToUserSession(user.email, {
+      accessToken,
+      user,
+    });
+  },
+
+  logout: async (): Promise<void> => {
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      await clearNativeRefreshToken();
+      persistAuthSession({ accessToken: '' });
+    }
   },
 };

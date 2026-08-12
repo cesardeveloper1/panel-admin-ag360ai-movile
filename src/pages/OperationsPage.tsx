@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
-import { chevronDownOutline, chevronUpOutline, peopleOutline } from 'ionicons/icons';
+import { peopleOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -65,12 +65,14 @@ const OperationsPage: React.FC = () => {
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
   const [visibleCount, setVisibleCount] = useState(6);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const lastScrollTopRef = useRef(0);
   const searchBootstrapped = useRef(false);
 
   const [contacts, setContacts] = useState<ContactInfo[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const contactsRequestId = useRef(0);
+  const contactsCacheRef = useRef(new Map<string, ContactInfo[]>());
 
   const loadContacts = useCallback(
     async (search?: string) => {
@@ -79,8 +81,15 @@ const OperationsPage: React.FC = () => {
         setContacts([]);
         return;
       }
+      const normalizedSearch = search?.trim().toLowerCase() || '';
+      const cacheKey = `${subdomain}|${normalizedSearch}`;
+      const cached = contactsCacheRef.current.get(cacheKey);
+      if (cached) {
+        setContacts(cached);
+        setContactsLoading(false);
+      }
       const requestId = ++contactsRequestId.current;
-      setContactsLoading(true);
+      if (!cached) setContactsLoading(true);
       try {
         const result = await apiFacade.listContacts({
           subDomain: subdomain,
@@ -89,11 +98,16 @@ const OperationsPage: React.FC = () => {
           search: search?.trim() || undefined,
         });
         if (requestId !== contactsRequestId.current) return;
+        contactsCacheRef.current.set(cacheKey, result.data);
         setContacts(result.data);
       } catch {
         if (requestId === contactsRequestId.current) {
-          setContacts([]);
-          showToast('ops.funnel.loadError');
+          if (cached) {
+            setContacts(cached);
+          } else {
+            setContacts([]);
+            showToast('ops.funnel.loadError');
+          }
         }
       } finally {
         if (requestId === contactsRequestId.current) {
@@ -233,6 +247,23 @@ const OperationsPage: React.FC = () => {
 
   const visibleOrderItems = queueItems.slice(0, visibleCount);
   const visibleContacts = funnelQueue.slice(0, visibleCount);
+  const currentQueueLength = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel || visibleCount >= currentQueueLength) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setVisibleCount((current) => Math.min(current + 6, currentQueueLength));
+        }
+      },
+      { rootMargin: '0px 0px 160px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [currentQueueLength, visibleCount]);
 
   const subChips: KanbanSubState[] =
     activeFocus === 'new' ? NEW_SUBSTATES : activeFocus === 'processing' ? PROCESSING_SUBSTATES : [];
@@ -453,30 +484,7 @@ const OperationsPage: React.FC = () => {
                     </div>
                   ) : null}
 
-                  {visibleCount > 6 || visibleCount < queueLen ? (
-                    <div className="ops-load-controls">
-                      {visibleCount > 6 ? (
-                        <button
-                          type="button"
-                          className="ops-load-more"
-                          aria-label={t('ops.collapseThree')}
-                          onClick={() => setVisibleCount((n) => Math.max(6, n - 3))}
-                        >
-                          <IonIcon icon={chevronUpOutline} />
-                        </button>
-                      ) : null}
-                      {visibleCount < queueLen ? (
-                        <button
-                          type="button"
-                          className="ops-load-more"
-                          aria-label={t('ops.showThreeMore')}
-                          onClick={() => setVisibleCount((n) => n + 3)}
-                        >
-                          <IonIcon icon={chevronDownOutline} />
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
+                  {visibleCount < queueLen ? <div ref={loadMoreSentinelRef} className="ops-scroll-sentinel" aria-hidden="true" /> : null}
                 </section>
               </>
             ) : (
@@ -615,30 +623,7 @@ const OperationsPage: React.FC = () => {
                     <p className="kanban-empty">{t(emptyKey)}</p>
                   ) : null}
 
-                  {visibleCount > 6 || visibleCount < queueItems.length ? (
-                    <div className="ops-load-controls">
-                      {visibleCount > 6 ? (
-                        <button
-                          type="button"
-                          className="ops-load-more"
-                          aria-label={t('ops.collapseThree')}
-                          onClick={() => setVisibleCount((n) => Math.max(6, n - 3))}
-                        >
-                          <IonIcon icon={chevronUpOutline} />
-                        </button>
-                      ) : null}
-                      {visibleCount < queueItems.length ? (
-                        <button
-                          type="button"
-                          className="ops-load-more"
-                          aria-label={t('ops.showThreeMore')}
-                          onClick={() => setVisibleCount((n) => n + 3)}
-                        >
-                          <IonIcon icon={chevronDownOutline} />
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
+                  {visibleCount < queueItems.length ? <div ref={loadMoreSentinelRef} className="ops-scroll-sentinel" aria-hidden="true" /> : null}
                 </section>
               </>
             )}

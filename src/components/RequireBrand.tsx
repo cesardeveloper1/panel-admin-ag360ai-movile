@@ -10,7 +10,7 @@ interface RequireBrandProps {
 
 export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
   const { goRoot } = useAppNavigation();
-  const { session, brand, brandLoading, selectBrandAndLoad, authEpoch } = useApp();
+  const { session, authRestoring, brand, brandLoading, selectBrandAndLoad, authEpoch } = useApp();
   const pendingBrand = typeof localStorage !== 'undefined' ? localStorage.getItem(BRAND_KEY) : null;
   const manualPick = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(PICK_BRAND_KEY) === '1';
   const hydratingRef = useRef(false);
@@ -20,14 +20,14 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
   }, [session?.email, authEpoch]);
 
   useEffect(() => {
-    if (!session) {
+    if (!authRestoring && !session) {
       goRoot('/login');
       return;
     }
     if (!brand && !brandLoading && !pendingBrand) {
       goRoot('/welcome');
     }
-  }, [session, brand, brandLoading, pendingBrand, goRoot]);
+  }, [session, authRestoring, brand, brandLoading, pendingBrand, goRoot]);
 
   useLayoutEffect(() => {
     if (!session || brand || brandLoading || !pendingBrand || manualPick || hydratingRef.current) return;
@@ -52,6 +52,10 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
       }
     })();
   }, [session, brand, brandLoading, pendingBrand, manualPick, selectBrandAndLoad, goRoot, authEpoch]);
+
+  if (authRestoring) {
+    return <BrandBootShell />;
+  }
 
   if (!session) {
     return null;

@@ -31,6 +31,17 @@ export type { SendChatAttachment } from './chatService';
 export type { OrdersListFilters } from './ordersQuery';
 export type { BotCtxState } from './botService';
 
+const MOCK_SESSION_KEY = 'ag360-mock-session';
+
+function readMockSession(): UserSession | null {
+  try {
+    const raw = sessionStorage.getItem(MOCK_SESSION_KEY);
+    return raw ? JSON.parse(raw) as UserSession : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface GetDashboardFacadeParams {
   brand: Brand;
   period: 'today' | 'range';
@@ -61,15 +72,25 @@ export const apiFacade = {
   async login(email: string, password: string): Promise<UserSession | null> {
     if (config.useApiMock) {
       clearAuthTokens();
-      return apiMock.login(email, password);
+      const session = await apiMock.login(email, password);
+      if (session) sessionStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(session));
+      return session;
     }
     return authService.login(email, password);
   },
 
-  logout(): void {
-    if (!config.useApiMock) {
-      clearAuthTokens();
+  async restoreSession(): Promise<UserSession | null> {
+    if (config.useApiMock) return readMockSession();
+    return authService.restoreSession();
+  },
+
+  async logout(): Promise<void> {
+    if (config.useApiMock) {
+      sessionStorage.removeItem(MOCK_SESSION_KEY);
+      return;
     }
+    await authService.logout();
+    clearAuthTokens();
   },
 
   async getBrands(): Promise<Brand[]> {

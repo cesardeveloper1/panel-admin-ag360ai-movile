@@ -2571,6 +2571,11 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
   transform: scale(0.98);
 }
 
+.ops-scroll-sentinel {
+  height: 1px;
+  width: 100%;
+}
+
 .ops-view-switch button.active,
 .ops-all-stages button.active {
   background: var(--ag-paper);

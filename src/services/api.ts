@@ -1,7 +1,20 @@
 import { config } from '../config/env';
-import { getAuthToken, notifySessionExpired } from '../utils/authSession';
+import {
+  getAuthToken,
+  notifySessionExpired,
+  runWithRefreshLock,
+  setAuthToken,
+} from '../utils/authSession';
+import {
+  clearNativeRefreshToken,
+  getClientInstanceId,
+  getNativeRefreshToken,
+  isNativeAuthClient,
+  setNativeRefreshToken,
+} from '../utils/nativeRefreshTokenStorage';
 
 const BASE_URL = config.apiBaseUrl;
+const CLIENT_INSTANCE_HEADER = 'X-Client-Instance';
 
 interface RequestOptions extends RequestInit {
   data?: unknown;
@@ -11,6 +24,8 @@ const PUBLIC_AUTH_ENDPOINTS = [
   '/auth/signin',
   '/auth/system/info',
   '/auth/verify-reset-token',
+  '/auth/refresh',
+  '/auth/logout',
   '/user-action-requests/complete-registration',
 ];
 
@@ -19,13 +34,66 @@ const shouldNotifySessionExpired = (url: string, status: number, token: string |
   return !PUBLIC_AUTH_ENDPOINTS.some((endpoint) => url.startsWith(endpoint));
 };
 
-async function fetchWithAuth(url: string, options: RequestOptions = {}) {
+let refreshPromise: Promise<boolean> | null = null;
+
+function readAccessToken(payload: unknown): string | null {
+  return readAuthField(payload, 'accessToken');
+}
+
+function readAuthField(payload: unknown, field: 'accessToken' | 'refreshToken'): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const root = payload as Record<string, unknown>;
+  const first = root.data && typeof root.data === 'object'
+    ? root.data as Record<string, unknown>
+    : root;
+  const second = first.data && typeof first.data === 'object'
+    ? first.data as Record<string, unknown>
+    : first;
+  const value = second[field];
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = runWithRefreshLock(async () => {
+      const payload = await fetchWithAuth(
+        '/auth/refresh',
+        { method: 'POST' },
+        false,
+      );
+      const token = readAccessToken(payload);
+      if (!token) return false;
+      setAuthToken(token);
+      return true;
+    }).catch(() => false).finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+async function fetchWithAuth(url: string, options: RequestOptions = {}, canRetry = true) {
   const { data, ...fetchOptions } = options;
   const token = getAuthToken();
+  const nativeClient = isNativeAuthClient();
+  const clientInstanceId = await getClientInstanceId();
+  const isRefreshRequest = url.startsWith('/auth/refresh');
+  const isLogoutRequest = url.startsWith('/auth/logout');
+  const usesNativeRefreshToken = nativeClient && (isRefreshRequest || isLogoutRequest);
+  const nativeRefreshToken = usesNativeRefreshToken
+    ? await getNativeRefreshToken()
+    : null;
+  const requestData = nativeRefreshToken
+    ? { ...(data && typeof data === 'object' ? data : {}), refreshToken: nativeRefreshToken }
+    : data;
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    [CLIENT_INSTANCE_HEADER]: clientInstanceId,
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(nativeClient && url.startsWith('/auth/')
+      ? { 'x-auth-client': 'capacitor' }
+      : {}),
     ...(options.headers as Record<string, string> | undefined),
   };
 
@@ -33,7 +101,8 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}) {
     ...fetchOptions,
     method: fetchOptions.method || 'GET',
     headers,
-    body: data !== undefined ? JSON.stringify(data) : undefined,
+    body: requestData !== undefined ? JSON.stringify(requestData) : undefined,
+    credentials: 'include',
   });
 
   const rawText = await response.text();
@@ -48,11 +117,13 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}) {
         statusCode: response.status,
       };
     }
-  } else if (response.ok) {
-    return null;
   }
 
   if (!response.ok) {
+    if (shouldNotifySessionExpired(url, response.status, token) && canRetry) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) return fetchWithAuth(url, options, false);
+    }
     if (shouldNotifySessionExpired(url, response.status, token)) {
       notifySessionExpired();
     }
@@ -65,6 +136,18 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}) {
       statusCode: response.status,
       data: responseData?.data,
     };
+  }
+
+  if (nativeClient && (url.startsWith('/auth/signin') || isRefreshRequest)) {
+    const rotatedRefreshToken = readAuthField(responseData, 'refreshToken');
+    if (!rotatedRefreshToken) {
+      throw new Error('El backend no devolvió el refresh token para Capacitor.');
+    }
+    await setNativeRefreshToken(rotatedRefreshToken);
+  }
+
+  if (nativeClient && isLogoutRequest) {
+    await clearNativeRefreshToken();
   }
 
   return responseData;

@@ -18,7 +18,7 @@ import { sessionDisplayName } from '../utils/sessionDisplayName';
 const WelcomePage: React.FC = () => {
   const { t } = useTranslation();
   const { goRoot } = useAppNavigation();
-  const { session, brand, clearBrand, selectBrandAndLoad, brandLoading, showToast, authEpoch, logout } = useApp();
+  const { session, authRestoring, brand, clearBrand, selectBrandAndLoad, brandLoading, showToast, authEpoch, logout } = useApp();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectingId, setSelectingId] = useState<string | null>(null);
@@ -71,6 +71,7 @@ const WelcomePage: React.FC = () => {
   }, [session?.email, authEpoch]);
 
   useEffect(() => {
+    if (authRestoring) return;
     if (!session) {
       goRoot('/login');
       return;
@@ -84,7 +85,7 @@ const WelcomePage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [session, authEpoch, goRoot, reloadBrands]);
+  }, [session, authRestoring, authEpoch, goRoot, reloadBrands]);
 
   const handleSelect = useCallback(
     async (selected: Brand) => {
