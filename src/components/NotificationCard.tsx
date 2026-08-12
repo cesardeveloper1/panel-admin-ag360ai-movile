@@ -11,6 +11,10 @@ interface NotificationCardProps {
 export const NotificationCard: React.FC<NotificationCardProps> = ({ item, onPress }) => {
   const { t } = useTranslation();
   const meta = getNotificationMeta(item.kind);
+  const complaint = item.complaint;
+  const severityLabel = complaint?.severity
+    ? t(`notifications.complaint.severity.${complaint.severity}`)
+    : undefined;
 
   return (
     <button
@@ -35,7 +39,31 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ item, onPres
           {item.time ? <time className="notification-card__time">{item.time}</time> : null}
         </span>
         <span className="notification-card__title">{item.title ?? t(item.titleKey ?? '', item.params)}</span>
-        {item.body || item.bodyKey ? <span className="notification-card__body">{item.body ?? t(item.bodyKey ?? '', item.params)}</span> : null}
+        {complaint ? (
+          <span className="notification-card__complaint">
+            <span className="notification-card__complaint-meta">
+              {complaint.typeLabel ? <span className="notification-card__complaint-type">{complaint.typeLabel}</span> : null}
+              {severityLabel ? (
+                <span className={`notification-card__severity notification-card__severity--${complaint.severity}`}>
+                  {severityLabel}
+                </span>
+              ) : null}
+            </span>
+            {complaint.clientPhone ? (
+              <span className="notification-card__complaint-client">
+                {t('notifications.complaint.client')}: {complaint.clientPhone}
+              </span>
+            ) : null}
+            {complaint.description ? <span className="notification-card__body notification-card__complaint-description">{complaint.description}</span> : null}
+            {complaint.actionTaken === 'agent_deactivated' ? (
+              <span className="notification-card__complaint-action">
+                {t('notifications.complaint.agentDeactivated')}
+              </span>
+            ) : null}
+          </span>
+        ) : item.body || item.bodyKey ? (
+          <span className="notification-card__body">{item.body ?? t(item.bodyKey ?? '', item.params)}</span>
+        ) : null}
       </span>
       {item.unread ? <span className="notification-card__dot" aria-label={t('notifications.unread')} /> : null}
     </button>

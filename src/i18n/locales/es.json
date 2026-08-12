@@ -286,7 +286,18 @@
       "kitchen": "Cocina",
       "payment": "Pago",
       "whatsapp": "WhatsApp",
+      "complaint": "Reclamo",
       "system": "Sistema"
+    },
+    "complaint": {
+      "title": "Reclamo de cliente",
+      "client": "Cliente",
+      "agentDeactivated": "El agente fue desactivado automáticamente",
+      "severity": {
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta"
+      }
     },
     "whatsappLead": "Lead por WhatsApp",
     "whatsappLeadBody": "{{name}} pidió el menú del día",

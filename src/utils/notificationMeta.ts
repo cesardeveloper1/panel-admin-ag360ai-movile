@@ -1,5 +1,6 @@
 import {
   alertCircleOutline,
+  warningOutline,
   cardOutline,
   chatbubbleEllipsesOutline,
   flameOutline,
@@ -53,6 +54,15 @@ export const NOTIFICATION_META: Record<NotificationKind, NotificationMeta> = {
     badgeBg: 'rgba(37, 211, 102, 0.14)',
     badgeColor: '#15803d',
     labelKey: 'notifications.types.whatsapp',
+  },
+  complaint: {
+    icon: warningOutline,
+    accent: '#dc2626',
+    surface: 'rgba(220, 38, 38, 0.07)',
+    border: 'rgba(220, 38, 38, 0.25)',
+    badgeBg: 'rgba(220, 38, 38, 0.12)',
+    badgeColor: '#b91c1c',
+    labelKey: 'notifications.types.complaint',
   },
   system: {
     icon: alertCircleOutline,

@@ -507,6 +507,22 @@ const notifications: NotificationItem[] = [
     unread: false,
     time: 'Ayer',
   },
+  {
+    id: 'n6',
+    kind: 'complaint',
+    titleKey: 'notifications.complaint.title',
+    unread: true,
+    time: '10:52',
+    complaint: {
+      schemaVersion: 1,
+      complaintId: 'complaint-demo-1',
+      clientPhone: '51973638686',
+      typeLabel: 'Calidad de comida',
+      severity: 'high',
+      description: 'El cliente indica que la hamburguesa llegó en mal estado.',
+      actionTaken: 'agent_deactivated',
+    },
+  },
 ];
 
 function loadOrders(): Order[] {

@@ -79,7 +79,19 @@ export interface UserSession {
   brandId?: string;
 }
 
-export type NotificationKind = 'order' | 'kitchen' | 'payment' | 'whatsapp' | 'system';
+export type NotificationKind = 'order' | 'kitchen' | 'payment' | 'whatsapp' | 'complaint' | 'system';
+
+export type ComplaintSeverity = 'low' | 'medium' | 'high';
+
+export interface ComplaintNotificationView {
+  complaintId?: string;
+  clientPhone?: string;
+  typeLabel?: string;
+  severity?: ComplaintSeverity;
+  description?: string;
+  actionTaken?: 'agent_deactivated' | 'none';
+  schemaVersion?: number;
+}
 
 export interface NotificationItem {
   id: string;
@@ -91,6 +103,7 @@ export interface NotificationItem {
   unread: boolean;
   time?: string;
   params?: Record<string, string | number>;
+  complaint?: ComplaintNotificationView;
 }
 
 export type ProductCategory = 'starters' | 'mains' | 'drinks' | 'desserts';

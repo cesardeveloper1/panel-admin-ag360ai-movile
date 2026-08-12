@@ -7848,6 +7848,70 @@ html.ag-native.ion-palette-dark .ag-header {
   color: var(--ag-text-secondary);
 }
 
+.notification-card__complaint {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.notification-card__complaint-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.notification-card__complaint-type,
+.notification-card__severity {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.notification-card__complaint-type {
+  color: var(--ag-text-secondary);
+  background: color-mix(in srgb, var(--ag-text-secondary) 10%, transparent);
+}
+
+.notification-card__severity--low {
+  color: #047857;
+  background: rgba(5, 150, 105, 0.12);
+}
+
+.notification-card__severity--medium {
+  color: #a16207;
+  background: rgba(234, 179, 8, 0.16);
+}
+
+.notification-card__severity--high {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.13);
+}
+
+.notification-card__complaint-client,
+.notification-card__complaint-action {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ag-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.notification-card__complaint-action {
+  font-weight: 600;
+}
+
+.notification-card__complaint-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .notification-card__dot {
   width: 10px;
   height: 10px;
@@ -7915,6 +7979,11 @@ html.ag-native.ion-palette-dark .ag-header {
 }
 
 .ion-palette-dark .notification-card__body {
+  color: rgba(248, 250, 252, 0.72);
+}
+
+.ion-palette-dark .notification-card__complaint-client,
+.ion-palette-dark .notification-card__complaint-action {
   color: rgba(248, 250, 252, 0.72);
 }
 

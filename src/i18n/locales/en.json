@@ -252,7 +252,18 @@
       "kitchen": "Kitchen",
       "payment": "Payment",
       "whatsapp": "WhatsApp",
+      "complaint": "Complaint",
       "system": "System"
+    },
+    "complaint": {
+      "title": "Customer complaint",
+      "client": "Customer",
+      "agentDeactivated": "The agent was automatically disabled",
+      "severity": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
     },
     "whatsappLead": "WhatsApp lead",
     "whatsappLeadBody": "{{name}} asked for today's menu",

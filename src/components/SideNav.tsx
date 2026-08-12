@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IonIcon } from '@ionic/react';
-import { logoWhatsapp, storefrontOutline } from 'ionicons/icons';
+import { storefrontOutline } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../context/AppContext';
@@ -10,7 +10,7 @@ import {
   CHATS_PATH,
   PROFILE_PATH,
   isNavActive,
-  ownerNavItems,
+  mobileNavItems,
 } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
@@ -57,14 +57,14 @@ export function SideNav() {
 
   const toggleCollapsed = () => setCollapsed((prev) => !prev);
 
-  const renderItem = (item: (typeof ownerNavItems)[number]) => {
+  const renderItem = (item: (typeof mobileNavItems)[number]) => {
     const active = isNavActive(location.pathname, item);
     return (
       <button
         key={item.path}
         type="button"
         className={`ag-side-nav-item${active ? ' active' : ''}`}
-        onClick={() => go(item.path)}
+        onClick={item.path === CHATS_PATH ? openChatsInbox : () => go(item.path)}
       >
         <IonIcon icon={item.icon} aria-hidden="true" />
         <span>{t(item.labelKey)}</span>
@@ -93,15 +93,7 @@ export function SideNav() {
       </div>
 
       <nav className="ag-side-nav-items">
-        {ownerNavItems.map(renderItem)}
-        <button
-          type="button"
-          className={`ag-side-nav-item ag-side-nav-item--chats${location.pathname.startsWith(CHATS_PATH) ? ' active' : ''}`}
-          onClick={openChatsInbox}
-        >
-          <IonIcon icon={logoWhatsapp} aria-hidden="true" />
-          <span>{t('nav.chats')}</span>
-        </button>
+        {mobileNavItems.map(renderItem)}
       </nav>
 
       <div className="ag-side-nav-footer">
