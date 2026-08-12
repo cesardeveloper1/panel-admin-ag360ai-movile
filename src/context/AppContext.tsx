@@ -3,7 +3,6 @@ import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { Brand, NotificationItem, Order, UserSession } from '../types';
 import { apiFacade } from '../services/apiFacade';
-import { apiMock } from '../services/apiMock';
 import {
   defaultOrdersFilters,
   type OrdersListFilters,
@@ -49,8 +48,8 @@ interface AppContextValue {
   showToast: (key: string, params?: Record<string, string | number>) => void;
   completeOnboarding: () => void;
   isOnboardingDone: (brandId: string) => boolean;
-  markNotificationRead: (id: string) => void;
-  markAllNotificationsRead: () => void;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -96,6 +95,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [authEpoch, setAuthEpoch] = useState(0);
 
   const ordersRequestId = useRef(0);
+  const notificationsRequestId = useRef(0);
   const brandSelectPromise = useRef<Promise<boolean> | null>(null);
   // En desarrollo, StrictMode vuelve a ejecutar el efecto de montaje. Ambas
   // ejecuciones deben compartir la misma rotación del refresh token.
@@ -169,6 +169,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [],
   );
 
+  const refreshNotifications = useCallback(async (brandId: string) => {
+    const requestId = ++notificationsRequestId.current;
+    try {
+      const data = await apiFacade.getNotifications(brandId);
+      if (requestId === notificationsRequestId.current) setNotifications(data);
+    } catch {
+      if (requestId === notificationsRequestId.current) setNotifications([]);
+    }
+  }, []);
+
   const refreshOrders = useCallback(async () => {
     if (!brand) return;
     setLoading(true);
@@ -208,10 +218,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [brand, loadOrdersForBrand, showToast],
   );
 
-  useEffect(() => {
-    void apiMock.getNotifications().then(setNotifications);
-  }, []);
-
   const syncAgentForBrand = useCallback(async (nextBrand: Brand) => {
     const subdomain = nextBrand.subdomain?.trim();
     if (!subdomain) {
@@ -233,9 +239,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const clearBrand = useCallback(() => {
     ordersRequestId.current += 1;
+    notificationsRequestId.current += 1;
     brandSelectPromise.current = null;
     setBrand(null);
     setOrders([]);
+    setNotifications([]);
     const resetFilters = defaultOrdersFilters();
     ordersFiltersRef.current = resetFilters;
     setOrdersFiltersState(resetFilters);
@@ -294,11 +302,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logout = useCallback(() => {
     ordersRequestId.current += 1;
+    notificationsRequestId.current += 1;
     brandSelectPromise.current = null;
     flushSync(() => {
       setSession(null);
       setBrand(null);
       setOrders([]);
+      setNotifications([]);
       setKitchenMode(false);
       setBrandLoading(false);
       setLoading(false);
@@ -332,6 +342,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
 
           void syncAgentForBrand(next);
+          void refreshNotifications(next.id);
           return true;
         } catch {
           if (requestId === ordersRequestId.current) {
@@ -356,7 +367,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         brandSelectPromise.current = null;
       }
     },
-    [session, showToast, syncAgentForBrand],
+    [refreshNotifications, session, showToast, syncAgentForBrand],
   );
 
   const setDarkMode = useCallback((value: boolean) => {
@@ -408,13 +419,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem(`${ONBOARDING_PREFIX}${brandId}`) === '1';
   }, []);
 
-  const markNotificationRead = useCallback((id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
-  }, []);
+  const markNotificationRead = useCallback(async (id: string) => {
+    const notification = notifications.find((item) => item.id === id);
+    if (!notification?.unread) return;
 
-  const markAllNotificationsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-  }, []);
+    setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, unread: false } : item)));
+    try {
+      await apiFacade.markNotificationRead(id);
+    } catch {
+      setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, unread: true } : item)));
+      showToast('toast.notificationsUpdateError');
+    }
+  }, [notifications, showToast]);
+
+  const markAllNotificationsRead = useCallback(async () => {
+    if (!brand) return;
+    const unreadIds = new Set(notifications.filter((item) => item.unread).map((item) => item.id));
+    if (unreadIds.size === 0) return;
+
+    setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })));
+    try {
+      await apiFacade.markAllNotificationsRead(brand.id);
+    } catch {
+      setNotifications((prev) => prev.map((item) => (unreadIds.has(item.id) ? { ...item, unread: true } : item)));
+      showToast('toast.notificationsUpdateError');
+    }
+  }, [brand, notifications, showToast]);
 
   const advanceOrder = useCallback(
     async (orderId: string) => {

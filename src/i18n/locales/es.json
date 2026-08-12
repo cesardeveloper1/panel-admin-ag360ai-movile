@@ -148,11 +148,10 @@
     "kanbanDelivered": "Entregado",
     "emptyColumn": "Sin pedidos aquí",
     "subStates": {
-      "starting": "Iniciando",
-      "ordering": "Pidiendo",
-      "human": "Humano",
+      "pre_order": "Pre Orden",
+      "accepted": "Aceptado",
       "in_kitchen": "En cocina",
-      "ready": "Listo",
+      "ready": "Para Recoger",
       "on_the_way": "En camino",
       "delivered": "Entregado"
     },
@@ -307,10 +306,19 @@
     "brandLoading": "Cargando operaciones...",
     "productEnabled": "Producto activado en carta",
     "productDisabled": "Producto oculto en carta",
+    "productUpdateError": "No se pudo actualizar el producto",
+    "productCreated": "Producto creado",
+    "productCreateError": "No se pudo crear el producto",
     "comingSoon": "Disponible en la próxima versión",
     "brandSaved": "Marca actualizada",
+    "brandLoadError": "No se pudieron cargar los datos de la marca",
+    "brandSaveError": "No se pudieron guardar los cambios de la marca",
+    "brandLogoUpdated": "Logotipo actualizado",
+    "brandLogoError": "No se pudo actualizar el logotipo",
+    "brandLogoInvalid": "Usa una imagen de hasta 2 MB",
     "brandsLoadError": "No se pudieron cargar las marcas",
     "ordersLoadError": "No se pudieron cargar los pedidos",
+    "notificationsUpdateError": "No se pudieron actualizar las alertas",
     "reportsLoadError": "No se pudieron cargar los reportes",
     "orderUpdateError": "No se pudo actualizar el pedido",
     "socketNewOrder": "Nuevo pedido recibido"
@@ -347,6 +355,18 @@
     "subtitle": "Gestor de menú",
     "search": "Buscar producto...",
     "newProduct": "Nuevo producto",
+    "create": {
+      "title": "Nuevo producto",
+      "description": "Añade lo esencial ahora. Puedes completar más detalles luego en el gestor de menú.",
+      "name": "Nombre del producto",
+      "namePlaceholder": "Ej. Hamburguesa clásica",
+      "category": "Categoría",
+      "categoryPlaceholder": "Selecciona una categoría",
+      "price": "Precio base (S/)",
+      "publish": "Publicar en carta",
+      "publishHint": "Disponible para tus clientes al guardar",
+      "submit": "Crear producto"
+    },
     "soldOut": "Agotado",
     "empty": "No hay productos con ese filtro",
     "categories": {
@@ -373,6 +393,7 @@
     "subtitle": "Marketing · CRM",
     "search": "Buscar por nombre o celular...",
     "empty": "No hay clientes con ese filtro",
+    "error": "No se pudieron cargar los clientes. Inténtalo nuevamente.",
     "ordersTotal": "Total pedidos",
     "spentTotal": "Total gastado",
     "campaign": "Campaña",
@@ -380,9 +401,14 @@
     "badgeVip": "VIP",
     "segments": {
       "all": "Todos",
-      "vip": "VIP (>S/1000)",
-      "frequent": "Frecuentes",
-      "inactive": "Inactivos"
+      "vip": "VIP",
+      "regular": "Regulares",
+      "new": "Nuevos"
+    },
+    "types": {
+      "vip": "VIP",
+      "regular": "Regular",
+      "new": "Nuevo"
     }
   },
   "locationsPage": {
@@ -393,9 +419,27 @@
     "statusClosed": "Cerrado",
     "edit": "Editar",
     "stats": "Estadísticas",
-    "add": "Añadir local",
+    "add": "Nuevo local",
     "brandDataLink": "Configurar identidad de marca →",
-    "empty": "Aún no hay locales para esta marca."
+    "empty": "Aún no hay locales para esta marca.",
+    "create": {
+      "title": "Nuevo local",
+      "description": "Añade lo esencial ahora. Podrás completar horarios y configuraciones desde el panel.",
+      "name": "Nombre del local",
+      "namePlaceholder": "Ej. Local Miraflores",
+      "address": "Dirección",
+      "addressPlaceholder": "Ej. Av. Principal 123",
+      "phone": "Teléfono",
+      "phonePlaceholder": "Ej. 999 888 777",
+      "active": "Local activo",
+      "activeHint": "Disponible para operar al guardar",
+      "submit": "Crear local"
+    },
+    "editForm": {
+      "title": "Editar local",
+      "description": "Actualiza los datos esenciales de esta sucursal.",
+      "submit": "Guardar cambios"
+    }
   },
   "crm": {
     "anaGarcia": "Ana García",
@@ -407,6 +451,7 @@
     "subtitle": "Identidad visual",
     "logo": "Logotipo",
     "uploadLogo": "Subir nuevo",
+    "uploadingLogo": "Subiendo...",
     "logoHint": "Recomendado: PNG transparente, máx 2MB.",
     "colors": "Colores",
     "primaryColor": "Color primario",

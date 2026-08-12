@@ -28,7 +28,7 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
   const primaryAction: 'chat' | 'status' | null =
     group === 'delivered'
       ? null
-      : order.needsHuman || subState === 'human'
+      : order.needsHuman
         ? 'chat'
         : 'status';
 

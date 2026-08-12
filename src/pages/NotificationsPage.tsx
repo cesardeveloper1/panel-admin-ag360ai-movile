@@ -17,7 +17,7 @@ const NotificationsPage: React.FC = () => {
         notifications.some((n) => n.unread)
           ? {
               label: t('notifications.markAll'),
-              onClick: () => markAllNotificationsRead(),
+              onClick: () => void markAllNotificationsRead(),
             }
           : undefined
       }
@@ -28,7 +28,7 @@ const NotificationsPage: React.FC = () => {
         <ul className="notification-list">
           {notifications.map((item) => (
             <li key={item.id}>
-              <NotificationCard item={item} onPress={() => markNotificationRead(item.id)} />
+              <NotificationCard item={item} onPress={() => void markNotificationRead(item.id)} />
             </li>
           ))}
         </ul>

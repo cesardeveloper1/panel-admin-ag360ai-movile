@@ -59,7 +59,7 @@ function renderTextPart(part: string, key: string): ReactNode {
       return <span key={`${key}-${index}`}>{piece}</span>;
     }
 
-    const url = piece.replace(/[.,;:!?\)\]\}]+$/, '');
+    const url = piece.replace(/[.,;:!?)\]}]+$/, '');
     const trailing = piece.slice(url.length);
     return (
       <span key={`${key}-${index}`}>

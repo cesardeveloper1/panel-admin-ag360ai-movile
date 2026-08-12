@@ -1,6 +1,6 @@
 import type { KanbanGroup, KanbanSubState, Order, OrderStatus } from '../types';
 
-/** Agrupa estados UI en focos de la cola Operaciones (005). */
+/** Agrupa los estados de pedidos igual que el kanban de Operaciones del panel. */
 export function getKanbanGroup(status: OrderStatus): KanbanGroup | null {
   if (status === 'delivered') return 'delivered';
   if (status === 'in_kitchen' || status === 'ready' || status === 'on_the_way') {
@@ -15,10 +15,9 @@ export function getKanbanSubState(order: Order): KanbanSubState {
   if (order.status === 'in_kitchen') return 'in_kitchen';
   if (order.status === 'ready') return 'ready';
   if (order.status === 'on_the_way') return 'on_the_way';
-  if (order.status === 'pre_order') return 'starting';
-  if (order.needsHuman) return 'human';
-  if (order.status === 'accepted') return 'ordering';
-  return 'starting';
+  if (order.status === 'pre_order') return 'pre_order';
+  if (order.status === 'accepted') return 'accepted';
+  return 'pre_order';
 }
 
 export function getKitchenAction(status: OrderStatus): OrderStatus | null {

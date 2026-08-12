@@ -1,6 +1,9 @@
 import { config } from '../config/env';
 import type {
   Brand,
+  CatalogMenu,
+  CatalogProduct,
+  CreateCatalogProductInput,
   ChatConversation,
   ChatMessage,
   DashboardReport,
@@ -16,10 +19,24 @@ import { brandService } from './brandService';
 import { chatService, type SendChatAttachment, type SendChatMessageInput } from './chatService';
 import { contactService } from './contactService';
 import { dashboardService } from './dashboardService';
+import { catalogService } from './catalogService';
+import {
+  customerService,
+  type CustomerAnalyticsData,
+  type CustomerAnalyticsParams,
+} from './customerService';
 import { mapContactToConversation } from './mappers/chatMapper';
 import { orderService } from './orderService';
 import { botService, type BotCtxState } from './botService';
 import { quickMessageService, type QuickMessage } from './quickMessageService';
+import {
+  locationService,
+  type CreateLocationInput,
+  type UpdateLocationInput,
+} from './locationService';
+import { brandDataService } from './brandDataService';
+import { fileUploadService } from './fileUploadService';
+import { notificationService } from './notificationService';
 import {
   defaultOrdersFilters,
   type OrdersListFilters,
@@ -201,6 +218,87 @@ export const apiFacade = {
       search,
     });
     return result.data.map((c) => mapContactToConversation(c, brand.id));
+  },
+
+  async getCatalogMenu(brandId: string): Promise<CatalogMenu> {
+    if (config.useApiMock) {
+      const products = await apiMock.getProducts(brandId);
+      const categories = Array.from(
+        new Map(products.map((product) => [product.category, {
+          id: product.category,
+          name: product.categoryName || product.category,
+        }])).values(),
+      );
+      return { products, categories };
+    }
+    return catalogService.getMenu(brandId);
+  },
+
+  async getCustomerAnalytics(params: CustomerAnalyticsParams): Promise<CustomerAnalyticsData> {
+    if (config.useApiMock) {
+      return apiMock.getCustomerAnalytics(params);
+    }
+    return customerService.getCustomerAnalytics(params);
+  },
+
+  async getLocations(brandId: string): Promise<import('../types').BranchLocation[]> {
+    if (config.useApiMock) return apiMock.getLocations(brandId);
+    return locationService.list(brandId);
+  },
+
+  async createLocation(input: CreateLocationInput): Promise<import('../types').BranchLocation> {
+    if (config.useApiMock) return apiMock.createLocation(input);
+    return locationService.create(input);
+  },
+
+  async updateLocation(input: UpdateLocationInput): Promise<import('../types').BranchLocation> {
+    if (config.useApiMock) return apiMock.updateLocation(input);
+    return locationService.update(input);
+  },
+
+  async getBrandConfig(brandId: string): Promise<import('../types').BrandConfig> {
+    if (config.useApiMock) return apiMock.getBrandConfig(brandId);
+    return brandDataService.get(brandId);
+  },
+
+  async saveBrandConfig(configToSave: import('../types').BrandConfig): Promise<import('../types').BrandConfig> {
+    if (config.useApiMock) return apiMock.saveBrandConfig(configToSave);
+    return brandDataService.save(configToSave);
+  },
+
+  async uploadBrandLogo(brandId: string, file: File): Promise<string> {
+    if (config.useApiMock) return apiMock.uploadBrandLogo(brandId, file);
+    return fileUploadService.uploadBrandLogo(file, brandId);
+  },
+
+  async getNotifications(brandId: string): Promise<import('../types').NotificationItem[]> {
+    if (config.useApiMock) return apiMock.getNotifications();
+    return notificationService.list(brandId);
+  },
+
+  async markNotificationRead(id: string): Promise<void> {
+    if (config.useApiMock) return apiMock.markNotificationRead(id);
+    return notificationService.markRead(id);
+  },
+
+  async markAllNotificationsRead(brandId: string): Promise<void> {
+    if (config.useApiMock) return apiMock.markAllNotificationsRead();
+    return notificationService.markAllRead(brandId);
+  },
+
+  async setCatalogProductActive(product: CatalogProduct, isActive: boolean): Promise<CatalogProduct | null> {
+    if (config.useApiMock) {
+      return apiMock.setProductActive(product.id, isActive);
+    }
+    await catalogService.setActive(product.id, isActive);
+    return { ...product, active: isActive };
+  },
+
+  async createCatalogProduct(input: CreateCatalogProductInput): Promise<CatalogProduct> {
+    if (config.useApiMock) {
+      return apiMock.createProduct(input);
+    }
+    return catalogService.createProduct(input);
   },
 
   async setConversationBotState(

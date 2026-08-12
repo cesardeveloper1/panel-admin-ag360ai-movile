@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
-import { peopleOutline } from 'ionicons/icons';
+import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
@@ -25,7 +25,7 @@ type OpsFocus = KanbanGroup;
 type OpsSubFilter = 'all' | KanbanSubState;
 type FunnelFocus = FunnelStage;
 
-const NEW_SUBSTATES: KanbanSubState[] = ['starting', 'ordering', 'human'];
+const NEW_SUBSTATES: KanbanSubState[] = ['pre_order', 'accepted'];
 const PROCESSING_SUBSTATES: KanbanSubState[] = ['in_kitchen', 'ready', 'on_the_way'];
 const FUNNEL_FOCI: FunnelFocus[] = ['INICIAL', 'PIDIENDO', 'HUMANO', 'CON_PEDIDO'];
 
@@ -620,7 +620,10 @@ const OperationsPage: React.FC = () => {
                   </div>
 
                   {!listLoading && queueItems.length === 0 ? (
-                    <p className="kanban-empty">{t(emptyKey)}</p>
+                    <div className="ops-empty-state" role="status">
+                      <IonIcon icon={receiptOutline} aria-hidden="true" />
+                      <p>{t(emptyKey)}</p>
+                    </div>
                   ) : null}
 
                   {visibleCount < queueItems.length ? <div ref={loadMoreSentinelRef} className="ops-scroll-sentinel" aria-hidden="true" /> : null}

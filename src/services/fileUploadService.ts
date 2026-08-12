@@ -36,8 +36,24 @@ function extractUploadUrl(response: Record<string, unknown>): string {
   throw new Error('No se pudo obtener la URL del archivo subido');
 }
 
+function extractBrandLogoUrl(response: Record<string, unknown>): string {
+  const data = response.data;
+  if (data && typeof data === 'object') {
+    const logo = (data as { logo?: unknown }).logo;
+    if (typeof logo === 'string' && logo.trim()) return logo.trim();
+  }
+  return extractUploadUrl(response);
+}
+
 /** Subida de archivos para chats (imagen, PDF, audio). */
 export const fileUploadService = {
+  async uploadBrandLogo(file: File, brandId: string): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await postFormData(`/brand/${encodeURIComponent(brandId)}/logo`, formData);
+    return extractBrandLogoUrl(response);
+  },
+
   async uploadImage(file: File, brandId: string): Promise<string> {
     const formData = new FormData();
     formData.append('image', file);

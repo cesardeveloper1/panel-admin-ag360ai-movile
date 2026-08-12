@@ -143,11 +143,10 @@
     "kanbanDelivered": "Delivered",
     "emptyColumn": "No orders here",
     "subStates": {
-      "starting": "Starting",
-      "ordering": "Ordering",
-      "human": "Human",
+      "pre_order": "Pre-order",
+      "accepted": "Accepted",
       "in_kitchen": "In kitchen",
-      "ready": "Ready",
+      "ready": "Ready for pickup",
       "on_the_way": "On the way",
       "delivered": "Delivered"
     },
@@ -273,10 +272,19 @@
     "brandLoading": "Loading operations...",
     "productEnabled": "Product enabled on menu",
     "productDisabled": "Product hidden from menu",
+    "productUpdateError": "Could not update product",
+    "productCreated": "Product created",
+    "productCreateError": "Could not create product",
     "comingSoon": "Available in the next release",
     "brandSaved": "Brand updated",
+    "brandLoadError": "Could not load brand data",
+    "brandSaveError": "Could not save brand changes",
+    "brandLogoUpdated": "Logo updated",
+    "brandLogoError": "Could not update the logo",
+    "brandLogoInvalid": "Use an image up to 2 MB",
     "brandsLoadError": "Could not load brands",
     "ordersLoadError": "Could not load orders",
+    "notificationsUpdateError": "Could not update alerts",
     "reportsLoadError": "Could not load reports",
     "orderUpdateError": "Could not update order",
     "socketNewOrder": "New order received"
@@ -313,6 +321,18 @@
     "subtitle": "Menu manager",
     "search": "Search product...",
     "newProduct": "New product",
+    "create": {
+      "title": "New product",
+      "description": "Add the essentials now. You can complete more details later in the menu manager.",
+      "name": "Product name",
+      "namePlaceholder": "E.g. Classic burger",
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "price": "Base price (S/)",
+      "publish": "Publish on menu",
+      "publishHint": "Available to your customers after saving",
+      "submit": "Create product"
+    },
     "soldOut": "Sold out",
     "empty": "No products match this filter",
     "categories": {
@@ -339,6 +359,7 @@
     "subtitle": "Marketing · CRM",
     "search": "Search by name or phone...",
     "empty": "No clients match this filter",
+    "error": "Clients could not be loaded. Please try again.",
     "ordersTotal": "Total orders",
     "spentTotal": "Total spent",
     "campaign": "Campaign",
@@ -346,9 +367,14 @@
     "badgeVip": "VIP",
     "segments": {
       "all": "All",
-      "vip": "VIP (>S/1000)",
-      "frequent": "Frequent",
-      "inactive": "Inactive"
+      "vip": "VIP",
+      "regular": "Regular",
+      "new": "New"
+    },
+    "types": {
+      "vip": "VIP",
+      "regular": "Regular",
+      "new": "New"
     }
   },
   "locationsPage": {
@@ -359,9 +385,27 @@
     "statusClosed": "Closed",
     "edit": "Edit",
     "stats": "Statistics",
-    "add": "Add location",
+    "add": "New location",
     "brandDataLink": "Configure brand identity →",
-    "empty": "No locations for this brand yet."
+    "empty": "No locations for this brand yet.",
+    "create": {
+      "title": "New location",
+      "description": "Add the essentials now. You can complete schedules and settings from the panel later.",
+      "name": "Location name",
+      "namePlaceholder": "E.g. Miraflores location",
+      "address": "Address",
+      "addressPlaceholder": "E.g. Main Avenue 123",
+      "phone": "Phone",
+      "phonePlaceholder": "E.g. 999 888 777",
+      "active": "Active location",
+      "activeHint": "Available to operate when saved",
+      "submit": "Create location"
+    },
+    "editForm": {
+      "title": "Edit location",
+      "description": "Update this location's essential details.",
+      "submit": "Save changes"
+    }
   },
   "crm": {
     "anaGarcia": "Ana García",
@@ -373,6 +417,7 @@
     "subtitle": "Visual identity",
     "logo": "Logo",
     "uploadLogo": "Upload new",
+    "uploadingLogo": "Uploading...",
     "logoHint": "Recommended: transparent PNG, max 2MB.",
     "colors": "Colors",
     "primaryColor": "Primary color",

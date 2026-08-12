@@ -12,9 +12,8 @@ export type OrderStatus =
 export type KanbanGroup = 'new' | 'processing' | 'delivered';
 
 export type KanbanSubState =
-  | 'starting'
-  | 'ordering'
-  | 'human'
+  | 'pre_order'
+  | 'accepted'
   | 'in_kitchen'
   | 'ready'
   | 'on_the_way'
@@ -85,8 +84,10 @@ export type NotificationKind = 'order' | 'kitchen' | 'payment' | 'whatsapp' | 's
 export interface NotificationItem {
   id: string;
   kind: NotificationKind;
-  titleKey: string;
-  bodyKey: string;
+  titleKey?: string;
+  bodyKey?: string;
+  title?: string;
+  body?: string;
   unread: boolean;
   time?: string;
   params?: Record<string, string | number>;
@@ -94,15 +95,42 @@ export interface NotificationItem {
 
 export type ProductCategory = 'starters' | 'mains' | 'drinks' | 'desserts';
 
+export interface CatalogCategory {
+  id: string;
+  name: string;
+  order?: number;
+}
+
 export interface CatalogProduct {
   id: string;
   brandId: string;
-  nameKey: string;
-  category: ProductCategory;
+  /** Clave de traducción disponible solo en el catálogo de demostración. */
+  nameKey?: string;
+  /** Nombre real enviado por el gestor de menú. */
+  name?: string;
+  /** Categoría legacy del catálogo de demostración. */
+  category: string;
+  categoryId?: string;
+  categoryName?: string;
   price: number;
   active: boolean;
   soldOut?: boolean;
-  emoji: string;
+  emoji?: string;
+  imageUrl?: string;
+}
+
+export interface CatalogMenu {
+  categories: CatalogCategory[];
+  products: CatalogProduct[];
+}
+
+export interface CreateCatalogProductInput {
+  brandId: string;
+  name: string;
+  categoryId: string;
+  categoryName: string;
+  price: number;
+  active: boolean;
 }
 
 export type ClientSegment = 'vip' | 'frequent' | 'inactive' | 'regular';
@@ -121,8 +149,10 @@ export interface CrmClient {
 export interface BranchLocation {
   id: string;
   brandId: string;
-  nameKey: string;
-  addressKey: string;
+  name?: string;
+  address?: string;
+  nameKey?: string;
+  addressKey?: string;
   phone: string;
   active: boolean;
 }

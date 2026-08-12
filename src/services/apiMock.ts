@@ -2,6 +2,7 @@ import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import type {
   BranchLocation,
   Brand,
+  CreateCatalogProductInput,
   CatalogProduct,
   CrmClient,
   DashboardKpi,
@@ -15,6 +16,12 @@ import type {
   ChatConversation,
   ChatMessage,
 } from '../types';
+import type {
+  CustomerAnalyticsData,
+  CustomerAnalyticsParams,
+  CustomerType,
+} from './customerService';
+import type { CreateLocationInput, UpdateLocationInput } from './locationService';
 
 export {
   getKanbanGroup,
@@ -204,6 +211,20 @@ const clients: CrmClient[] = [
   { id: 'c5', brandId: 'anticuchos', nameKey: 'crm.carlosMendoza', phone: '+51 912 345 678', ordersCount: 6, totalSpent: 540, segment: 'frequent', initials: 'CM' },
   { id: 'c6', brandId: 'anticuchos', nameKey: 'customers.ana', phone: '+51 988 777 666', ordersCount: 2, totalSpent: 95, segment: 'inactive', initials: 'AT' },
 ];
+
+const mockClientNames: Record<string, string> = {
+  'crm.anaGarcia': 'Ana García',
+  'crm.carlosMendoza': 'Carlos Mendoza',
+  'crm.luciaRojas': 'Lucía Rojas',
+  'customers.pedro': 'Pedro Sánchez',
+  'customers.ana': 'Ana Torres',
+};
+
+function customerTypeFromMock(client: CrmClient): CustomerType {
+  if (client.ordersCount > 10) return 'VIP';
+  if (client.ordersCount > 5) return 'Regular';
+  return 'New';
+}
 
 const seedLocations: BranchLocation[] = [
   { id: 'l1', brandId: 'pacifico', nameKey: 'locations.central', addressKey: 'locations.addressCentral', phone: '+51 1 445 7788', active: true },
@@ -754,6 +775,17 @@ export const apiMock = {
     return structuredClone(notifications);
   },
 
+  async markNotificationRead(id: string): Promise<void> {
+    await delay(80);
+    const notification = notifications.find((item) => item.id === id);
+    if (notification) notification.unread = false;
+  },
+
+  async markAllNotificationsRead(): Promise<void> {
+    await delay(80);
+    notifications.forEach((item) => { item.unread = false; });
+  },
+
   async getProducts(brandId: string) {
     await delay(200);
     return loadProducts().filter((p) => p.brandId === brandId);
@@ -769,14 +801,113 @@ export const apiMock = {
     return products[idx];
   },
 
+  async setProductActive(productId: string, isActive: boolean) {
+    await delay(100);
+    const products = loadProducts();
+    const idx = products.findIndex((p) => p.id === productId);
+    if (idx < 0) return null;
+    products[idx] = { ...products[idx], active: isActive };
+    saveProducts(products);
+    return products[idx];
+  },
+
+  async createProduct(input: CreateCatalogProductInput) {
+    await delay(150);
+    const product: CatalogProduct = {
+      id: `local-product-${Date.now()}`,
+      brandId: input.brandId,
+      name: input.name,
+      category: input.categoryId,
+      categoryId: input.categoryId,
+      categoryName: input.categoryName,
+      price: input.price,
+      active: input.active,
+      emoji: '🍽️',
+    };
+    const products = loadProducts();
+    products.unshift(product);
+    saveProducts(products);
+    return product;
+  },
+
   async getClients(brandId: string) {
     await delay(200);
     return structuredClone(clients.filter((c) => c.brandId === brandId));
   },
 
+  async getCustomerAnalytics(params: CustomerAnalyticsParams): Promise<CustomerAnalyticsData> {
+    await delay(200);
+    const page = Math.max(1, params.page ?? 1);
+    const limit = Math.max(1, params.limit ?? 50);
+    const search = params.search?.trim().toLocaleLowerCase('es-PE') ?? '';
+    const customers = clients
+      .filter((client) => client.brandId === params.brandId)
+      .map((client) => ({
+        name: mockClientNames[client.nameKey] ?? 'Cliente',
+        documentId: client.id,
+        phone: client.phone,
+        lastOrderDate: null,
+        customerType: customerTypeFromMock(client),
+        orderCount: client.ordersCount,
+        totalAmount: client.totalSpent,
+      }))
+      .filter((client) =>
+        (!params.customerType || client.customerType === params.customerType) &&
+        (!search || client.name.toLocaleLowerCase('es-PE').includes(search) || client.phone.includes(search)),
+      );
+    const sorted = [...customers].sort((a, b) => {
+      const field = params.sortBy ?? 'orderCount';
+      const direction = params.sortDirection === 'asc' ? 1 : -1;
+      return (a[field] - b[field]) * direction;
+    });
+    const total = sorted.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    return {
+      customers: sorted.slice((page - 1) * limit, page * limit),
+      meta: { total, page, limit, totalPages },
+      summary: {
+        totalOrders: sorted.reduce((sum, client) => sum + client.orderCount, 0),
+        totalAmount: sorted.reduce((sum, client) => sum + client.totalAmount, 0),
+      },
+    };
+  },
+
   async getLocations(brandId: string) {
     await delay(200);
     return structuredClone(loadLocations().filter((l) => l.brandId === brandId));
+  },
+
+  async createLocation(input: CreateLocationInput): Promise<BranchLocation> {
+    await delay(200);
+    const location: BranchLocation = {
+      id: `location-${Date.now()}`,
+      brandId: input.brandId,
+      name: input.name,
+      address: input.address,
+      phone: input.phone,
+      active: input.active,
+    };
+    const locations = loadLocations();
+    locations.unshift(location);
+    saveLocations(locations);
+    return location;
+  },
+
+  async updateLocation(input: UpdateLocationInput): Promise<BranchLocation> {
+    await delay(200);
+    const locations = loadLocations();
+    const index = locations.findIndex((location) => location.id === input.id && location.brandId === input.brandId);
+    if (index < 0) throw new Error('Local no encontrado');
+    const updated: BranchLocation = {
+      ...locations[index],
+      name: input.name,
+      address: input.address,
+      phone: input.phone,
+      active: input.active,
+    };
+    locations[index] = updated;
+    saveLocations(locations);
+    return updated;
   },
 
   async getBrandConfig(brandId: string) {
@@ -795,6 +926,14 @@ export const apiMock = {
     else configs.push(config);
     saveBrandConfigs(configs);
     return config;
+  },
+
+  async uploadBrandLogo(brandId: string, file: File): Promise<string> {
+    await delay(180);
+    const logoUrl = URL.createObjectURL(file);
+    const config = await this.getBrandConfig(brandId);
+    await this.saveBrandConfig({ ...config, brandId, logoUrl });
+    return logoUrl;
   },
 
 
