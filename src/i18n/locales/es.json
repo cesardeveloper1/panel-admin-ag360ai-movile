@@ -543,6 +543,8 @@
     "notConfiguredBody": "Selecciona el local y vincula este teléfono para comenzar a recibir pagos.",
     "listeningTitle": "Escuchando pagos",
     "listeningBody": "Este teléfono está listo para capturar notificaciones de Yape.",
+    "pausedTitle": "Captura en pausa",
+    "pausedBody": "Activa al menos una fuente compatible para volver a detectar pagos.",
     "errorTitle": "No pudimos verificar la captura",
     "errorBody": "Abre los ajustes de Android y confirma que Agiliza360 tenga acceso.",
     "yapeOnly": "Solo Yape",
@@ -571,7 +573,32 @@
     },
     "failed": "Requieren revisión",
     "lastAck": "Última entrega confirmada",
-    "retryFailed": "Reintentar fallidos"
+    "retryFailed": "Reintentar fallidos",
+    "hubTitle": "Seguimiento de pagos",
+    "hubDesc": "Configura fuentes y revisa capturas",
+    "providersTitle": "Fuentes a escuchar",
+    "providersHint": "Elige qué aplicaciones pueden generar eventos de pago.",
+    "providers": {
+      "yape": "Yape",
+      "plin": "Plin"
+    },
+    "providerReady": "Disponible en este dispositivo",
+    "providerComingSoon": "Próximamente · requiere validación bancaria",
+    "providerToggle": "Rastrear pagos de {{provider}}",
+    "providerQueueNote": "Desactivar una fuente detiene nuevas capturas. Los eventos ya guardados continuarán su entrega.",
+    "logsTitle": "Actividad reciente",
+    "logsHint": "Últimas capturas guardadas en este teléfono.",
+    "refreshLogs": "Actualizar actividad",
+    "logsEmptyTitle": "Aún no hay capturas",
+    "logsEmptyBody": "Cuando llegue un pago compatible aparecerá aquí.",
+    "logStates": {
+      "captured": "Capturado",
+      "pending": "Pendiente de envío",
+      "sending": "Enviando",
+      "retry": "Reintentando",
+      "sent": "Entregado al tracker",
+      "dead_letter": "Requiere revisión"
+    }
   },
   "business": {
     "title": "Tu negocio",

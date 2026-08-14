@@ -1,8 +1,8 @@
 # PRP: Captura nativa de notificaciones de pago en Android
 
 > **Proyecto:** panel-admin-ag360ai-movile
-> **Versión:** 1.0
-> **Fecha:** 2026-08-12
+> **Versión:** 1.1
+> **Fecha:** 2026-08-13
 > **Estado:** Implemented — pendiente validación en dispositivo con una notificación real de Yape
 > **Patrón:** B — plugin nativo Android
 > **Epic:** `018--tradingtracker-payment-capture-and-reconciliation.md`
@@ -23,6 +23,8 @@ El proyecto solo contiene una `MainActivity` estándar y no declara un `Notifica
 - Reiniciar la app/teléfono no elimina eventos pendientes.
 - Revocar el permiso se refleja al volver a foreground.
 - Notificaciones de correo, WhatsApp y otras apps nunca se persisten.
+- Desactivar Yape impide nuevas capturas incluso con el listener conectado y la UI cerrada.
+- La app puede mostrar actividad local reciente sin devolver payload cifrado al WebView.
 
 ## 4. User Stories (Jobs-to-be-Done)
 
@@ -48,11 +50,16 @@ El proyecto solo contiene una `MainActivity` estándar y no declara un `Notifica
 - **FR-011:** Exponer diagnóstico agregado: permiso, listener conectado, último evento aceptado y contador pendiente.
 - **FR-012:** Manejar repost/actualizaciones de una misma notificación mediante clave estable.
 - **FR-013:** No cancelar ni modificar notificaciones de Yape.
+- **FR-014:** Resolver el proveedor exclusivamente desde el package exacto de allowlist.
+- **FR-015:** Persistir preferencias nativas por proveedor con defaults seguros y consultarlas antes de extraer texto.
+- **FR-016:** Rechazar la activación de proveedores conocidos pero aún no soportados.
+- **FR-017:** Persistir el identificador normalizado del proveedor dentro del envelope local.
+- **FR-018:** Proyectar logs sanitizados limitados sin devolver ciphertext ni contenido de la notificación.
 
 ### P1
 
-- **FR-014:** Añadir package/parser fixture de Plin.
-- **FR-015:** Registrar códigos de error nativos anonimizados para soporte.
+- **FR-019:** Añadir allowlists y parsers fixture de Plin por aplicación bancaria validada.
+- **FR-020:** Permitir exportar códigos de error nativos anonimizados para soporte.
 
 ## 6. Non-Functional Requirements
 
@@ -76,6 +83,7 @@ El proyecto solo contiene una `MainActivity` estándar y no declara un `Notifica
 ```ts
 interface CapturedNotificationEnvelope {
   localEventId: string;
+  provider: 'yape' | 'plin';
   packageName: string;
   notificationKey: string;
   postTime: number;
@@ -96,6 +104,8 @@ Definir TTL para payload crudo local. La clave criptográfica no será exportabl
 - Explicar de forma breve qué apps se leen y por qué.
 - No pedir permisos no relacionados.
 - Diagnóstico visible sin exponer texto de notificaciones.
+- Controles por proveedor deben reflejar `enabled` y `supported` por separado.
+- Si un proveedor no está soportado, el toggle permanece deshabilitado y explica la causa.
 
 ## 10. Risks & Assumptions
 
@@ -104,6 +114,7 @@ Definir TTL para payload crudo local. La clave criptográfica no será exportabl
 - **Payload cambia:** esta fase conserva envelope seguro; parsing se cubre después.
 - **Backup restaura base sin clave:** excluir almacenamiento sensible de backup o limpiar registros ilegibles.
 - **Supuesto:** Yape publica monto/pagador en texto accesible al listener.
+- **Plin distribuido entre bancos:** tratar “Plin” como capacidad futura, no como un package único ni como permiso para leer toda una app bancaria.
 
 ## 11. Out of Scope
 
@@ -167,3 +178,13 @@ Definir TTL para payload crudo local. La clave criptográfica no será exportabl
 - Conceder/revocar acceso en un teléfono Android.
 - Confirmar el package ID y el payload real de una notificación de Yape instalada desde producción.
 - Probar reconexión en los OEM priorizados después de reinicio y cierre forzado.
+
+### Ampliación implementada (2026-08-13)
+
+- Nuevo almacenamiento `PaymentProviderSettings` separado de la cola y persistente entre reinicios.
+- Yape queda habilitado por defecto; Plin aparece como proveedor conocido, deshabilitado y `supported=false`.
+- `NotificationListenerService` resuelve package → provider y verifica su preferencia antes de leer título/cuerpo.
+- Envelopes nuevos guardan `provider`; los antiguos conservan compatibilidad mediante fallback por package.
+- `getCaptureLogs(limit)` devuelve solo ID local, proveedor, timestamps, estado, intentos, duplicado y error.
+- El bridge Capacitor permite consultar/actualizar fuentes y consultar los últimos 50 logs.
+- Pruebas JVM ampliadas para resolución exacta package → proveedor; Gradle y TypeScript pasan.

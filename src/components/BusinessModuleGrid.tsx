@@ -1,4 +1,5 @@
 import { IonIcon } from '@ionic/react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BusinessModule } from '../navigation/businessModules';
 import { BUSINESS_MODULES } from '../navigation/businessModules';
@@ -9,6 +10,7 @@ export interface BusinessModuleGridProps {
   onSelect: (mod: BusinessModule) => void;
   /** Extra class on the grid container */
   className?: string;
+  children?: ReactNode;
 }
 
 /** Grid de hub-cards compartido por Pagos / Business. */
@@ -17,6 +19,7 @@ export function BusinessModuleGrid({
   descKey,
   onSelect,
   className = 'hub-grid',
+  children,
 }: BusinessModuleGridProps) {
   const { t } = useTranslation();
 
@@ -39,6 +42,7 @@ export function BusinessModuleGrid({
           </span>
         </button>
       ))}
+      {children}
     </div>
   );
 }

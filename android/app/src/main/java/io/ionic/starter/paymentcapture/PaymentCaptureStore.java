@@ -25,6 +25,7 @@ final class PaymentCaptureStore {
     }
 
     CaptureResult capture(
+        String provider,
         String packageName,
         String notificationKey,
         int notificationId,
@@ -52,6 +53,7 @@ final class PaymentCaptureStore {
                 String capturedAt = Instant.now().toString();
                 JSONObject envelope = new JSONObject();
                 envelope.put("localEventId", UUID.randomUUID().toString());
+                envelope.put("provider", provider);
                 envelope.put("packageName", packageName);
                 envelope.put("notificationKey", notificationKey);
                 envelope.put("notificationId", notificationId);
@@ -238,6 +240,38 @@ final class PaymentCaptureStore {
 
     String getLastErrorCode() {
         return preferences.getString(LAST_ERROR_CODE_KEY, null);
+    }
+
+    JSONArray getCaptureLogs(int requestedLimit) {
+        synchronized (QUEUE_LOCK) {
+            JSONArray queue = readQueue();
+            JSONArray logs = new JSONArray();
+            int limit = Math.max(1, Math.min(requestedLimit, 100));
+            for (int index = queue.length() - 1; index >= 0 && logs.length() < limit; index -= 1) {
+                JSONObject envelope = queue.optJSONObject(index);
+                if (envelope == null) continue;
+                JSONObject log = new JSONObject();
+                try {
+                    log.put("localEventId", envelope.optString("localEventId"));
+                    log.put("provider", envelope.optString(
+                        "provider",
+                        PaymentNotificationAllowlist.providerForPackage(envelope.optString("packageName"))
+                    ));
+                    log.put("capturedAt", envelope.optString("capturedAt"));
+                    log.put("state", envelope.optString("state", "pending"));
+                    log.put("attempts", envelope.optInt("attempts", 0));
+                    log.put("sentAt", envelope.has("sentAt") ? envelope.optString("sentAt") : JSONObject.NULL);
+                    log.put("lastErrorCode", envelope.has("lastErrorCode")
+                        ? envelope.optString("lastErrorCode")
+                        : JSONObject.NULL);
+                    log.put("duplicate", envelope.optBoolean("duplicate", false));
+                    logs.put(log);
+                } catch (JSONException ignored) {
+                    // Ignorar exclusivamente el registro corrupto; nunca exponer el payload cifrado.
+                }
+            }
+            return logs;
+        }
     }
 
     private JSONArray readQueue() {

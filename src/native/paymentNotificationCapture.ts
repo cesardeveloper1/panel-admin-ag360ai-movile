@@ -36,6 +36,35 @@ export interface PaymentNotificationCapturedEvent {
   pendingCount: number;
 }
 
+export const PAYMENT_PROVIDERS = ['yape', 'plin'] as const;
+export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
+
+export interface PaymentProviderSetting {
+  enabled: boolean;
+  supported: boolean;
+}
+
+export type PaymentProviderSettings = Record<PaymentProvider, PaymentProviderSetting>;
+
+export type PaymentCaptureLogState =
+  | 'captured'
+  | 'pending'
+  | 'sending'
+  | 'retry'
+  | 'sent'
+  | 'dead_letter';
+
+export interface PaymentCaptureLog {
+  localEventId: string;
+  provider: PaymentProvider;
+  capturedAt: string;
+  state: PaymentCaptureLogState;
+  attempts: number;
+  sentAt: string | null;
+  lastErrorCode: string | null;
+  duplicate: boolean;
+}
+
 interface PaymentNotificationCapturePlugin {
   getPermissionStatus(): Promise<PaymentCapturePermissionStatus>;
   openNotificationListenerSettings(): Promise<void>;
@@ -43,6 +72,12 @@ interface PaymentNotificationCapturePlugin {
   pairDevice(input: PairDeviceInput): Promise<PairDeviceResult>;
   unlinkDevice(): Promise<void>;
   retryFailed(): Promise<{ retriedCount: number }>;
+  getProviderSettings(): Promise<PaymentProviderSettings>;
+  setProviderEnabled(input: { provider: PaymentProvider; enabled: boolean }): Promise<{
+    provider: PaymentProvider;
+    enabled: boolean;
+  }>;
+  getCaptureLogs(input: { limit: number }): Promise<{ logs: PaymentCaptureLog[] }>;
   addListener(
     eventName: 'paymentNotificationCaptured',
     listener: (event: PaymentNotificationCapturedEvent) => void,
@@ -87,6 +122,22 @@ export const paymentNotificationCapture = {
     requireAndroid();
     const result = await nativePlugin.retryFailed();
     return result.retriedCount;
+  },
+
+  async getProviderSettings(): Promise<PaymentProviderSettings> {
+    requireAndroid();
+    return nativePlugin.getProviderSettings();
+  },
+
+  async setProviderEnabled(provider: PaymentProvider, enabled: boolean): Promise<void> {
+    requireAndroid();
+    await nativePlugin.setProviderEnabled({ provider, enabled });
+  },
+
+  async getCaptureLogs(limit = 50): Promise<PaymentCaptureLog[]> {
+    requireAndroid();
+    const result = await nativePlugin.getCaptureLogs({ limit });
+    return result.logs;
   },
 
   async onCaptured(

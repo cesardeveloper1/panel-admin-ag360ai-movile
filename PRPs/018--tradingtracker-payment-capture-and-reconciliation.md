@@ -1,9 +1,9 @@
 # PRP Epic: Captura Android y conexión con TradingTracker
 
 > **Proyecto:** panel-admin-ag360ai-movile
-> **Versión:** 1.1
-> **Fecha:** 2026-08-12
-> **Estado:** Draft
+> **Versión:** 1.2
+> **Fecha:** 2026-08-13
+> **Estado:** Implementado parcialmente — captura, entrega, configuración por proveedor y logs locales listos; pendiente E2E físico y operación financiera SSGG
 > **Patrón:** B — integración móvil nativa y distribuida
 > **Alcance de plataforma:** Android/Capacitor exclusivamente
 > **PRP hijos:** `019--android-notification-capture.md`, `020--tradingtracker-device-delivery.md`, `021--payment-reconciliation-operations.md`
@@ -46,6 +46,8 @@ Sin registro seguro del dispositivo, persistencia offline e idempotencia, una no
 - Cuando pierdo internet, quiero que los pagos se envíen después, para no perder validaciones.
 - Cuando hay una coincidencia ambigua, quiero verla como pendiente de revisión, no como pago confirmado.
 - Cuando reviso la operación desde la misma app Android, quiero ver el estado del capturador y los pagos ya analizados.
+- Cuando un medio de pago no debe rastrearse, quiero apagarlo sin perder eventos ya capturados.
+- Cuando soporte revisa un teléfono, quiero consultar actividad reciente sin exponer el contenido de las notificaciones.
 
 ## 5. Functional Requirements
 
@@ -88,12 +90,22 @@ Sin registro seguro del dispositivo, persistencia offline e idempotencia, una no
 - **FR-026:** La navegación y servicios relacionados con TradingTracker podrán asumir entorno Capacitor Android después de validar el bridge.
 - **FR-027:** Los comandos de validación relevantes serán build de assets, `cap sync android`, Gradle y pruebas en Android.
 
+### P0 — configuración y observabilidad local
+
+- **FR-028:** Mostrar “Seguimiento de pagos” como módulo accesible desde el hub Pagos.
+- **FR-029:** Persistir en Android una preferencia independiente por proveedor; Yape inicia habilitado y la preferencia sobrevive reinicios.
+- **FR-030:** Consultar la preferencia en `NotificationListenerService` antes de extraer o persistir una notificación.
+- **FR-031:** Desactivar una fuente detiene capturas nuevas sin descartar ni detener la entrega de eventos ya encolados.
+- **FR-032:** Un proveedor no soportado podrá mostrarse en UI, pero no podrá activarse hasta contar con allowlist y parser validados.
+- **FR-033:** Exponer al WebView hasta 50 registros locales recientes con proveedor, fecha, estado, intentos, duplicado y código de error.
+- **FR-034:** Los registros nunca expondrán título, cuerpo, pagador, teléfono, monto crudo, ciphertext, token ni secreto.
+
 ### P1
 
-- **FR-028:** Añadir Plin mediante una entrada de allowlist/parser, manteniendo el mismo contrato.
-- **FR-029:** Diagnóstico exportable sin payload personal: permiso, última captura, cola y último error.
-- **FR-030:** Activación `shadow`, `manual`, `automatic` por local según estado enviado por `ssgg`.
-- **FR-031:** Recuperar vínculo tras reinstalación mediante nuevo pairing; no restaurar credenciales desde backup inseguro.
+- **FR-035:** Añadir Plin mediante allowlists por aplicación bancaria y fixtures anonimizados, manteniendo el mismo contrato de proveedor.
+- **FR-036:** Diagnóstico exportable sin payload personal: permiso, última captura, cola, proveedores y último error.
+- **FR-037:** Activación `shadow`, `manual`, `automatic` por local según estado enviado por `ssgg`.
+- **FR-038:** Recuperar vínculo tras reinstalación mediante nuevo pairing; no restaurar credenciales desde backup inseguro.
 
 ## 6. Non-Functional Requirements
 
@@ -129,6 +141,22 @@ interface CapturedPaymentEventV1 {
   postTime?: number;
   rawPayloadHash: string;
 }
+
+interface PaymentProviderSetting {
+  enabled: boolean;
+  supported: boolean;
+}
+
+interface PaymentCaptureLog {
+  localEventId: string;
+  provider: 'yape' | 'plin';
+  capturedAt: string;
+  state: 'pending' | 'sending' | 'retry' | 'sent' | 'dead_letter';
+  attempts: number;
+  sentAt: string | null;
+  lastErrorCode: string | null;
+  duplicate: boolean;
+}
 ```
 
 La cola puede conservar temporalmente el texto mínimo necesario para reparse/reenvío, cifrado y con TTL. Después del ACK debe retener solo identificadores/estado según política.
@@ -141,6 +169,11 @@ La cola puede conservar temporalmente el texto mínimo necesario para reparse/re
 - Estado persistente y calmado; no mostrar loader permanente por falta de eventos.
 - Bandeja móvil compacta para elementos por revisar y confirmados.
 - Empty state con ícono y texto breve, coherente con el dashboard.
+- Tarjeta “Seguimiento de pagos” dentro de Pagos, manteniendo el vocabulario visual de los módulos existentes.
+- Sección “Fuentes a escuchar” con toggle accesible y explicación de lo que ocurre con la cola al desactivar.
+- Plin debe mostrarse como “Próximamente” y su control permanecer deshabilitado mientras `supported=false`.
+- Sección “Actividad reciente” con estados expresados mediante texto además de color, refresco manual y límite de altura con scroll interno.
+- Si no queda ninguna fuente soportada activa, el estado superior debe indicar “Captura en pausa”.
 
 ## 10. Risks & Assumptions
 
@@ -150,6 +183,7 @@ La cola puede conservar temporalmente el texto mínimo necesario para reparse/re
 - **Dispositivo compartido:** vínculo visible y revocación; cambio de local explícito.
 - **Evento tardío/offline:** conservar `occurredAt`; `ssgg` decide si sigue dentro de ventana.
 - **Fragmentación Android:** comportamiento en background varía por fabricante; validar matriz de dispositivos y documentar ajustes de batería.
+- **Plin no tiene una única app fuente:** no agregar paquetes bancarios genéricos sin fixtures; podrían capturarse avisos ajenos a pagos Plin.
 
 ## 11. Out of Scope
 
@@ -158,6 +192,7 @@ La cola puede conservar temporalmente el texto mínimo necesario para reparse/re
 - Asignar una orden dentro del parser móvil.
 - Guardar secretos server-to-server en la app.
 - Pagos parciales, devoluciones o múltiples pagos por orden.
+- Captura efectiva de Plin antes de validar cada package emisor y su formato de notificación.
 
 ## 12. Open Questions
 
@@ -177,6 +212,17 @@ La cola puede conservar temporalmente el texto mínimo necesario para reparse/re
 6. Pantalla de configuración/diagnóstico.
 7. Resultados analizados desde `ssgg` y socket.
 8. Shadow mode y pruebas en dispositivos reales antes de auto-confirmación.
+
+## 13. Implementation Update (2026-08-13)
+
+- Se añadió un quinto módulo “Seguimiento de pagos” al hub Pagos y la ruta mantiene Pagos resaltado.
+- `PaymentProviderSettings` persiste controles nativos por proveedor; Yape está soportado/habilitado por defecto y Plin está registrado como no soportado.
+- El listener consulta proveedor + preferencia antes de leer el payload. Desactivar Yape no modifica la cola existente.
+- El plugin Capacitor expone `getProviderSettings`, `setProviderEnabled` y `getCaptureLogs`.
+- La cola conserva `provider` y genera una proyección sanitizada de hasta 50 registros, sin descifrar ni devolver título/cuerpo.
+- La UI muestra fuentes, estado pausado, actividad reciente, estados de entrega y códigos de error.
+- Validado con `npx tsc --noEmit`, JSON i18n y `gradlew testDebugUnitTest`.
+- Continúa pendiente la prueba con notificaciones reales en dispositivo físico y la incorporación segura de Plin.
 
 ## Validation Loop
 

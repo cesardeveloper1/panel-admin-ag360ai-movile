@@ -1,18 +1,26 @@
 package io.ionic.starter.paymentcapture;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 final class PaymentNotificationAllowlist {
     // Nunca aceptar paquetes por prefijo o nombre visible.
-    private static final Set<String> ALLOWED_PACKAGES = Collections.unmodifiableSet(
-        new HashSet<>(Collections.singletonList("com.bcp.innovacxion.yapeapp"))
-    );
+    private static final Map<String, String> PACKAGES_BY_PROVIDER;
+
+    static {
+        Map<String, String> packages = new HashMap<>();
+        packages.put("com.bcp.innovacxion.yapeapp", PaymentProviderSettings.YAPE);
+        PACKAGES_BY_PROVIDER = Collections.unmodifiableMap(packages);
+    }
 
     private PaymentNotificationAllowlist() {}
 
     static boolean contains(String packageName) {
-        return packageName != null && ALLOWED_PACKAGES.contains(packageName);
+        return providerForPackage(packageName) != null;
+    }
+
+    static String providerForPackage(String packageName) {
+        return packageName == null ? null : PACKAGES_BY_PROVIDER.get(packageName);
     }
 }

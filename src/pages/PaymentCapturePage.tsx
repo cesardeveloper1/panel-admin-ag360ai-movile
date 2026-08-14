@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
-import { IonButton, IonIcon, IonSelect, IonSelectOption, IonSpinner } from '@ionic/react';
+import { IonButton, IonIcon, IonSelect, IonSelectOption, IonSpinner, IonToggle } from '@ionic/react';
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
   notificationsOutline,
   openOutline,
+  receiptOutline,
+  refreshOutline,
   shieldCheckmarkOutline,
+  walletOutline,
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { StackLayout } from '../components/layouts';
@@ -16,7 +19,11 @@ import { paymentCaptureService } from '../services/paymentCaptureService';
 import type { BranchLocation } from '../types';
 import {
   paymentNotificationCapture,
+  PAYMENT_PROVIDERS,
+  type PaymentCaptureLog,
   type PaymentCaptureDiagnostics,
+  type PaymentProvider,
+  type PaymentProviderSettings,
 } from '../native/paymentNotificationCapture';
 
 type CaptureViewState =
@@ -33,6 +40,9 @@ const PaymentCapturePage: React.FC = () => {
   const [locations, setLocations] = useState<BranchLocation[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState('');
   const [bindingBusy, setBindingBusy] = useState(false);
+  const [providerSettings, setProviderSettings] = useState<PaymentProviderSettings | null>(null);
+  const [providerBusy, setProviderBusy] = useState<PaymentProvider | null>(null);
+  const [captureLogs, setCaptureLogs] = useState<PaymentCaptureLog[]>([]);
 
   const refreshDiagnostics = useCallback(async () => {
     try {
@@ -53,6 +63,15 @@ const PaymentCapturePage: React.FC = () => {
     }
   }, []);
 
+  const refreshOperationalData = useCallback(async () => {
+    const [settings, logs] = await Promise.all([
+      paymentNotificationCapture.getProviderSettings(),
+      paymentNotificationCapture.getCaptureLogs(),
+    ]);
+    setProviderSettings(settings);
+    setCaptureLogs(logs);
+  }, []);
+
   useEffect(() => {
     let active = true;
     if (!brand?.id) return;
@@ -69,6 +88,7 @@ const PaymentCapturePage: React.FC = () => {
 
   useEffect(() => {
     void refreshDiagnostics();
+    void refreshOperationalData().catch(() => undefined);
 
     const appStateHandle = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       if (!isActive) return;
@@ -76,18 +96,41 @@ const PaymentCapturePage: React.FC = () => {
       window.setTimeout(() => void refreshDiagnostics(), 900);
     });
     const captureHandle = paymentNotificationCapture
-      .onCaptured(() => void refreshDiagnostics())
+      .onCaptured(() => {
+        void refreshDiagnostics();
+        void refreshOperationalData().catch(() => undefined);
+      })
       .catch(() => undefined);
-    const diagnosticsTimer = window.setInterval(() => void refreshDiagnostics(), 5_000);
+    const diagnosticsTimer = window.setInterval(() => {
+      void refreshDiagnostics();
+      void refreshOperationalData().catch(() => undefined);
+    }, 5_000);
 
     return () => {
       window.clearInterval(diagnosticsTimer);
       void appStateHandle.then((handle) => handle.remove());
       void captureHandle.then((handle) => handle?.remove());
     };
-  }, [refreshDiagnostics]);
+  }, [refreshDiagnostics, refreshOperationalData]);
+
+  const toggleProvider = async (provider: PaymentProvider, enabled: boolean) => {
+    if (providerBusy || !providerSettings?.[provider].supported) return;
+    setProviderBusy(provider);
+    try {
+      await paymentNotificationCapture.setProviderEnabled(provider, enabled);
+      setProviderSettings((current) => current ? {
+        ...current,
+        [provider]: { ...current[provider], enabled },
+      } : current);
+    } finally {
+      setProviderBusy(null);
+    }
+  };
 
   const diagnostics = viewState.status === 'loading' ? undefined : viewState.diagnostics;
+  const hasEnabledProvider = providerSettings === null || PAYMENT_PROVIDERS.some(
+    (provider) => providerSettings[provider].supported && providerSettings[provider].enabled,
+  );
   const statePresentation = (() => {
     switch (viewState.status) {
       case 'loading':
@@ -112,6 +155,14 @@ const PaymentCapturePage: React.FC = () => {
           body: t('paymentCapture.notConfiguredBody'),
         };
       case 'listening':
+        if (!hasEnabledProvider) {
+          return {
+            icon: notificationsOutline,
+            tone: 'neutral',
+            title: t('paymentCapture.pausedTitle'),
+            body: t('paymentCapture.pausedBody'),
+          };
+        }
         return {
           icon: checkmarkCircleOutline,
           tone: 'success',
@@ -289,6 +340,87 @@ const PaymentCapturePage: React.FC = () => {
           </IonButton>
         ) : null}
         <p className="payment-capture-privacy">{t('paymentCapture.privacy')}</p>
+      </section>
+
+      <section className="payment-capture-providers">
+        <div className="payment-capture-section-heading">
+          <div>
+            <h3>{t('paymentCapture.providersTitle')}</h3>
+            <p>{t('paymentCapture.providersHint')}</p>
+          </div>
+          <IonIcon icon={walletOutline} />
+        </div>
+        <div className="payment-provider-list">
+          {PAYMENT_PROVIDERS.map((provider) => {
+            const setting = providerSettings?.[provider];
+            return (
+              <div className="payment-provider-row" key={provider}>
+                <div>
+                  <strong>{t(`paymentCapture.providers.${provider}`)}</strong>
+                  <span>
+                    {setting?.supported
+                      ? t('paymentCapture.providerReady')
+                      : t('paymentCapture.providerComingSoon')}
+                  </span>
+                </div>
+                <IonToggle
+                  aria-label={t('paymentCapture.providerToggle', {
+                    provider: t(`paymentCapture.providers.${provider}`),
+                  })}
+                  checked={setting?.enabled ?? false}
+                  disabled={!setting?.supported || providerBusy !== null}
+                  onIonChange={(event) => void toggleProvider(provider, event.detail.checked)}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <p className="payment-capture-provider-note">{t('paymentCapture.providerQueueNote')}</p>
+      </section>
+
+      <section className="payment-capture-logs">
+        <div className="payment-capture-section-heading">
+          <div>
+            <h3>{t('paymentCapture.logsTitle')}</h3>
+            <p>{t('paymentCapture.logsHint')}</p>
+          </div>
+          <IonButton
+            fill="clear"
+            size="small"
+            aria-label={t('paymentCapture.refreshLogs')}
+            onClick={() => void refreshOperationalData().catch(() => undefined)}
+          >
+            <IonIcon icon={refreshOutline} slot="icon-only" />
+          </IonButton>
+        </div>
+        {captureLogs.length === 0 ? (
+          <div className="payment-capture-log-empty">
+            <IonIcon icon={receiptOutline} />
+            <strong>{t('paymentCapture.logsEmptyTitle')}</strong>
+            <span>{t('paymentCapture.logsEmptyBody')}</span>
+          </div>
+        ) : (
+          <ol className="payment-capture-log-list">
+            {captureLogs.map((log) => (
+              <li key={log.localEventId}>
+                <span className={`payment-capture-log-state payment-capture-log-state--${log.state}`} />
+                <div className="payment-capture-log-copy">
+                  <div>
+                    <strong>{t(`paymentCapture.providers.${log.provider}`)}</strong>
+                    <time dateTime={log.capturedAt}>
+                      {new Intl.DateTimeFormat(i18n.language, {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      }).format(new Date(log.capturedAt))}
+                    </time>
+                  </div>
+                  <span>{t(`paymentCapture.logStates.${log.state}`)}</span>
+                  {log.lastErrorCode ? <code>{log.lastErrorCode}</code> : null}
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
     </StackLayout>
   );

@@ -39,7 +39,8 @@ public final class PaymentNotificationListenerService extends NotificationListen
         }
 
         String packageName = statusBarNotification.getPackageName();
-        if (!PaymentNotificationAllowlist.contains(packageName)) {
+        String provider = PaymentNotificationAllowlist.providerForPackage(packageName);
+        if (provider == null || !new PaymentProviderSettings(this).isEnabled(provider)) {
             return;
         }
         if (!new PaymentDeviceStore(this).canCapture()) {
@@ -58,6 +59,7 @@ public final class PaymentNotificationListenerService extends NotificationListen
         }
 
         PaymentCaptureStore.CaptureResult result = new PaymentCaptureStore(this).capture(
+            provider,
             packageName,
             statusBarNotification.getKey(),
             statusBarNotification.getId(),

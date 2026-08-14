@@ -51,6 +51,19 @@ Detalle: [README-ssgg-connection.md](./README-ssgg-connection.md)
 
 ---
 
+## Epic D: Captura Android y conciliación de pagos
+
+| # | PRP | Status | Notas |
+|---|-----|--------|--------|
+| 018 | [tradingtracker-payment-capture-and-reconciliation](./018--tradingtracker-payment-capture-and-reconciliation.md) | In progress | Epic Android; captura/entrega/configuración listas, E2E físico pendiente |
+| 019 | [android-notification-capture](./019--android-notification-capture.md) | Implemented | Yape, toggle persistente y logs sanitizados; Plin no soportado aún |
+| 020 | [tradingtracker-device-delivery](./020--tradingtracker-device-delivery.md) | Implemented | Pairing, cola, WorkManager, ACK y observabilidad local |
+| 021 | [payment-reconciliation-operations](./021--payment-reconciliation-operations.md) | Draft | Resultados financieros y revisión desde SSGG |
+
+**Restricción:** Android/Capacitor exclusivamente. Los logs locales describen captura/transporte; nunca equivalen a pago confirmado.
+
+---
+
 ## Cómo ejecutar un PRP
 
 En Agent mode: *“Execute PRP 005”* o *“Implementa PRPs/005--ops-attention-queue.md”*.

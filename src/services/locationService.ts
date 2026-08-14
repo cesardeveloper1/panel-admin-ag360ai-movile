@@ -1,5 +1,6 @@
 import { api } from './api';
 import type { BranchLocation } from '../types';
+import { asArray, unwrapApiPayload } from '../utils/apiPayload';
 
 export interface CreateLocationInput {
   brandId: string;
@@ -26,13 +27,6 @@ type ApiBranch = {
   status?: boolean;
 };
 
-type ApiEnvelope = { data?: unknown };
-
-function unwrapData(response: unknown): unknown {
-  const envelope = response as ApiEnvelope;
-  return envelope?.data ?? response;
-}
-
 function mapBranch(branch: ApiBranch, fallbackBrandId: string): BranchLocation {
   return {
     id: String(branch._id ?? branch.id ?? ''),
@@ -44,10 +38,9 @@ function mapBranch(branch: ApiBranch, fallbackBrandId: string): BranchLocation {
   };
 }
 
-function readBranches(response: unknown, brandId: string): BranchLocation[] {
-  const data = unwrapData(response);
-  if (!Array.isArray(data)) return [];
-  return data.map((branch) => mapBranch(branch as ApiBranch, brandId));
+export function readBranches(response: unknown, brandId: string): BranchLocation[] {
+  const payload = unwrapApiPayload<unknown>(response);
+  return asArray<ApiBranch>(payload).map((branch) => mapBranch(branch, brandId));
 }
 
 export const locationService = {
@@ -63,14 +56,14 @@ export const locationService = {
         phone: input.phone,
       },
     });
-    const branch = unwrapData(response);
+    const branch = unwrapApiPayload<unknown>(response);
     if (!branch || typeof branch !== 'object') {
       throw new Error('La respuesta al crear el local no tiene el formato esperado.');
     }
     const created = mapBranch(branch as ApiBranch, input.brandId);
     if (!input.active && created.id) {
       const updated = await api.put(`/branch/${encodeURIComponent(created.id)}`, { status: false });
-      return mapBranch(unwrapData(updated) as ApiBranch, input.brandId);
+      return mapBranch(unwrapApiPayload<ApiBranch>(updated), input.brandId);
     }
     return created;
   },
@@ -84,7 +77,7 @@ export const locationService = {
       },
       status: input.active,
     });
-    const branch = unwrapData(response);
+    const branch = unwrapApiPayload<unknown>(response);
     if (!branch || typeof branch !== 'object') {
       throw new Error('La respuesta al actualizar el local no tiene el formato esperado.');
     }

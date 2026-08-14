@@ -158,6 +158,55 @@ public final class PaymentNotificationCapturePlugin extends Plugin {
         call.resolve(result);
     }
 
+    @PluginMethod
+    public void getProviderSettings(PluginCall call) {
+        PaymentProviderSettings settings = new PaymentProviderSettings(getContext());
+        JSObject result = new JSObject();
+        JSObject yape = new JSObject();
+        yape.put("enabled", settings.isEnabled(PaymentProviderSettings.YAPE));
+        yape.put("supported", settings.isSupported(PaymentProviderSettings.YAPE));
+        JSObject plin = new JSObject();
+        plin.put("enabled", settings.isEnabled(PaymentProviderSettings.PLIN));
+        plin.put("supported", settings.isSupported(PaymentProviderSettings.PLIN));
+        result.put(PaymentProviderSettings.YAPE, yape);
+        result.put(PaymentProviderSettings.PLIN, plin);
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void setProviderEnabled(PluginCall call) {
+        String provider = call.getString("provider");
+        Boolean enabled = call.getBoolean("enabled");
+        if (provider == null || enabled == null) {
+            call.reject("Configuración de proveedor inválida", "PROVIDER_INPUT_INVALID");
+            return;
+        }
+        try {
+            boolean persisted = new PaymentProviderSettings(getContext()).setEnabled(provider, enabled);
+            if (!persisted) {
+                call.reject("No se pudo guardar la configuración", "PROVIDER_PERSIST_FAILED");
+                return;
+            }
+            JSObject result = new JSObject();
+            result.put("provider", provider);
+            result.put("enabled", enabled);
+            call.resolve(result);
+        } catch (IllegalStateException exception) {
+            call.reject("Proveedor aún no compatible", exception.getMessage());
+        } catch (IllegalArgumentException exception) {
+            call.reject("Proveedor desconocido", exception.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void getCaptureLogs(PluginCall call) {
+        Integer requestedLimit = call.getInt("limit");
+        int limit = requestedLimit == null ? 50 : requestedLimit;
+        JSObject result = new JSObject();
+        result.put("logs", new PaymentCaptureStore(getContext()).getCaptureLogs(limit));
+        call.resolve(result);
+    }
+
     private boolean hasNotificationAccess() {
         return NotificationManagerCompat.getEnabledListenerPackages(getContext())
             .contains(getContext().getPackageName());

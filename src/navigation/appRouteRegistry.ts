@@ -89,7 +89,7 @@ export const APP_ROUTES: AppRoute[] = [
   {
     path: PAYMENTS_PATH,
     kind: 'tab',
-    matchPaths: [PAYMENTS_PATH, ...BUSINESS_PATHS],
+    matchPaths: [PAYMENTS_PATH, PAYMENT_CAPTURE_PATH, ...BUSINESS_PATHS],
     pageMarker: '.hub-grid',
     pageMarkerExclude: '.agilito-layout',
     titleKey: 'nav.payments',
@@ -151,7 +151,7 @@ export const APP_ROUTES: AppRoute[] = [
   {
     path: PAYMENT_CAPTURE_PATH,
     kind: 'stack',
-    parent: PROFILE_PATH,
+    parent: PAYMENTS_PATH,
     titleKey: 'paymentCapture.title',
   },
   {

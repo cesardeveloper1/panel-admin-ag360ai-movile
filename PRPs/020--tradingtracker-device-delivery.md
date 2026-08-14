@@ -1,9 +1,9 @@
 # PRP: Vinculación y entrega confiable a TradingTracker
 
 > **Proyecto:** panel-admin-ag360ai-movile
-> **Versión:** 1.0
-> **Fecha:** 2026-08-12
-> **Estado:** Cliente Android implementado — integración E2E bloqueada por endpoints pendientes en `ssgg` y `tradingtracker-back`
+> **Versión:** 1.1
+> **Fecha:** 2026-08-13
+> **Estado:** Implemented — contratos backend disponibles; pendiente validación E2E en Android físico
 > **Patrón:** B — cliente móvil financiero offline-first
 > **Epic:** `018--tradingtracker-payment-capture-and-reconciliation.md`
 > **Depende de:** `019--android-notification-capture.md`
@@ -62,11 +62,13 @@ Enviar desde el callback o guardar una clave global en el APK produciría pérdi
 - **FR-018:** Usar WorkManager con restricciones de conectividad y recuperación de elementos `sending` cuyo lease expiró.
 - **FR-019:** Actualizar último ACK y contadores visibles sin exponer payload.
 - **FR-020:** Permitir reintento manual de `dead_letter` sin crear otro identificador lógico.
+- **FR-021:** Un cambio de preferencia de proveedor solo afecta nuevas capturas; los registros `pending/sending/retry` existentes conservan su política de entrega.
+- **FR-022:** Exponer una proyección local sanitizada de los estados de entrega para diagnóstico operativo.
 
 ### P1
 
-- **FR-021:** Rotación silenciosa del token mediante refresh ligado al dispositivo.
-- **FR-022:** Envío por lotes preservando ACK individual.
+- **FR-023:** Rotación silenciosa del token mediante refresh ligado al dispositivo.
+- **FR-024:** Envío por lotes preservando ACK individual.
 
 ## 6. Non-Functional Requirements
 
@@ -98,6 +100,17 @@ interface DeliveryRecord {
   trackerEventId?: string;
   lastErrorCode?: string;
 }
+
+interface DeliveryLogView {
+  localEventId: string;
+  provider: 'yape' | 'plin';
+  state: DeliveryRecord['state'];
+  capturedAt: string;
+  sentAt: string | null;
+  attempts: number;
+  lastErrorCode: string | null;
+  duplicate: boolean;
+}
 ```
 
 La respuesta remota debe distinguir `created` de `duplicate` y devolver siempre el mismo `trackerEventId` para el mismo evento.
@@ -109,6 +122,8 @@ La respuesta remota debe distinguir `created` de `duplicate` y devolver siempre 
 - Error 401/403 muestra “Dispositivo desvinculado” y detiene reintentos inútiles.
 - Offline es estado informativo, no error destructivo.
 - Acción reintentar afecta solo elementos fallidos y confirma resultado.
+- Actividad reciente ordenada de más nueva a más antigua, sin equiparar `sent` con pago confirmado.
+- Los logs locales nunca muestran monto, pagador ni texto; “Entregado al tracker” describe solo el ACK de transporte.
 
 ## 10. Risks & Assumptions
 
@@ -168,7 +183,7 @@ La respuesta remota debe distinguir `created` de `duplicate` y devolver siempre 
 - `POST {TRACKER}/api/payment-events/v1` con bearer de dispositivo e `Idempotency-Key`.
 - `POST {TRACKER}/api/devices/self/revoke` con bearer de dispositivo.
 
-Los endpoints aún no existen. Bloquean el E2E los PRPs `ssgg/PRPs/202--payment-reconciliation-tradingtracker.md` y `tradingtracker-back/PRPs/001--payment-events-ssgg-delivery.md`.
+Los cuatro endpoints están implementados entre `ssgg` y `tradingtracker-back`. Los PRPs `ssgg/PRPs/202--payment-reconciliation-tradingtracker.md` y `tradingtracker-back/PRPs/001--payment-events-ssgg-delivery.md` conservan el contrato y sus validaciones de backend.
 
 ### Validación ejecutada
 
@@ -183,10 +198,18 @@ Los endpoints aún no existen. Bloquean el E2E los PRPs `ssgg/PRPs/202--payment-
 
 ### Pendiente para cerrar el E2E
 
-- Implementar ambos contratos backend.
-- Contract tests de ticket expirado/reutilizado y ACK idempotente.
+- Ejecutar contract tests cruzados móvil → tracker → SSGG en el entorno integrado.
+- Validar desde el APK ticket expirado/reutilizado y ACK idempotente contra los endpoints reales.
 - Red intermitente, reinicio y cierre forzado sobre Android físico.
 - Confirmar fixtures reales anonimizados de Yape.
+
+### Observabilidad local añadida (2026-08-13)
+
+- La cola conserva evidencia terminal mínima y ahora incluye el proveedor normalizado.
+- El plugin devuelve hasta 50 transiciones recientes sin descifrar payloads.
+- La pantalla distingue pendiente, enviando, reintentando, entregado y requiere revisión.
+- Los eventos capturados antes de apagar un proveedor continúan hasta ACK o `dead_letter`.
+- La validación JVM/Gradle confirma compatibilidad del listener y la entrega existente.
 
 ## Validation Loop
 

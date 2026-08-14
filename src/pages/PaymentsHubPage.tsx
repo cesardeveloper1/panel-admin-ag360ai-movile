@@ -1,8 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { IonIcon } from '@ionic/react';
+import { phonePortraitOutline } from 'ionicons/icons';
 import { BusinessModuleGrid } from '../components/BusinessModuleGrid';
 import { TabLayout } from '../components/layouts';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PAYMENTS_PATH } from '../navigation/navConfig';
+import { PAYMENT_CAPTURE_PATH } from '../navigation/appRouteRegistry';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 
 const PaymentsHubPage: React.FC = () => {
@@ -19,7 +22,22 @@ const PaymentsHubPage: React.FC = () => {
           setModuleNavFrom(PAYMENTS_PATH);
           go(mod.path);
         }}
-      />
+      >
+        <button
+          type="button"
+          className="hub-card hub-card--pulse ag-enter"
+          style={{ animationDelay: '240ms' }}
+          onClick={() => go(PAYMENT_CAPTURE_PATH)}
+        >
+          <span className="hub-card-icon">
+            <IonIcon icon={phonePortraitOutline} />
+          </span>
+          <span className="hub-card-copy">
+            <strong>{t('paymentCapture.hubTitle')}</strong>
+            <span>{t('paymentCapture.hubDesc')}</span>
+          </span>
+        </button>
+      </BusinessModuleGrid>
     </TabLayout>
   );
 };

@@ -498,6 +498,8 @@
     "notConfiguredBody": "Select a location and link this phone to start receiving payments.",
     "listeningTitle": "Listening for payments",
     "listeningBody": "This phone is ready to capture Yape notifications.",
+    "pausedTitle": "Capture paused",
+    "pausedBody": "Enable at least one supported source to detect payments again.",
     "errorTitle": "Capture could not be verified",
     "errorBody": "Open Android settings and confirm that Agiliza360 has access.",
     "yapeOnly": "Yape only",
@@ -526,7 +528,32 @@
     },
     "failed": "Needs review",
     "lastAck": "Last acknowledged delivery",
-    "retryFailed": "Retry failed events"
+    "retryFailed": "Retry failed events",
+    "hubTitle": "Payment tracking",
+    "hubDesc": "Configure sources and review captures",
+    "providersTitle": "Sources to monitor",
+    "providersHint": "Choose which applications can generate payment events.",
+    "providers": {
+      "yape": "Yape",
+      "plin": "Plin"
+    },
+    "providerReady": "Available on this device",
+    "providerComingSoon": "Coming soon · requires bank validation",
+    "providerToggle": "Track {{provider}} payments",
+    "providerQueueNote": "Disabling a source stops new captures. Already stored events will still be delivered.",
+    "logsTitle": "Recent activity",
+    "logsHint": "Latest captures stored on this phone.",
+    "refreshLogs": "Refresh activity",
+    "logsEmptyTitle": "No captures yet",
+    "logsEmptyBody": "A compatible payment will appear here when received.",
+    "logStates": {
+      "captured": "Captured",
+      "pending": "Pending delivery",
+      "sending": "Sending",
+      "retry": "Retrying",
+      "sent": "Delivered to tracker",
+      "dead_letter": "Needs review"
+    }
   },
   "business": {
     "title": "Your business",
