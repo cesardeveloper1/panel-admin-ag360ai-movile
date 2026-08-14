@@ -16,6 +16,7 @@ import BrandDataPage from './pages/BrandDataPage';
 import LocationsPage from './pages/LocationsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import PaymentCapturePage from './pages/PaymentCapturePage';
 import { AppProvider, useApp } from './context/AppContext';
 import { ChatSocketProvider } from './context/ChatSocketProvider';
 import { OrdersSocketProvider } from './context/OrdersSocketProvider';
@@ -53,6 +54,7 @@ const BrandedBrandDataPage = branded(BrandDataPage);
 const BrandedLocationsPage = branded(LocationsPage);
 const BrandedSettingsPage = branded(SettingsPage);
 const BrandedNotificationsPage = branded(NotificationsPage);
+const BrandedPaymentCapturePage = branded(PaymentCapturePage);
 const BrandedOnboardingPage = branded(OnboardingWizardPage);
 
 const WelcomeRoute: React.FC = () => {
@@ -86,6 +88,7 @@ const AppRoutes: React.FC = () => {
       <Route exact path="/app/brand-data" component={BrandedBrandDataPage} />
       <Route exact path="/app/profile" component={BrandedSettingsPage} />
       <Route exact path="/app/notifications" component={BrandedNotificationsPage} />
+      <Route exact path="/app/payment-capture" component={BrandedPaymentCapturePage} />
       <Route exact path="/app">
         <Redirect to="/app/agilito" />
       </Route>

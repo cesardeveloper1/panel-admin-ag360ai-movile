@@ -8,6 +8,7 @@ import {
   type OrdersListFilters,
 } from '../services/ordersQuery';
 import { onSessionExpired } from '../utils/authSession';
+import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
 
 export const BRAND_KEY = 'ag360-brand-id';
 export const PICK_BRAND_KEY = 'ag360-pick-brand';
@@ -135,6 +136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     return onSessionExpired(() => {
+      void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
       ordersRequestId.current += 1;
       brandSelectPromise.current = null;
       flushSync(() => {
@@ -264,6 +266,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.clearTimeout(brandTransitionTimer.current);
     }
     flushSync(() => setBrandTransitioning(true));
+    void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
     ordersRequestId.current += 1;
     brandSelectPromise.current = null;
     prepareBrandPick();
@@ -301,6 +304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const logout = useCallback(() => {
+    void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
     ordersRequestId.current += 1;
     notificationsRequestId.current += 1;
     brandSelectPromise.current = null;

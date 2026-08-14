@@ -15,6 +15,7 @@ export const CHATS_PATH = '/app/chats';
 export const REPORTS_PATH = '/app/reports';
 export const OPERATIONS_PATH = '/app/operations';
 export const BUSINESS_HUB_PATH = '/app/business';
+export const PAYMENT_CAPTURE_PATH = '/app/payment-capture';
 
 export type RouteKind = 'tab' | 'stack';
 
@@ -146,6 +147,12 @@ export const APP_ROUTES: AppRoute[] = [
     kind: 'stack',
     parent: AGILITO_PATH,
     titleKey: 'settings.title',
+  },
+  {
+    path: PAYMENT_CAPTURE_PATH,
+    kind: 'stack',
+    parent: PROFILE_PATH,
+    titleKey: 'paymentCapture.title',
   },
   {
     path: '/app/onboarding',

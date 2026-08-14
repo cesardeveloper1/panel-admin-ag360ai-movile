@@ -12,6 +12,7 @@ import {
   moonOutline,
   swapHorizontalOutline,
   notificationsOutline,
+  phonePortraitOutline,
   storefrontOutline,
 } from 'ionicons/icons';
 import { useAppNavigation } from '../hooks/useAppNavigation';
@@ -19,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { StackLayout } from '../components/layouts';
 import { useApp } from '../context/AppContext';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
+import { PAYMENT_CAPTURE_PATH } from '../navigation/appRouteRegistry';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
 
@@ -107,6 +109,13 @@ const SettingsPage: React.FC = () => {
 
       <p className="settings-section-label">{t('settings.account')}</p>
       <IonList className="settings-list" lines="full">
+        <IonItem button className="settings-item" onClick={() => go(PAYMENT_CAPTURE_PATH)}>
+          <IonIcon icon={phonePortraitOutline} slot="start" className="settings-icon" />
+          <IonLabel>
+            <h2>{t('paymentCapture.settingsTitle')}</h2>
+            <p>{t('paymentCapture.settingsHint')}</p>
+          </IonLabel>
+        </IonItem>
         <IonItem button className="settings-item" onClick={() => go(NOTIFICATIONS_PATH)}>
           <IonIcon icon={notificationsOutline} slot="start" className="settings-icon" />
           <IonLabel>

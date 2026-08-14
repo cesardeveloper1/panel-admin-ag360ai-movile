@@ -17,6 +17,8 @@ export const config = {
     import.meta.env.MODE,
   apiBaseUrl: (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || '/api/v3',
   socketUrl: (import.meta.env.VITE_SOCKET_BASE_URL as string | undefined)?.trim() || '',
+  tradingTrackerBaseUrl:
+    (import.meta.env.VITE_TRADING_TRACKER_BASE_URL as string | undefined)?.trim() || '',
   devBackendUrl:
     (import.meta.env.VITE_DEV_BACKEND_URL as string | undefined)?.trim() ||
     'http://127.0.0.1:3002',

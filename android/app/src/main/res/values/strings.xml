@@ -4,4 +4,5 @@
     <string name="title_activity_main">Agiliza360</string>
     <string name="package_name">com.agiliza360.mobile</string>
     <string name="custom_url_scheme">com.agiliza360.mobile</string>
+    <string name="payment_notification_listener_label">Captura de pagos Agiliza360</string>
 </resources>
