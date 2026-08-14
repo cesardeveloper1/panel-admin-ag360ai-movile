@@ -70,6 +70,19 @@ En Agent mode: *“Execute PRP 005”* o *“Implementa PRPs/005--ops-attention-
 
 Seguir la skill `prp-manager` (Workflow 3: Execute) si está disponible.
 
+---
+
+## Epic E: Impresión automática nativa
+
+| # | PRP | Status | Notas |
+|---|-----|--------|-------|
+| 022 | [native-mobile-auto-print](./022--native-mobile-auto-print.md) | Implemented P0 | Android TCP/Bluetooth listo; QA físico e iOS P1 pendientes |
+
+**Backend:** [`ssgg/PRPs/203--durable-mobile-print-jobs.md`](../../ssgg/PRPs/203--durable-mobile-print-jobs.md)
+**Contrato:** [`print-bridge/PRPs/011--portable-thermal-ticket-contract.md`](../../print-bridge/PRPs/011--portable-thermal-ticket-contract.md)
+
+**Restricción:** el APK usa plugin nativo y cola durable; nunca se conecta al loopback de `print-bridge`. La versión web no imprime.
+
 ## Template
 
 Ver [templates/prp_base.md](./templates/prp_base.md) (stack Ionic React + Vite + ESLint + Vitest).

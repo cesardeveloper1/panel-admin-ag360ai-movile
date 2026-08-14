@@ -8,6 +8,7 @@ import {
   orderSocketEventMatchesBrand,
   type OrderSocketEventShape,
 } from '../services/orderSocketBrandScope';
+import { mobilePrintSignals } from '../services/mobilePrintSignals';
 
 const ORDER_REFRESH_TYPES = new Set([
   'order_created',
@@ -96,6 +97,12 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     ordersSocket.on('event', handleOrdersEvent);
+    ordersSocket.on('mobile_print_job_available', () => {
+      mobilePrintSignals.notify();
+    });
+    ordersSocket.on('connect', () => {
+      mobilePrintSignals.notify();
+    });
 
     if (config.environment === 'development') {
       ordersSocket.on('connect', () => {
@@ -115,6 +122,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshTimer.current = null;
       }
       ordersSocket.off('event', handleOrdersEvent);
+      ordersSocket.off('mobile_print_job_available');
       ordersSocket.disconnect();
       eventsSocket.disconnect();
       ordersSocketRef.current = null;

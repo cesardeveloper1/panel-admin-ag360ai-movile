@@ -8364,3 +8364,237 @@ html.ag-native.ion-palette-dark .ag-header {
 .ag-header--sub.ag-enter {
   animation: none;
 }
+
+/* Native automatic printing */
+.printing-page {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.printing-loading,
+.printing-empty {
+  min-height: min(62vh, 34rem);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  color: var(--ag-text-secondary);
+}
+
+.printing-empty {
+  padding: 2rem;
+}
+
+.printing-empty__icon {
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1.25rem;
+  color: var(--ag-purple);
+  background: color-mix(in srgb, var(--ag-purple) 12%, var(--ag-paper));
+  font-size: 2rem;
+}
+
+.printing-empty h2 {
+  margin: 1rem 0 0.35rem;
+  color: var(--ag-ink);
+  font-size: 1.2rem;
+}
+
+.printing-empty p {
+  max-width: 27rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.printing-status-card,
+.printing-card {
+  border: 1px solid var(--ag-line);
+  border-radius: 1.25rem;
+  background: var(--ag-paper);
+  box-shadow: 0 2px 4px rgba(10, 17, 40, 0.05);
+}
+
+.printing-status-card {
+  min-height: 4.75rem;
+  padding: 0.85rem 1rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.printing-status-card__icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.85rem;
+  color: var(--ag-text-secondary);
+  background: var(--ag-soft);
+  font-size: 1.35rem;
+}
+
+.printing-status-card__icon.is-on {
+  color: #07825e;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.printing-status-card strong,
+.printing-status-card small,
+.printing-history__row strong,
+.printing-history__row small {
+  display: block;
+}
+
+.printing-status-card small,
+.printing-history__row small {
+  margin-top: 0.2rem;
+  color: var(--ag-text-secondary);
+  line-height: 1.35;
+}
+
+.printing-card {
+  padding: 1rem;
+}
+
+.printing-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--ag-ink);
+}
+
+.printing-field {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  color: var(--ag-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.printing-field:first-of-type {
+  margin-top: 0;
+}
+
+.printing-field ion-input,
+.printing-field ion-select {
+  width: 100%;
+  min-height: 3rem;
+  --padding-start: 0.85rem;
+  --padding-end: 0.85rem;
+  color: var(--ag-ink);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 1px solid var(--ag-line);
+  border-radius: 0.9rem;
+  background: var(--ag-soft);
+}
+
+.printing-transport {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.printing-transport button {
+  min-height: 4.75rem;
+  padding: 0.75rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  text-align: left;
+  color: var(--ag-text-secondary);
+  background: var(--ag-soft);
+  border: 1px solid var(--ag-line);
+  border-radius: 1rem;
+}
+
+.printing-transport button.is-selected {
+  color: var(--ag-purple);
+  border-color: color-mix(in srgb, var(--ag-purple) 65%, var(--ag-line));
+  background: color-mix(in srgb, var(--ag-purple) 8%, var(--ag-paper));
+}
+
+.printing-transport ion-icon {
+  flex: 0 0 auto;
+  font-size: 1.35rem;
+}
+
+.printing-transport strong,
+.printing-transport small {
+  display: block;
+}
+
+.printing-transport small {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: inherit;
+}
+
+.printing-address-grid,
+.printing-options-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(5.5rem, 1fr);
+  gap: 0.65rem;
+  margin-top: 0.15rem;
+}
+
+.printing-bluetooth {
+  margin-top: 1rem;
+}
+
+.printing-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 0.65rem;
+}
+
+.printing-actions ion-button {
+  min-height: 3rem;
+  margin: 0;
+  --border-radius: 0.9rem;
+}
+
+.printing-history__empty {
+  margin: 0;
+  color: var(--ag-text-secondary);
+}
+
+.printing-history__row {
+  min-height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--ag-line);
+}
+
+.printing-history__row time {
+  flex: 0 0 auto;
+  color: var(--ag-text-secondary);
+  font-size: 0.75rem;
+}
+
+@media (min-width: 700px) {
+  .printing-page {
+    width: min(100%, 50rem);
+    margin-inline: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .printing-status-card,
+  .printing-actions,
+  .printing-history {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .printing-page .ag-enter {
+    animation: none;
+  }
+}

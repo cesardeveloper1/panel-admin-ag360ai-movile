@@ -16,6 +16,7 @@ export const REPORTS_PATH = '/app/reports';
 export const OPERATIONS_PATH = '/app/operations';
 export const BUSINESS_HUB_PATH = '/app/business';
 export const PAYMENT_CAPTURE_PATH = '/app/payment-capture';
+export const PRINTING_PATH = '/app/printing';
 
 export type RouteKind = 'tab' | 'stack';
 
@@ -89,7 +90,7 @@ export const APP_ROUTES: AppRoute[] = [
   {
     path: PAYMENTS_PATH,
     kind: 'tab',
-    matchPaths: [PAYMENTS_PATH, PAYMENT_CAPTURE_PATH, ...BUSINESS_PATHS],
+    matchPaths: [PAYMENTS_PATH, PAYMENT_CAPTURE_PATH, PRINTING_PATH, ...BUSINESS_PATHS],
     pageMarker: '.hub-grid',
     pageMarkerExclude: '.agilito-layout',
     titleKey: 'nav.payments',
@@ -153,6 +154,12 @@ export const APP_ROUTES: AppRoute[] = [
     kind: 'stack',
     parent: PAYMENTS_PATH,
     titleKey: 'paymentCapture.title',
+  },
+  {
+    path: PRINTING_PATH,
+    kind: 'stack',
+    parent: PAYMENTS_PATH,
+    titleKey: 'printing.title',
   },
   {
     path: '/app/onboarding',
