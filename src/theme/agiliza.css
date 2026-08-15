@@ -5905,7 +5905,8 @@ html.ag-native.ion-palette-dark .ag-header {
 }
 
 .welcome-body {
-  padding-top: 1.75rem;
+  /* Evita que el saludo compita con la cámara, barra de estado o borde superior. */
+  padding-top: calc(2rem + env(safe-area-inset-top, 0px));
   padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
@@ -5916,7 +5917,7 @@ html.ag-native.ion-palette-dark .ag-header {
 
 @media (min-width: 768px) {
   .welcome-body {
-    padding: 2.75rem 2.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
+    padding: calc(2.75rem + env(safe-area-inset-top, 0px)) 2.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
     max-width: 920px;
     margin-inline: auto;
     width: 100%;
