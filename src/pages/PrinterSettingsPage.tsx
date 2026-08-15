@@ -25,7 +25,6 @@ import { mobilePrintCoordinator } from '../services/mobilePrintCoordinator';
 import { mobilePrintSignals } from '../services/mobilePrintSignals';
 import type { BranchLocation } from '../types';
 import type {
-  LocalPrintJob,
   MobilePrinterConfig,
   PrinterCapabilities,
   PrinterDevice,
@@ -50,13 +49,12 @@ const DEFAULT_CONFIG: MobilePrinterConfig = {
 };
 
 const PrinterSettingsPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { brand, showToast } = useApp();
   const [capabilities, setCapabilities] = useState<PrinterCapabilities | null>(null);
   const [locations, setLocations] = useState<BranchLocation[]>([]);
   const [devices, setDevices] = useState<PrinterDevice[]>([]);
   const [config, setConfig] = useState<MobilePrinterConfig>(DEFAULT_CONFIG);
-  const [history, setHistory] = useState<LocalPrintJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -64,12 +62,10 @@ const PrinterSettingsPage: React.FC = () => {
     const nextCapabilities = await thermalPrinter.getCapabilities();
     setCapabilities(nextCapabilities);
     if (!nextCapabilities.available) return;
-    const [saved, recent] = await Promise.all([
+    const [saved] = await Promise.all([
       thermalPrinter.getConfig(),
-      thermalPrinter.getHistory(12),
     ]);
     if (saved) setConfig(saved);
-    setHistory(recent);
   }, []);
 
   useEffect(() => {
@@ -128,11 +124,23 @@ const PrinterSettingsPage: React.FC = () => {
     }
   };
 
+  const scanNetwork = async () => {
+    setBusy(true);
+    try {
+      setDevices(await thermalPrinter.scanNetwork());
+      showToast('printing.scanComplete');
+    } catch {
+      showToast('printing.scanError');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const normalizedConfig = (): MobilePrinterConfig => ({
     ...config,
     brandId: brand?.id ?? '',
     branchName: selectedLocation?.name ?? config.branchName,
-    deviceRef: config.transport === 'tcp' ? (config.host?.trim() ?? '') : config.deviceRef,
+      deviceRef: config.transport === 'tcp' ? (config.host?.trim() ?? '') : config.deviceRef,
     displayName: config.transport === 'tcp'
       ? `${config.host?.trim() ?? ''}:${config.port ?? 9100}`
       : config.displayName,
@@ -166,7 +174,6 @@ const PrinterSettingsPage: React.FC = () => {
     try {
       await thermalPrinter.saveConfig(normalizedConfig());
       await thermalPrinter.testPrint();
-      setHistory(await thermalPrinter.getHistory(12));
       showToast('printing.testSent');
     } catch {
       showToast('printing.testError');
@@ -244,8 +251,17 @@ const PrinterSettingsPage: React.FC = () => {
 
         {config.transport === 'tcp' ? (
           <div className="printing-address-grid">
-            <label className="printing-field"><span>{t('printing.host')}</span><IonInput value={config.host} inputmode="decimal" placeholder="192.168.1.50" onIonInput={(event) => patchConfig('host', String(event.detail.value ?? ''))} /></label>
+            <div className="printing-network-discovery">
+              <IonButton fill="outline" expand="block" disabled={busy} onClick={() => void scanNetwork()}><IonIcon slot="start" icon={refreshOutline} />{t('printing.findNetworkPrinters')}</IonButton>
+              {devices.length > 0 && <label className="printing-field"><span>{t('printing.printer')}</span><IonSelect value={config.host} interface="popover" placeholder={t('printing.selectPrinter')} onIonChange={(event) => {
+                const host = String(event.detail.value ?? '');
+                const device = devices.find((item) => (item.host ?? item.id) === host);
+                setConfig((current) => ({ ...current, host, port: device?.port ?? 9100, deviceRef: host, displayName: device?.name ?? `${host}:9100` }));
+              }}>{devices.map((device) => <IonSelectOption key={device.id} value={device.host ?? device.id}>{device.name} · {device.host ?? device.id}</IonSelectOption>)}</IonSelect></label>}
+            </div>
+            <details className="printing-advanced"><summary>{t('printing.advanced')}</summary><div className="printing-address-grid"><label className="printing-field"><span>{t('printing.host')}</span><IonInput value={config.host} inputmode="decimal" placeholder="192.168.1.50" onIonInput={(event) => patchConfig('host', String(event.detail.value ?? ''))} /></label>
             <label className="printing-field"><span>{t('printing.port')}</span><IonInput type="number" value={config.port} min="1" max="65535" onIonInput={(event) => patchConfig('port', Number(event.detail.value) || 9100)} /></label>
+            </div></details>
           </div>
         ) : (
           <div className="printing-bluetooth">
@@ -273,15 +289,6 @@ const PrinterSettingsPage: React.FC = () => {
         <IonButton disabled={busy || !isValid} onClick={() => void save()}>{busy && <IonSpinner slot="start" name="crescent" />}{t('printing.save')}</IonButton>
       </div>
 
-      <section className="printing-card printing-history ag-enter">
-        <h2>{t('printing.history')}</h2>
-        {history.length === 0 ? <p className="printing-history__empty">{t('printing.noHistory')}</p> : history.map((job) => (
-          <div className="printing-history__row" key={`${job.jobId}-${job.createdAt}`}>
-            <span><strong>{t(`printing.states.${job.state}`)}</strong><small>{job.ticketType === 'kitchen' ? t('printing.kitchen') : t('printing.full')}</small></span>
-            <time>{new Intl.DateTimeFormat(i18n.language, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(job.createdAt))}</time>
-          </div>
-        ))}
-      </section>
     </StackLayout>
   );
 };

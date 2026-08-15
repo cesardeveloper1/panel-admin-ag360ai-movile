@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.net.DhcpInfo;
+import android.net.wifi.WifiManager;
 
 import androidx.core.content.ContextCompat;
 
@@ -95,6 +97,48 @@ public final class ThermalPrinterPlugin extends Plugin {
         } catch (SecurityException exception) {
             call.reject("Bluetooth permission is required", "PERMISSION_DENIED");
         }
+    }
+
+    @PluginMethod
+    public void scanNetwork(PluginCall call) {
+        printExecutor.execute(() -> {
+            JSObject result = new JSObject();
+            List<JSObject> devices = new ArrayList<>();
+            try {
+                WifiManager wifi = (WifiManager) getContext().getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
+                DhcpInfo dhcp = wifi == null ? null : wifi.getDhcpInfo();
+                if (dhcp == null || dhcp.ipAddress == 0 || dhcp.netmask == 0) {
+                    call.reject("Wi-Fi network is unavailable", "NETWORK_UNAVAILABLE");
+                    return;
+                }
+                int network = dhcp.ipAddress & dhcp.netmask;
+                int broadcast = network | ~dhcp.netmask;
+                for (int address = network + 1; address < broadcast; address++) {
+                    String host = ipv4(address);
+                    if (host.equals(ipv4(dhcp.ipAddress))) continue;
+                    try (java.net.Socket socket = new java.net.Socket()) {
+                        socket.connect(new java.net.InetSocketAddress(host, 9100), 120);
+                        JSObject item = new JSObject();
+                        item.put("id", host);
+                        item.put("name", "Impresora de red");
+                        item.put("transport", "tcp");
+                        item.put("paired", false);
+                        item.put("host", host);
+                        item.put("port", 9100);
+                        devices.add(item);
+                    } catch (Exception ignored) { }
+                    if (devices.size() >= 20) break;
+                }
+                result.put("devices", new JSArray(devices));
+                call.resolve(result);
+            } catch (Exception exception) {
+                call.reject("Could not scan the local network", "NETWORK_SCAN_FAILED");
+            }
+        });
+    }
+
+    private static String ipv4(int value) {
+        return (value & 0xff) + "." + ((value >> 8) & 0xff) + "." + ((value >> 16) & 0xff) + "." + ((value >> 24) & 0xff);
     }
 
     @PluginMethod

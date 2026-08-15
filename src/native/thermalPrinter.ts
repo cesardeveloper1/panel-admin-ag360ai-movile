@@ -16,6 +16,7 @@ interface ThermalPrinterPlugin {
   getCapabilities(): Promise<PrinterCapabilities>;
   requestBluetoothPermissions(): Promise<PrinterCapabilities>;
   listDevices(): Promise<{ devices: PrinterDevice[] }>;
+  scanNetwork(): Promise<{ devices: PrinterDevice[] }>;
   getConfig(): Promise<{ config: MobilePrinterConfig | null }>;
   saveConfig(input: { config: MobilePrinterConfig }): Promise<{ config: MobilePrinterConfig }>;
   clearConfig(): Promise<void>;
@@ -79,6 +80,11 @@ export const thermalPrinter = {
   async listDevices(): Promise<PrinterDevice[]> {
     requireNative();
     return (await nativePlugin.listDevices()).devices;
+  },
+
+  async scanNetwork(): Promise<PrinterDevice[]> {
+    requireNative();
+    return (await nativePlugin.scanNetwork()).devices;
   },
 
   async getConfig(): Promise<MobilePrinterConfig | null> {

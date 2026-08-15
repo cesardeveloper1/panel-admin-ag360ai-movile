@@ -114,6 +114,8 @@ export interface PrinterDevice {
   name: string;
   transport: PrinterTransport;
   paired: boolean;
+  host?: string;
+  port?: number;
 }
 
 export interface PrinterCapabilities {

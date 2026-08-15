@@ -48,6 +48,8 @@ const LoginPage: React.FC = () => {
         <div className="login-content">
           <form
             className="login-card"
+            method="post"
+            autoComplete="on"
             onSubmit={(e) => {
               e.preventDefault();
               void onSubmit();
@@ -64,10 +66,11 @@ const LoginPage: React.FC = () => {
                   <IonIcon icon={mailOutline} className="login-field__leading" aria-hidden="true" />
                   <input
                     id={emailId}
+                    name="username"
                     className="login-field__input"
                     type="email"
                     inputMode="email"
-                    autoComplete="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
@@ -84,6 +87,7 @@ const LoginPage: React.FC = () => {
                   <IonIcon icon={lockClosedOutline} className="login-field__leading" aria-hidden="true" />
                   <input
                     id={passwordId}
+                    name="password"
                     className="login-field__input login-field__input--password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
