@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { LOGO_WHITE_LOCAL } from '../constants/assets';
 import { config } from '../config/env';
+import { requestCredentialSave } from '../services/credentialSaveService';
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
@@ -26,6 +27,7 @@ const LoginPage: React.FC = () => {
     setError(null);
     const ok = await login(email, password);
     if (ok) {
+      void requestCredentialSave(email, password);
       goRoot('/welcome');
       return;
     }
