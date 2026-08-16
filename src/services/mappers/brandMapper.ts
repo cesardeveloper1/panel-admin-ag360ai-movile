@@ -8,6 +8,7 @@ export interface ApiBrand {
   logo?: string;
   branches?: unknown[];
   status?: boolean;
+  language?: string;
 }
 
 function brandInitials(name: string): string {
@@ -34,6 +35,7 @@ export function mapBrandFromApi(raw: ApiBrand): Brand | null {
     nameKey: 'brands.custom',
     displayName: name,
     logoUrl: typeof raw.logo === 'string' ? raw.logo : '',
+    language: raw.language === 'en' ? 'en' : 'es',
     locations: branchCount || 1,
     ordersToday: 0,
   };

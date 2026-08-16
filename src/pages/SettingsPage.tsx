@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   IonAlert,
   IonIcon,
@@ -14,6 +14,7 @@ import {
   notificationsOutline,
   phonePortraitOutline,
   storefrontOutline,
+  languageOutline,
 } from 'ionicons/icons';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useTranslation } from 'react-i18next';
@@ -23,13 +24,47 @@ import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { PAYMENT_CAPTURE_PATH } from '../navigation/appRouteRegistry';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
+import { userSettingsService, type SupportedAppLanguage } from '../services/userSettingsService';
 
 const SettingsPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { goRoot, go } = useAppNavigation();
-  const { session, brand, orders, notifications, darkMode, setDarkMode, startBrandSwitch, logout } =
+  const { session, brand, orders, notifications, darkMode, setDarkMode, startBrandSwitch, logout, showToast } =
     useApp();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [useOwnLanguage, setUseOwnLanguage] = useState(false);
+  const [language, setLanguage] = useState<SupportedAppLanguage>('es');
+  const [languageBusy, setLanguageBusy] = useState(false);
+
+  useEffect(() => {
+    if (!brand?.id) return;
+    let active = true;
+    void userSettingsService.getLanguageSettings(brand.id)
+      .then((settings) => {
+        if (!active) return;
+        setUseOwnLanguage(settings.useOwnConfig);
+        setLanguage(settings.language);
+        void i18n.changeLanguage(settings.useOwnConfig ? settings.language : (brand.language ?? 'es'));
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [brand?.id, i18n]);
+
+  const updateLanguage = async (patch: { useOwnConfig?: boolean; language?: SupportedAppLanguage }) => {
+    if (!brand?.id) return;
+    setLanguageBusy(true);
+    try {
+      const saved = await userSettingsService.updateLanguageSettings(brand.id, patch);
+      setUseOwnLanguage(saved.useOwnConfig);
+      setLanguage(saved.language);
+      await i18n.changeLanguage(saved.useOwnConfig ? saved.language : (brand.language ?? 'es'));
+      showToast('settings.languageSaved');
+    } catch {
+      showToast('settings.languageError');
+    } finally {
+      setLanguageBusy(false);
+    }
+  };
 
   const unread = notifications.filter((n) => n.unread).length;
   const activeOrders = useMemo(
@@ -105,6 +140,23 @@ const SettingsPage: React.FC = () => {
           </IonLabel>
           <IonToggle slot="end" checked={darkMode} onIonChange={(e) => setDarkMode(e.detail.checked)} />
         </IonItem>
+        <IonItem className="settings-item">
+          <IonIcon icon={languageOutline} slot="start" className="settings-icon" />
+          <IonLabel>
+            <h2>{t('settings.personalLanguage')}</h2>
+            <p>{t('settings.personalLanguageHint')}</p>
+          </IonLabel>
+          <IonToggle slot="end" checked={useOwnLanguage} disabled={languageBusy} onIonChange={(event) => void updateLanguage({ useOwnConfig: event.detail.checked })} />
+        </IonItem>
+        {useOwnLanguage ? (
+          <IonItem className="settings-item">
+            <IonLabel>{t('settings.language')}</IonLabel>
+            <select className="settings-language-select" value={language} disabled={languageBusy} onChange={(event) => void updateLanguage({ language: event.target.value as SupportedAppLanguage })}>
+              <option value="es">{t('settings.spanish')}</option>
+              <option value="en">{t('settings.english')}</option>
+            </select>
+          </IonItem>
+        ) : null}
       </IonList>
 
       <p className="settings-section-label">{t('settings.account')}</p>

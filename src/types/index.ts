@@ -27,6 +27,8 @@ export interface Brand {
   /** Subdominio ssgg (filtro GET /orders?subdomains=). */
   subdomain?: string;
   logoUrl?: string;
+  /** Idioma predeterminado de la marca cuando el perfil no lo reemplaza. */
+  language?: 'es' | 'en';
   locations: number;
   ordersToday: number;
 }

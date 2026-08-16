@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
 import { BRAND_KEY, PICK_BRAND_KEY, useApp } from '../context/AppContext';
 import { useAppNavigation } from '../hooks/useAppNavigation';
+import { PROFILE_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';
 import type { Brand } from '../types';
 import { brandLabel } from '../utils/brandLabel';
@@ -17,7 +18,7 @@ import { sessionDisplayName } from '../utils/sessionDisplayName';
 
 const WelcomePage: React.FC = () => {
   const { t } = useTranslation();
-  const { goRoot } = useAppNavigation();
+  const { goRoot, go } = useAppNavigation();
   const { session, authRestoring, brand, clearBrand, selectBrandAndLoad, brandLoading, showToast, authEpoch, logout } = useApp();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -196,7 +197,7 @@ const WelcomePage: React.FC = () => {
                     <button
                       type="button"
                       className="welcome-action-btn"
-                      onClick={() => showToast('toast.comingSoon')}
+                      onClick={() => go(PROFILE_PATH)}
                     >
                       <IonIcon icon={personOutline} aria-hidden="true" />
                       {t('nav.profile')}

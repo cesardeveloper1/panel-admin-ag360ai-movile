@@ -11,6 +11,8 @@ import {
 import {
   bluetoothOutline,
   checkmarkCircleOutline,
+  chevronDownOutline,
+  chevronUpOutline,
   printOutline,
   refreshOutline,
   warningOutline,
@@ -57,6 +59,7 @@ const PrinterSettingsPage: React.FC = () => {
   const [config, setConfig] = useState<MobilePrinterConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [advancedNetworkOpen, setAdvancedNetworkOpen] = useState(false);
 
   const loadNativeState = useCallback(async () => {
     const nextCapabilities = await thermalPrinter.getCapabilities();
@@ -250,7 +253,7 @@ const PrinterSettingsPage: React.FC = () => {
         </div>
 
         {config.transport === 'tcp' ? (
-          <div className="printing-address-grid">
+          <div className="printing-network-setup">
             <div className="printing-network-discovery">
               <IonButton fill="outline" expand="block" disabled={busy} onClick={() => void scanNetwork()}><IonIcon slot="start" icon={refreshOutline} />{t('printing.findNetworkPrinters')}</IonButton>
               {devices.length > 0 && <label className="printing-field"><span>{t('printing.printer')}</span><IonSelect value={config.host} interface="popover" placeholder={t('printing.selectPrinter')} onIonChange={(event) => {
@@ -259,9 +262,13 @@ const PrinterSettingsPage: React.FC = () => {
                 setConfig((current) => ({ ...current, host, port: device?.port ?? 9100, deviceRef: host, displayName: device?.name ?? `${host}:9100` }));
               }}>{devices.map((device) => <IonSelectOption key={device.id} value={device.host ?? device.id}>{device.name} · {device.host ?? device.id}</IonSelectOption>)}</IonSelect></label>}
             </div>
-            <details className="printing-advanced"><summary>{t('printing.advanced')}</summary><div className="printing-address-grid"><label className="printing-field"><span>{t('printing.host')}</span><IonInput value={config.host} inputmode="decimal" placeholder="192.168.1.50" onIonInput={(event) => patchConfig('host', String(event.detail.value ?? ''))} /></label>
-            <label className="printing-field"><span>{t('printing.port')}</span><IonInput type="number" value={config.port} min="1" max="65535" onIonInput={(event) => patchConfig('port', Number(event.detail.value) || 9100)} /></label>
-            </div></details>
+            <button type="button" className={`printing-advanced-toggle${advancedNetworkOpen ? ' is-open' : ''}`} onClick={() => setAdvancedNetworkOpen((open) => !open)} aria-expanded={advancedNetworkOpen}>
+              <span><strong>{t('printing.advanced')}</strong><small>{t('printing.advancedHint')}</small></span>
+              <IonIcon icon={advancedNetworkOpen ? chevronUpOutline : chevronDownOutline} aria-hidden="true" />
+            </button>
+            {advancedNetworkOpen ? <div className="printing-address-grid printing-advanced-fields"><label className="printing-field"><span>{t('printing.host')}</span><IonInput value={config.host} inputmode="decimal" placeholder="192.168.1.50" onIonInput={(event) => patchConfig('host', String(event.detail.value ?? ''))} /></label>
+              <label className="printing-field"><span>{t('printing.port')}</span><IonInput type="number" value={config.port} min="1" max="65535" onIonInput={(event) => patchConfig('port', Number(event.detail.value) || 9100)} /></label>
+            </div> : null}
           </div>
         ) : (
           <div className="printing-bluetooth">

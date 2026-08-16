@@ -4207,6 +4207,16 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   color: var(--ag-muted);
 }
 
+.settings-language-select {
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  color: var(--ag-ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: end;
+}
+
 @media (min-width: 768px) {
   .hub-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -8542,6 +8552,63 @@ html.ag-native.ion-palette-dark .ag-header {
   grid-template-columns: minmax(0, 2fr) minmax(5.5rem, 1fr);
   gap: 0.65rem;
   margin-top: 0.15rem;
+}
+
+.printing-network-setup {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.printing-network-discovery .printing-field {
+  margin-top: 0.75rem;
+}
+
+.printing-advanced-toggle {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--ag-text-secondary);
+  background: transparent;
+  border: 1px solid var(--ag-line);
+  border-radius: 0.75rem;
+  text-align: left;
+}
+
+.printing-advanced-toggle:active,
+.printing-advanced-toggle.is-open {
+  border-color: color-mix(in srgb, var(--ag-purple) 55%, var(--ag-line));
+  background: color-mix(in srgb, var(--ag-purple) 6%, var(--ag-paper));
+}
+
+.printing-advanced-toggle span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.printing-advanced-toggle strong {
+  color: var(--ag-ink);
+  font-size: 0.88rem;
+}
+
+.printing-advanced-toggle small {
+  color: var(--ag-muted);
+  font-size: 0.75rem;
+}
+
+.printing-advanced-toggle ion-icon {
+  flex: 0 0 auto;
+  font-size: 1.15rem;
+  color: var(--ag-purple);
+}
+
+.printing-advanced-fields {
+  margin-top: 0;
+  padding-top: 0.1rem;
 }
 
 .printing-bluetooth {
