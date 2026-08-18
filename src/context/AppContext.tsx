@@ -9,12 +9,23 @@ import {
 } from '../services/ordersQuery';
 import { onSessionExpired } from '../utils/authSession';
 import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
+import { App as CapacitorApp } from '@capacitor/app';
+import type { PluginListenerHandle } from '@capacitor/core';
+import { refreshAccessToken } from '../services/api';
+import {
+  getAuthToken,
+  getTokenExpirationMs,
+  notifySessionExpired,
+} from '../utils/authSession';
 
 export const BRAND_KEY = 'ag360-brand-id';
 export const PICK_BRAND_KEY = 'ag360-pick-brand';
 export const ONBOARDING_PREFIX = 'ag360-onboarding-';
 const DARK_KEY = 'ag360-dark';
 const AGENT_KEY = 'ag360-agent-enabled';
+const ACCESS_TOKEN_REFRESH_ADVANCE_MS = 5 * 60 * 1000;
+const ACCESS_TOKEN_REFRESH_RETRY_MS = 60 * 1000;
+const MAX_TIMEOUT_MS = 2_147_483_647;
 
 interface AppContextValue {
   session: UserSession | null;
@@ -158,6 +169,84 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast('toast.sessionExpired');
     });
   }, [showToast]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    let stopped = false;
+    let refreshInFlight = false;
+    let timeoutId: number | undefined;
+    let appStateHandle: PluginListenerHandle | undefined;
+
+    const clearScheduledRefresh = () => {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+      timeoutId = undefined;
+    };
+
+    const scheduleRefresh = (delayOverride?: number) => {
+      clearScheduledRefresh();
+      if (stopped) return;
+      const expiresAt = getTokenExpirationMs(getAuthToken());
+      if (!expiresAt) return;
+      const delay = delayOverride ?? Math.max(
+        0,
+        expiresAt - Date.now() - ACCESS_TOKEN_REFRESH_ADVANCE_MS,
+      );
+      timeoutId = window.setTimeout(
+        () => void refreshSession(),
+        Math.min(delay, MAX_TIMEOUT_MS),
+      );
+    };
+
+    const refreshSession = async () => {
+      if (stopped || refreshInFlight) return;
+      refreshInFlight = true;
+      try {
+        const result = await refreshAccessToken();
+        if (stopped) return;
+        if (result === 'unauthorized') {
+          notifySessionExpired();
+          return;
+        }
+        scheduleRefresh(
+          result === 'refreshed' ? undefined : ACCESS_TOKEN_REFRESH_RETRY_MS,
+        );
+      } finally {
+        refreshInFlight = false;
+      }
+    };
+
+    const refreshIfNeeded = () => {
+      const expiresAt = getTokenExpirationMs(getAuthToken());
+      if (expiresAt && expiresAt <= Date.now() + ACCESS_TOKEN_REFRESH_ADVANCE_MS) {
+        void refreshSession();
+        return;
+      }
+      scheduleRefresh();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshIfNeeded();
+    };
+
+    scheduleRefresh();
+    window.addEventListener('online', refreshIfNeeded);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) refreshIfNeeded();
+    }).then((handle) => {
+      if (stopped) void handle.remove();
+      else appStateHandle = handle;
+    });
+
+    return () => {
+      stopped = true;
+      clearScheduledRefresh();
+      window.removeEventListener('online', refreshIfNeeded);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      void appStateHandle?.remove();
+    };
+  }, [session]);
 
   const loadOrdersForBrand = useCallback(
     async (nextBrand: Brand, filters?: OrdersListFilters): Promise<Order[]> => {

@@ -14,14 +14,21 @@ const LEGACY_AUTH_KEYS = [
 ] as const;
 
 type SessionExpiredListener = () => void;
+type AuthTokenListener = (token: string | null) => void;
 
 const listeners = new Set<SessionExpiredListener>();
+const tokenListeners = new Set<AuthTokenListener>();
 let accessToken: string | null = null;
 let refreshChannel: BroadcastChannel | null = null;
 
 export function onSessionExpired(listener: SessionExpiredListener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+export function onAuthTokenChanged(listener: AuthTokenListener): () => void {
+  tokenListeners.add(listener);
+  return () => tokenListeners.delete(listener);
 }
 
 export function notifySessionExpired(): void {
@@ -31,11 +38,14 @@ export function notifySessionExpired(): void {
 
 /** El access token nunca se persiste: se pierde al cerrar/reload y se restaura con refresh. */
 export function setAuthToken(token: string | null): void {
-  accessToken = token?.trim() || null;
+  const nextToken = token?.trim() || null;
+  if (nextToken === accessToken) return;
+  accessToken = nextToken;
+  tokenListeners.forEach((listener) => listener(accessToken));
 }
 
 export function clearAuthTokens(): void {
-  accessToken = null;
+  setAuthToken(null);
   void clearNativeRefreshToken().catch(() => undefined);
   if (typeof localStorage === 'undefined') return;
   LEGACY_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -43,6 +53,27 @@ export function clearAuthTokens(): void {
 
 export function getAuthToken(): string | null {
   return accessToken;
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      '=',
+    );
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function getTokenExpirationMs(token: string | null): number | null {
+  if (!token) return null;
+  const expiration = decodeJwtPayload(token)?.exp;
+  return typeof expiration === 'number' ? expiration * 1000 : null;
 }
 
 /** Alias transitorio para los servicios que ya usan este nombre. */

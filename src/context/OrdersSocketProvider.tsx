@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { config } from '../config/env';
 import { useApp } from './AppContext';
-import { getAuthToken } from '../utils/authSession';
+import { useAuthToken } from '../hooks/useAuthToken';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import {
   orderSocketEventMatchesBrand,
@@ -26,6 +26,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { session, brand, refreshOrders, showToast } = useApp();
+  const token = useAuthToken();
   const refreshTimer = useRef<number | null>(null);
   const ordersSocketRef = useRef<Socket | null>(null);
   const eventsSocketRef = useRef<Socket | null>(null);
@@ -34,7 +35,6 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     if (config.useApiMock) return;
     if (!session || !brand?.id) return;
 
-    const token = getAuthToken();
     if (!token) return;
 
     const base = resolveSocketBaseUrl();
@@ -128,7 +128,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       ordersSocketRef.current = null;
       eventsSocketRef.current = null;
     };
-  }, [session, brand?.id, brand?.subdomain, refreshOrders, showToast]);
+  }, [session, brand?.id, brand?.subdomain, refreshOrders, showToast, token]);
 
   return <>{children}</>;
 };

@@ -34,7 +34,9 @@ const shouldNotifySessionExpired = (url: string, status: number, token: string |
   return !PUBLIC_AUTH_ENDPOINTS.some((endpoint) => url.startsWith(endpoint));
 };
 
-let refreshPromise: Promise<boolean> | null = null;
+export type RefreshAccessTokenResult = 'refreshed' | 'unauthorized' | 'unavailable';
+
+let refreshPromise: Promise<RefreshAccessTokenResult> | null = null;
 
 function readAccessToken(payload: unknown): string | null {
   return readAuthField(payload, 'accessToken');
@@ -53,7 +55,13 @@ function readAuthField(payload: unknown, field: 'accessToken' | 'refreshToken'):
   return typeof value === 'string' && value.trim() ? value : null;
 }
 
-async function refreshAccessToken(): Promise<boolean> {
+function readErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== 'object') return null;
+  const statusCode = (error as Record<string, unknown>).statusCode;
+  return typeof statusCode === 'number' ? statusCode : null;
+}
+
+export async function refreshAccessToken(): Promise<RefreshAccessTokenResult> {
   if (!refreshPromise) {
     refreshPromise = runWithRefreshLock(async () => {
       const payload = await fetchWithAuth(
@@ -62,10 +70,12 @@ async function refreshAccessToken(): Promise<boolean> {
         false,
       );
       const token = readAccessToken(payload);
-      if (!token) return false;
+      if (!token) return 'unavailable' as const;
       setAuthToken(token);
-      return true;
-    }).catch(() => false).finally(() => {
+      return 'refreshed' as const;
+    }).catch((error: unknown) => (
+      readErrorStatus(error) === 401 ? 'unauthorized' : 'unavailable'
+    )).finally(() => {
       refreshPromise = null;
     });
   }
@@ -122,7 +132,7 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}, canRetry
   if (!response.ok) {
     if (shouldNotifySessionExpired(url, response.status, token) && canRetry) {
       const refreshed = await refreshAccessToken();
-      if (refreshed) return fetchWithAuth(url, options, false);
+      if (refreshed === 'refreshed') return fetchWithAuth(url, options, false);
     }
     if (shouldNotifySessionExpired(url, response.status, token)) {
       notifySessionExpired();

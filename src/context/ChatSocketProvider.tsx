@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef } from
 import { io, type Socket } from 'socket.io-client';
 import { config } from '../config/env';
 import type { ContactInfo } from '../types/contact';
-import { getAuthToken } from '../utils/authSession';
+import { useAuthToken } from '../hooks/useAuthToken';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import { useApp } from './AppContext';
 
@@ -58,6 +58,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { session, brand } = useApp();
+  const token = useAuthToken();
   const socketRef = useRef<Socket | null>(null);
   const historyRoomRef = useRef<HistoryRoomOptions | null>(null);
   const messageListeners = useRef(new Set<MessageListener>());
@@ -67,7 +68,6 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     if (config.useApiMock) return;
     if (!session || !brand?.subdomain?.trim()) return;
 
-    const token = getAuthToken();
     if (!token) return;
 
     const subDomain = brand.subdomain.trim();
@@ -132,7 +132,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       socketRef.current = null;
       historyRoomRef.current = null;
     };
-  }, [session, brand?.id, brand?.subdomain]);
+  }, [session, brand?.id, brand?.subdomain, token]);
 
   const subscribeNewMessage = useCallback((listener: MessageListener) => {
     messageListeners.current.add(listener);
