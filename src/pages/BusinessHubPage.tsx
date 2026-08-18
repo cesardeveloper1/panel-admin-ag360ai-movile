@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { BusinessModuleGrid } from '../components/BusinessModuleGrid';
 import { TabLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { BUSINESS_HUB_PATH } from '../navigation/appRouteRegistry';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';

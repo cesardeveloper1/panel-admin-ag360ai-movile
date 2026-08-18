@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 
 export function AgentToggle() {
   const { t } = useTranslation();

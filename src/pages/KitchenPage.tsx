@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { KitchenOrderCard } from '../components/KitchenOrderCard';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 
 const KitchenPage: React.FC = () => {
   const { t } = useTranslation();

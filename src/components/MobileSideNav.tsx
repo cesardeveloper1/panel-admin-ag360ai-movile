@@ -3,7 +3,7 @@ import { IonIcon } from '@ionic/react';
 import { closeOutline, menuOutline, storefrontOutline } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH, isNavActive, mobileNavItems, CHATS_PATH } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';

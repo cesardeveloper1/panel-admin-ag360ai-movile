@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 
 const LIGHT_BG = '#ffffff';
 const DARK_BG = '#141A32';

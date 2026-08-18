@@ -4,7 +4,7 @@ import { callOutline, createOutline, locationOutline, storefrontOutline } from '
 import { useTranslation } from 'react-i18next';
 import NewLocationSheet from '../components/NewLocationSheet';
 import { StackLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { apiFacade } from '../services/apiFacade';
 import type { LocationFormInput } from '../services/locationService';

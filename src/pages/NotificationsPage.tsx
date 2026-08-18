@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StackLayout } from '../components/layouts';
 import { NotificationCard } from '../components/NotificationCard';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 
 const NotificationsPage: React.FC = () => {
   const { t } = useTranslation();

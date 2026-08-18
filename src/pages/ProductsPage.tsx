@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FilterChips } from '../components/FilterChips';
 import NewProductSheet from '../components/NewProductSheet';
 import { StackLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { apiFacade } from '../services/apiFacade';
 import { ProductMutationQueue } from '../services/productMutationQueue';
 import type { CatalogCategory, CatalogProduct } from '../types';

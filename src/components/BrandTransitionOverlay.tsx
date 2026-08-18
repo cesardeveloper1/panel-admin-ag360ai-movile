@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { LOGO_WHITE_LOCAL } from '../constants/assets';
 
 const BRAND_FLOW_PATHS = new Set(['/welcome', '/app/agilito']);

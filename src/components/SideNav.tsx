@@ -3,7 +3,7 @@ import { IonIcon } from '@ionic/react';
 import { storefrontOutline } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useViewport } from '../hooks/useViewport';
 import {

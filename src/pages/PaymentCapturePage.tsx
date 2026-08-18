@@ -13,7 +13,7 @@ import {
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { StackLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { locationService } from '../services/locationService';
 import { paymentCaptureService } from '../services/paymentCaptureService';
 import type { BranchLocation } from '../types';

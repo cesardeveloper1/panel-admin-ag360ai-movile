@@ -1,4 +1,4 @@
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 
 export function ToastUx() {
   const { toast } = useApp();

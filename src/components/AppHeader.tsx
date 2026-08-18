@@ -3,7 +3,7 @@ import { IonIcon } from '@ionic/react';
 import { chevronBackOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH } from '../navigation/navConfig';
 import { HeaderStatusMenu } from './HeaderStatusMenu';

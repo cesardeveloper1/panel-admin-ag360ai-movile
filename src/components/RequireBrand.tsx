@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { BRAND_KEY, PICK_BRAND_KEY, useApp } from '../context/AppContext';
+import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { apiFacade } from '../services/apiFacade';
 import { BrandBootShell } from './BrandBootShell';

@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import { eyeOffOutline, eyeOutline, mailOutline, lockClosedOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { LOGO_WHITE_LOCAL } from '../constants/assets';
 import { config } from '../config/env';

@@ -9,7 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import type { Order } from '../types';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 
 interface OrderDetailSheetProps {
   order: Order | null;

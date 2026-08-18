@@ -10,7 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
 import { AgentToggle } from '../components/AgentToggle';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { AGILITO_PATH, NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { BUSINESS_MODULES } from '../navigation/businessModules';

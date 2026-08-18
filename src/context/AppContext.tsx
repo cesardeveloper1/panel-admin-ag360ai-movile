@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { Brand, NotificationItem, Order, UserSession } from '../types';
@@ -7,6 +7,7 @@ import {
   defaultOrdersFilters,
   type OrdersListFilters,
 } from '../services/ordersQuery';
+import { AppContext } from './appContextInstance';
 import { onSessionExpired } from '../utils/authSession';
 import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -26,45 +27,6 @@ const AGENT_KEY = 'ag360-agent-enabled';
 const ACCESS_TOKEN_REFRESH_ADVANCE_MS = 5 * 60 * 1000;
 const ACCESS_TOKEN_REFRESH_RETRY_MS = 60 * 1000;
 const MAX_TIMEOUT_MS = 2_147_483_647;
-
-interface AppContextValue {
-  session: UserSession | null;
-  authRestoring: boolean;
-  brand: Brand | null;
-  orders: Order[];
-  ordersFilters: OrdersListFilters;
-  notifications: NotificationItem[];
-  loading: boolean;
-  brandLoading: boolean;
-  brandTransitioning: boolean;
-  kitchenMode: boolean;
-  darkMode: boolean;
-  agentEnabled: boolean;
-  agentLocked: boolean;
-  agentBusy: boolean;
-  authEpoch: number;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  clearBrand: () => void;
-  prepareBrandPick: () => void;
-  startBrandSwitch: () => void;
-  selectBrandAndLoad: (brand: Brand) => Promise<boolean>;
-  refreshOrders: () => Promise<void>;
-  /** Actualiza filtros de listado y refetch (fecha / search). */
-  setOrdersFilters: (patch: Partial<OrdersListFilters>) => Promise<void>;
-  advanceOrder: (orderId: string) => void;
-  setKitchenMode: (value: boolean) => void;
-  setDarkMode: (value: boolean) => void;
-  toggleAgent: () => Promise<void>;
-  toast: string | null;
-  showToast: (key: string, params?: Record<string, string | number>) => void;
-  completeOnboarding: () => void;
-  isOnboardingDone: (brandId: string) => boolean;
-  markNotificationRead: (id: string) => Promise<void>;
-  markAllNotificationsRead: () => Promise<void>;
-}
-
-const AppContext = createContext<AppContextValue | null>(null);
 
 function readDarkMode() {
   if (typeof localStorage === 'undefined') return false;
@@ -653,8 +615,3 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export function useApp() {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp must be used within AppProvider');
-  return ctx;
-}

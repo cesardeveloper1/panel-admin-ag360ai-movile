@@ -8,7 +8,8 @@ import {
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
-import { BRAND_KEY, PICK_BRAND_KEY, useApp } from '../context/AppContext';
+import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';

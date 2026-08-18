@@ -1,7 +1,7 @@
 import { App as CapacitorApp, type AppState } from '@capacitor/app';
 import type { PropsWithChildren } from 'react';
 import { useEffect, useRef } from 'react';
-import { useApp } from './AppContext';
+import { useApp } from '../hooks/useApp';
 import { mobilePrintCoordinator } from '../services/mobilePrintCoordinator';
 import { mobilePrintSignals } from '../services/mobilePrintSignals';
 import { thermalPrinter } from '../native/thermalPrinter';

@@ -1,30 +1,15 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { config } from '../config/env';
-import type { ContactInfo } from '../types/contact';
 import { useAuthToken } from '../hooks/useAuthToken';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
-import { useApp } from './AppContext';
-
-export interface ChatNewMessagePayload {
-  _id?: string;
-  id?: string;
-  subDomain?: string;
-  phoneNumber?: string;
-  clientBsuid?: string;
-  content?: string;
-  sender?: string;
-  createdAt?: string;
-  clientName?: string;
-}
-
-export interface ContactInfoUpdatedPayload {
-  type?: string;
-  contactInfo?: ContactInfo;
-  subDomain?: string;
-  clientPhone?: string;
-  clientBsuid?: string;
-}
+import { useApp } from '../hooks/useApp';
+import {
+  ChatSocketContext,
+  type ChatNewMessagePayload,
+  type ChatSocketContextValue,
+  type ContactInfoUpdatedPayload,
+} from './chatSocketContext';
 
 type MessageListener = (payload: ChatNewMessagePayload) => void;
 type ContactListener = (payload: ContactInfoUpdatedPayload) => void;
@@ -37,19 +22,6 @@ type HistoryRoomOptions = {
 function emitHistoryRoom(socket: Socket, room: HistoryRoomOptions): void {
   socket.emit('joinChatHistoryRoom', room);
 }
-
-interface ChatSocketContextValue {
-  subscribeNewMessage: (listener: MessageListener) => () => void;
-  subscribeContactUpdated: (listener: ContactListener) => () => void;
-  joinHistoryRoom: (opts: {
-    subDomain: string;
-    phoneNumber?: string;
-    agentStateId?: string;
-  }) => void;
-  clearHistoryRoom: () => void;
-}
-
-const ChatSocketContext = createContext<ChatSocketContextValue | null>(null);
 
 /**
  * Socket.IO `/chat`: join subdomain + agent-states; newMessage / contactInfoUpdated.
@@ -180,15 +152,3 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export function useChatSocket(): ChatSocketContextValue {
-  const ctx = useContext(ChatSocketContext);
-  if (!ctx) {
-    return {
-      subscribeNewMessage: () => () => undefined,
-      subscribeContactUpdated: () => () => undefined,
-      joinHistoryRoom: () => undefined,
-      clearHistoryRoom: () => undefined,
-    };
-  }
-  return ctx;
-}

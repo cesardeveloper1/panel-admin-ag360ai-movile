@@ -3,7 +3,7 @@ import { IonButton, IonContent, IonItem, IonLabel, IonPage, IonToggle } from '@i
 import { useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { apiMock } from '../services/apiMock';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { brandLabel } from '../utils/brandLabel';

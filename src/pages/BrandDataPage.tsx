@@ -3,7 +3,7 @@ import { IonIcon, IonSpinner } from '@ionic/react';
 import { imageOutline, linkOutline, saveOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { StackLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { apiFacade } from '../services/apiFacade';
 import type { BrandConfig } from '../types';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';

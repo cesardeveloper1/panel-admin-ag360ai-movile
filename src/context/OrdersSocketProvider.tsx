@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { config } from '../config/env';
-import { useApp } from './AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAuthToken } from '../hooks/useAuthToken';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import {

@@ -3,7 +3,7 @@ import { IonDatetime, IonIcon, IonModal, IonSpinner } from '@ionic/react';
 import { cubeOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { TabLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { apiFacade } from '../services/apiFacade';
 import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../types';
 

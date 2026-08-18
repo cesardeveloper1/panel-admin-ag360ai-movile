@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FilterChips } from '../components/FilterChips';
 import { StackLayout } from '../components/layouts';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { CHATS_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';
 import type { CustomerAnalyticsCustomer, CustomerType } from '../services/customerService';

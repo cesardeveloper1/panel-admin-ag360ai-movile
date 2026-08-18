@@ -6,8 +6,8 @@ import { useLocation } from 'react-router-dom';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { ChatComposer } from '../components/ChatComposer';
-import { useApp } from '../context/AppContext';
-import { useChatSocket } from '../context/ChatSocketProvider';
+import { useApp } from '../hooks/useApp';
+import { useChatSocket } from '../hooks/useChatSocket';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import {
   clearChatNavFrom,

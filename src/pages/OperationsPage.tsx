@@ -8,7 +8,7 @@ import { AppShell } from '../components/AppShell';
 import { ContactCard } from '../components/ContactCard';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailSheet } from '../components/OrderDetailSheet';
-import { useApp } from '../context/AppContext';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useViewport } from '../hooks/useViewport';
 import { CHATS_PATH, OPERATIONS_PATH } from '../navigation/navConfig';
