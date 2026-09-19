@@ -13,6 +13,8 @@ export type OrderSocketEventShape = {
     status?: string;
     _id?: string;
     orderId?: string;
+    branchId?: string;
+    thermalPrint?: unknown;
   };
 };
 

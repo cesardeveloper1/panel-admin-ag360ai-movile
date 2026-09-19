@@ -22,7 +22,6 @@ import { AppProvider } from './context/AppContext';
 import { useApp } from './hooks/useApp';
 import { ChatSocketProvider } from './context/ChatSocketProvider';
 import { OrdersSocketProvider } from './context/OrdersSocketProvider';
-import { MobilePrintProvider } from './context/MobilePrintProvider';
 import { ToastUx } from './components/ToastUx';
 import { BrandTransitionOverlay } from './components/BrandTransitionOverlay';
 import { AppLaunchSplash } from './components/AppLaunchSplash';
@@ -108,17 +107,15 @@ const App: React.FC = () => (
   <IonApp>
     <AppLaunchSplash />
     <AppProvider>
-      <MobilePrintProvider>
-        <OrdersSocketProvider>
-          <ChatSocketProvider>
-            <IonReactRouter>
-              <AppRoutes />
-              <BrandTransitionOverlay />
-              <ToastUx />
-            </IonReactRouter>
-          </ChatSocketProvider>
-        </OrdersSocketProvider>
-      </MobilePrintProvider>
+      <OrdersSocketProvider>
+        <ChatSocketProvider>
+          <IonReactRouter>
+            <AppRoutes />
+            <BrandTransitionOverlay />
+            <ToastUx />
+          </IonReactRouter>
+        </ChatSocketProvider>
+      </OrdersSocketProvider>
     </AppProvider>
   </IonApp>
 );

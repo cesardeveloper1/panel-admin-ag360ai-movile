@@ -8,7 +8,7 @@ import {
   orderSocketEventMatchesBrand,
   type OrderSocketEventShape,
 } from '../services/orderSocketBrandScope';
-import { mobilePrintSignals } from '../services/mobilePrintSignals';
+import { printThermalPayloadDirectly } from '../services/directMobilePrint';
 
 const ORDER_REFRESH_TYPES = new Set([
   'order_created',
@@ -93,16 +93,21 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (type === 'order_created') {
         showToast('toast.socketNewOrder');
+        if (event.data?.thermalPrint) {
+          void printThermalPayloadDirectly({
+            activeBrandId: brand.id,
+            branchId: event.data.branchId,
+            payload: event.data.thermalPrint,
+          }).catch((error) => {
+            if (config.environment === 'development') {
+              console.warn('[mobile] impresión térmica directa falló', error);
+            }
+          });
+        }
       }
     };
 
     ordersSocket.on('event', handleOrdersEvent);
-    ordersSocket.on('mobile_print_job_available', () => {
-      mobilePrintSignals.notify();
-    });
-    ordersSocket.on('connect', () => {
-      mobilePrintSignals.notify();
-    });
 
     if (config.environment === 'development') {
       ordersSocket.on('connect', () => {
@@ -122,7 +127,6 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshTimer.current = null;
       }
       ordersSocket.off('event', handleOrdersEvent);
-      ordersSocket.off('mobile_print_job_available');
       ordersSocket.disconnect();
       eventsSocket.disconnect();
       ordersSocketRef.current = null;

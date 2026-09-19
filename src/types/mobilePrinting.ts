@@ -79,36 +79,6 @@ export interface ThermalPrintPayloadV1 {
   ticketConfig?: Record<string, unknown>;
 }
 
-export interface MobilePrintServerJob {
-  jobId: string;
-  brandId: string;
-  branchId: string;
-  ticketType: 'full' | 'kitchen';
-  purpose: 'automatic';
-  payloadVersion: 1;
-  payloadHash: string;
-  state: string;
-  leaseId: string | null;
-  leasedUntil: string | null;
-  leaseVersion: number;
-  attempts: number;
-  nextAttemptAt: string | null;
-  completedAt: string | null;
-  lastErrorCode: string | null;
-  createdAt: string;
-  updatedAt: string;
-  payload?: ThermalPrintPayloadV1;
-}
-
-export interface MobilePrintStation {
-  stationId: string;
-  brandId: string;
-  branchId: string;
-  platform: 'android' | 'ios';
-  enabled: boolean;
-  version: number;
-}
-
 export interface PrinterDevice {
   id: string;
   name: string;

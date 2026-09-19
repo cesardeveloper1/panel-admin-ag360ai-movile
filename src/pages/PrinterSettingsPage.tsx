@@ -23,8 +23,6 @@ import { StackLayout } from '../components/layouts';
 import { useApp } from '../hooks/useApp';
 import { thermalPrinter } from '../native/thermalPrinter';
 import { locationService } from '../services/locationService';
-import { mobilePrintCoordinator } from '../services/mobilePrintCoordinator';
-import { mobilePrintSignals } from '../services/mobilePrintSignals';
 import type { BranchLocation } from '../types';
 import type {
   MobilePrinterConfig,
@@ -161,8 +159,6 @@ const PrinterSettingsPage: React.FC = () => {
     try {
       const saved = await thermalPrinter.saveConfig(normalizedConfig());
       setConfig(saved);
-      await mobilePrintCoordinator.sync(brand.id, 'configuration');
-      mobilePrintSignals.notify();
       showToast('printing.saved');
     } catch {
       showToast('printing.saveError');
@@ -190,7 +186,6 @@ const PrinterSettingsPage: React.FC = () => {
     if (enabled || !capabilities?.available) return;
     try {
       await thermalPrinter.saveConfig({ ...normalizedConfig(), enabled: false });
-      await mobilePrintCoordinator.disableCurrentStation();
     } catch {
       showToast('printing.saveError');
     }
