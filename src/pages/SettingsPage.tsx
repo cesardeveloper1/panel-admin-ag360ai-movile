@@ -117,16 +117,45 @@ const SettingsPage: React.FC = () => {
       showBack={false}
       bodyClassName="ag-body settings-body"
       pageExtras={
-        <IonAlert
-          isOpen={logoutOpen}
-          header={t('settings.logoutConfirmTitle')}
-          message={t('settings.logoutConfirmMessage')}
-          buttons={[
-            { text: t('settings.logoutConfirmCancel'), role: 'cancel', handler: () => setLogoutOpen(false) },
-            { text: t('settings.logoutConfirmOk'), role: 'destructive', handler: onLogout },
-          ]}
-          onDidDismiss={() => setLogoutOpen(false)}
-        />
+        <>
+          <IonAlert
+            isOpen={logoutOpen}
+            header={t('settings.logoutConfirmTitle')}
+            message={t('settings.logoutConfirmMessage')}
+            buttons={[
+              { text: t('settings.logoutConfirmCancel'), role: 'cancel', handler: () => setLogoutOpen(false) },
+              { text: t('settings.logoutConfirmOk'), role: 'destructive', handler: onLogout },
+            ]}
+            onDidDismiss={() => setLogoutOpen(false)}
+          />
+          <IonAlert
+            isOpen={deleteOpen}
+            header={t('settings.deleteOwnAccountTitle')}
+            message={t('settings.deleteOwnAccountMessage')}
+            backdropDismiss={!deleteBusy}
+            buttons={[
+              { text: t('settings.logoutConfirmCancel'), role: 'cancel', handler: () => setDeleteOpen(false) },
+              {
+                text: t('settings.deleteOwnAccountOk'),
+                role: 'destructive',
+                handler: () => {
+                  void onConfirmDelete();
+                  return false;
+                },
+              },
+            ]}
+            onDidDismiss={() => setDeleteOpen(false)}
+          />
+          <IonAlert
+            isOpen={deleteDueOpen}
+            backdropDismiss={false}
+            header={t('settings.deleteOwnAccountDueTitle')}
+            message={t('settings.deleteOwnAccountDue', { date: deleteDueLabel })}
+            buttons={[
+              { text: t('settings.deleteOwnAccountDueOk'), handler: onLogout },
+            ]}
+          />
+        </>
       }
     >
       <section className="profile-hero ag-enter">
