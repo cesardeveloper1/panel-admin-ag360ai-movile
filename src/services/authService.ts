@@ -67,6 +67,7 @@ function mapToUserSession(email: string, data: LoginDataPayload): UserSession {
   const fullName = data.user.fullName?.trim() || email;
   const role = normalizeRole(String(data.user.role ?? 'owner'));
   return {
+    id: data.user.id || data.user._id,
     email: data.user.email || email,
     nameKey: 'users.maria',
     displayName: fullName,

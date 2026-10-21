@@ -21,7 +21,9 @@
     "welcomeSubtitle": "Gestiona pedidos, chats y tu negocio en un solo lugar.",
     "emailPlaceholder": "tu@restaurante.com",
     "passwordPlaceholder": "Ingresa tu contraseña",
-    "loginFailed": "Correo o contraseña incorrectos"
+    "loginFailed": "Correo o contraseña incorrectos",
+    "privacy": "Política de privacidad",
+    "deleteAccount": "Eliminar cuenta y datos"
   },
   "welcome": {
     "title": "Elige tu marca",
@@ -362,8 +364,22 @@
     "logoutConfirmMessage": "Saldrás de tu cuenta en este dispositivo.",
     "logoutConfirmOk": "Cerrar sesión",
     "logoutConfirmCancel": "Cancelar",
+    "deleteOwnAccount": "Eliminar mi cuenta",
+    "deleteOwnAccountHint": "Un mes para recuperarla si vuelves a entrar",
+    "deleteOwnAccountTitle": "¿Eliminar tu cuenta?",
+    "deleteOwnAccountMessage": "Si vuelves a iniciar sesión antes de la fecha límite, recuperas la cuenta y tus contratos siguen activos. Si no vuelves, se elimina tu usuario y se dan de baja los contratos de tus marcas.",
+    "deleteOwnAccountOk": "Confirmar eliminación",
+    "deleteOwnAccountDueTitle": "Cuenta pendiente de eliminación",
+    "deleteOwnAccountDue": "Tu cuenta queda pendiente hasta {{date}}. A partir de ese momento un inicio de sesión ya no la recupera.",
+    "deleteOwnAccountDueOk": "Ir al inicio de sesión",
+    "deleteOwnAccountError": "No se pudo registrar la solicitud",
     "brandData": "Datos de marca",
-    "brandDataHint": "Logo, colores y redes sociales"
+    "brandDataHint": "Logo, colores y redes sociales",
+    "privacySection": "Privacidad",
+    "privacy": "Política de privacidad",
+    "privacyHint": "Datos que usa la aplicación y este negocio",
+    "deleteAccount": "Eliminar cuenta y datos",
+    "deleteAccountHint": "La solicitud se hace por correo. La app no borra la cuenta sola"
   },
   "menu": {
     "title": "Productos",

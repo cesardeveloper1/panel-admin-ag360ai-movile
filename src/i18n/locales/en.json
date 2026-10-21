@@ -21,7 +21,9 @@
     "welcomeSubtitle": "Manage orders, chats and your business in one place.",
     "emailPlaceholder": "you@restaurant.com",
     "passwordPlaceholder": "Enter your password",
-    "loginFailed": "Incorrect email or password"
+    "loginFailed": "Incorrect email or password",
+    "privacy": "Privacy policy",
+    "deleteAccount": "Delete account and data"
   },
   "welcome": {
     "title": "Choose your brand",
@@ -328,8 +330,22 @@
     "logoutConfirmMessage": "You will leave your account on this device.",
     "logoutConfirmOk": "Sign out",
     "logoutConfirmCancel": "Cancel",
+    "deleteOwnAccount": "Delete my account",
+    "deleteOwnAccountHint": "One month to recover it if you sign in again",
+    "deleteOwnAccountTitle": "Delete your account?",
+    "deleteOwnAccountMessage": "If you sign in before the deadline, you recover the account and your contracts stay active. If you do not come back, your user is deleted and the contracts of your brands are cancelled.",
+    "deleteOwnAccountOk": "Confirm deletion",
+    "deleteOwnAccountDueTitle": "Account pending deletion",
+    "deleteOwnAccountDue": "Your account stays pending until {{date}}. After that, signing in does not recover it.",
+    "deleteOwnAccountDueOk": "Go to sign in",
+    "deleteOwnAccountError": "The request could not be saved",
     "brandData": "Brand settings",
-    "brandDataHint": "Logo, colors and social links"
+    "brandDataHint": "Logo, colors and social links",
+    "privacySection": "Privacy",
+    "privacy": "Privacy policy",
+    "privacyHint": "Data the app and this business use",
+    "deleteAccount": "Delete account and data",
+    "deleteAccountHint": "Request it by email. The app does not delete the account by itself"
   },
   "menu": {
     "title": "Products",
