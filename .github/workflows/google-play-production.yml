@@ -1,0 +1,110 @@
+name: Google Play production
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: google-play-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VITE_API_BASE_URL: https://ssgg-production.up.railway.app/api/v3
+  VITE_SOCKET_BASE_URL: https://ssgg-production.up.railway.app
+  VITE_TRADING_TRACKER_BASE_URL: https://tradingtracker-back-prod-production.up.railway.app
+  VITE_ENVIRONMENT: production
+  VITE_USE_API_MOCK: 'false'
+  CYPRESS_INSTALL_BINARY: '0'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: python3 -m unittest discover -s scripts/tests -v
+      - run: npm run build
+      - name: Initial activation pending
+        if: github.ref == 'refs/heads/main' && vars.PLAY_AUTO_PUBLISH_ENABLED != 'true'
+        run: echo 'Automatic Play publishing is pending activation. See docs/google-play-release.md. No AAB was generated.' >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.PLAY_AUTO_PUBLISH_ENABLED == 'true'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check release configuration
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          GOOGLE_PLAY_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GOOGLE_PLAY_WORKLOAD_IDENTITY_PROVIDER }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT: ${{ vars.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+        run: python3 scripts/android-release.py prepare
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Version this release
+        run: python3 scripts/android-release.py version >> "$GITHUB_ENV"
+      - name: Build the signed production bundle
+        working-directory: android
+        run: bash gradlew --no-daemon bundleRelease -PreleaseVersionCode="$ANDROID_VERSION_CODE" -PreleaseVersionName="$ANDROID_VERSION_NAME"
+      - name: Remove signing files
+        if: always()
+        run: rm -f android/signing/upload.properties android/signing/upload.p12
+      - name: Verify production bundle and signature
+        run: |
+          python3 scripts/android-release.py verify android/app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify android/app/build/outputs/bundle/release/app-release.aab
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: agiliza360-production-${{ env.ANDROID_VERSION_CODE }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
+      - id: google
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GOOGLE_PLAY_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+      - name: Publish to production and send for Google review
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
+        with:
+          serviceAccountJson: ${{ steps.google.outputs.credentials_file_path }}
+          packageName: com.agiliza360.mobile
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          tracks: production
+          status: completed
+          releaseName: ${{ env.ANDROID_VERSION_NAME }}
+          changesNotSentForReview: false
