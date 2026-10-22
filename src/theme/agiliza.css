@@ -6549,6 +6549,30 @@ html.ag-native.ion-palette-dark .ag-header {
   text-decoration: underline;
 }
 
+.login-legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1rem;
+  margin-top: 1.1rem;
+  font-size: 0.8125rem;
+}
+
+.login-legal a {
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-weight: 600;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  text-align: center;
+}
+
+.login-legal a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 .login-submit {
   display: inline-flex;
   align-items: center;

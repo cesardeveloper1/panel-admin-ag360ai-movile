@@ -1,10 +1,16 @@
 apply plugin: 'com.android.application'
 
+def uploadSigningFile = rootProject.file('signing/upload.properties')
+def uploadSigning = new Properties()
+if (uploadSigningFile.exists()) {
+    uploadSigningFile.withInputStream { uploadSigning.load(it) }
+}
+
 android {
     namespace = "io.ionic.starter"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.ionic.starter"
+        applicationId "com.agiliza360.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,8 +22,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (uploadSigningFile.exists()) {
+            release {
+                storeFile rootProject.file(uploadSigning.getProperty('storeFile'))
+                storePassword uploadSigning.getProperty('storePassword')
+                keyAlias uploadSigning.getProperty('keyAlias')
+                keyPassword uploadSigning.getProperty('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (uploadSigningFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

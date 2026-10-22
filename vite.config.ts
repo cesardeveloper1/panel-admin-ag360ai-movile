@@ -26,6 +26,9 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), legacy()],
     server: {
       host: true,
+      port: 5178,
+      strictPort: true,
+      open: true,
       allowedHosts: ['gerty-ethical-lenita.ngrok-free.dev'],
       proxy,
     },
