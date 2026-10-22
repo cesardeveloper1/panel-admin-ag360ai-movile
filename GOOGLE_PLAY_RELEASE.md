@@ -33,7 +33,7 @@ La compilación actual usa el `.env` existente, que apunta a `https://ssgg-devel
 
 - Recompilar el AAB contra `https://ssgg-production.up.railway.app` e incluir `@capacitor/browser`. No subir la compilación actual.
 - Publicar la landing para que existan las URLs de privacidad y de eliminación. El código ya las tiene; el sitio en producción todavía no.
-- Crear la cuenta de revisión en la misma base que use el AAB que se vaya a subir. No se creó: el `DB_NAME` activo de ssgg es de producción y el script se niega a escribir ahí.
+- La cuenta de revisión ya está en la base `ssgg-prod`, la misma que usan el panel y la app cuando apuntan a producción.
 - Responsable confirmado: CARTA AI SAC, Cal. Los Ceibos Nro. 271, Urb. Miraflores, Castilla, Piura, Piura. Contacto: `soporte@agiliza360.ai`.
 - Icono, gráfico de funciones 1024 × 500 y capturas reales de teléfono. La subida del icono no pudo verificarse.
 - Subir el AAB nuevo, completar la versión y enviar a revisión cuando se resuelvan los requisitos. No se ha subido nada.
@@ -51,19 +51,18 @@ Azure Static Web Apps ya reescribe las rutas de la SPA a `index.html`, así que 
 
 ## Cuenta de revisión
 
-Correo: `revision-play@agiliza360.ai`.
+Creada el 21 de octubre de 2026 en la base `ssgg-prod`.
 
-La contraseña no está en Git ni en este documento. Se toma de `PLAY_REVIEW_PASSWORD` solo al aplicar el alta, con al menos 12 caracteres y sin espacios, y no se imprime.
+- Correo: `revision-play@agiliza360.ai`
+- Contraseña: `Play-6ZyXnB5VmRJ7dz0q`
+- Marca: `revision-play`
 
-En ssgg, con el `MONGODB` y `DB_NAME` del entorno que usará el AAB público:
-
-```bash
-npm run provision:play-review -- --dry-run
-PLAY_REVIEW_PASSWORD='(valor fuera del repositorio)' npm run provision:play-review
-```
+En Play Console, acceso para revisores: ese correo y esa contraseña. No hace falta un código de verificación. La revisión puede ver pedidos del día, la carta y una bandeja vacía. No debe esperar mensajes a clientes, Yape vinculado ni cobros reales.
 
 El alta es idempotente. Crea o actualiza una marca etiquetada `play-review`, una sucursal, una carta, un cliente y un pedido ficticio ya entregado. El asistente queda apagado y bloqueado. No crea cuenta de mensajería, credenciales ni cobros. Si el subdominio `revision-play` ya existe sin esa etiqueta, o el correo ya tiene acceso a otra marca, se detiene sin cambiarlos.
 
-Si `DB_NAME` contiene `prod`, la escritura se rechaza. El 21 de octubre de 2026 el entorno activo era `servicios-generales-prod`: la simulación dijo `create` y la escritura se bloqueó. La cuenta no existe todavía.
+Para volver a aplicarla en una base cuyo nombre contiene `prod`:
 
-En Play Console, acceso para revisores: ese correo y la contraseña usada al aplicar. No hace falta un código de verificación. La revisión puede ver pedidos del día, la carta y una bandeja vacía. No debe esperar mensajes a clientes, Yape vinculado ni cobros reales.
+```bash
+npm run provision:play-review -- --confirm-production
+```
