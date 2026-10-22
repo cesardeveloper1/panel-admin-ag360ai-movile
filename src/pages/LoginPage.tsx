@@ -7,6 +7,8 @@ import { useAppNavigation } from '../hooks/useAppNavigation';
 import { LOGO_WHITE_LOCAL } from '../constants/assets';
 import { config } from '../config/env';
 import { requestCredentialSave } from '../services/credentialSaveService';
+import { ACCOUNT_DELETION_URL, PRIVACY_POLICY_URL } from '../constants/legalUrls';
+import { openExternalUrl } from '../utils/openExternalUrl';
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
@@ -22,6 +24,11 @@ const LoginPage: React.FC = () => {
   useEffect(() => {
     if (session) goRoot('/welcome');
   }, [session, goRoot]);
+
+  const openLegal = (event: { preventDefault: () => void }, url: string) => {
+    event.preventDefault();
+    void openExternalUrl(url);
+  };
 
   const onSubmit = async () => {
     setError(null);
@@ -126,6 +133,14 @@ const LoginPage: React.FC = () => {
             <button type="submit" className="login-submit" disabled={loading}>
               {loading ? <IonSpinner name="crescent" /> : t('auth.login')}
             </button>
+            <div className="login-legal">
+              <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" onClick={(event) => void openLegal(event, PRIVACY_POLICY_URL)}>
+                {t('auth.privacy')}
+              </a>
+              <a href={ACCOUNT_DELETION_URL} target="_blank" rel="noopener noreferrer" onClick={(event) => void openLegal(event, ACCOUNT_DELETION_URL)}>
+                {t('auth.deleteAccount')}
+              </a>
+            </div>
           </form>
         </div>
       </IonContent>

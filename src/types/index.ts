@@ -72,6 +72,7 @@ export interface DashboardKpi {
 }
 
 export interface UserSession {
+  id?: string;
   email: string;
   nameKey: string;
   /** Nombre real del usuario (API); si existe, la UI lo prioriza sobre nameKey i18n. */

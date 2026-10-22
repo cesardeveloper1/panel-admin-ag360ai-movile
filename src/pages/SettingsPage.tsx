@@ -15,6 +15,8 @@ import {
   phonePortraitOutline,
   storefrontOutline,
   languageOutline,
+  documentTextOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +27,9 @@ import { PAYMENT_CAPTURE_PATH } from '../navigation/appRouteRegistry';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
 import { userSettingsService, type SupportedAppLanguage } from '../services/userSettingsService';
+import { ACCOUNT_DELETION_URL, PRIVACY_POLICY_URL } from '../constants/legalUrls';
+import { openExternalUrl } from '../utils/openExternalUrl';
+import { api } from '../services/api';
 
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -32,6 +37,11 @@ const SettingsPage: React.FC = () => {
   const { session, brand, orders, notifications, darkMode, setDarkMode, startBrandSwitch, logout, showToast } =
     useApp();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteDueOpen, setDeleteDueOpen] = useState(false);
+  const [deleteDueLabel, setDeleteDueLabel] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const canRequestAccountDeletion = session?.role !== 'superadmin' && Boolean(session?.id);
   const [useOwnLanguage, setUseOwnLanguage] = useState(false);
   const [language, setLanguage] = useState<SupportedAppLanguage>('es');
   const [languageBusy, setLanguageBusy] = useState(false);
@@ -82,6 +92,24 @@ const SettingsPage: React.FC = () => {
     goRoot('/login');
   };
 
+  const onConfirmDelete = async () => {
+    if (!session?.id || deleteBusy) return;
+    setDeleteBusy(true);
+    try {
+      const response = await api.post(`/auth/account-deletion/${session.id}`) as { data?: { deletionDueAt?: string } } | null;
+      const due = response?.data?.deletionDueAt;
+      if (typeof due !== 'string') throw new Error('missing date');
+      setDeleteDueLabel(new Date(due).toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' }));
+      setDeleteOpen(false);
+      setDeleteDueOpen(true);
+    } catch {
+      setDeleteOpen(false);
+      showToast('settings.deleteOwnAccountError');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
   return (
     <StackLayout
       title={t('settings.title')}
@@ -89,16 +117,45 @@ const SettingsPage: React.FC = () => {
       showBack={false}
       bodyClassName="ag-body settings-body"
       pageExtras={
-        <IonAlert
-          isOpen={logoutOpen}
-          header={t('settings.logoutConfirmTitle')}
-          message={t('settings.logoutConfirmMessage')}
-          buttons={[
-            { text: t('settings.logoutConfirmCancel'), role: 'cancel', handler: () => setLogoutOpen(false) },
-            { text: t('settings.logoutConfirmOk'), role: 'destructive', handler: onLogout },
-          ]}
-          onDidDismiss={() => setLogoutOpen(false)}
-        />
+        <>
+          <IonAlert
+            isOpen={logoutOpen}
+            header={t('settings.logoutConfirmTitle')}
+            message={t('settings.logoutConfirmMessage')}
+            buttons={[
+              { text: t('settings.logoutConfirmCancel'), role: 'cancel', handler: () => setLogoutOpen(false) },
+              { text: t('settings.logoutConfirmOk'), role: 'destructive', handler: onLogout },
+            ]}
+            onDidDismiss={() => setLogoutOpen(false)}
+          />
+          <IonAlert
+            isOpen={deleteOpen}
+            header={t('settings.deleteOwnAccountTitle')}
+            message={t('settings.deleteOwnAccountMessage')}
+            backdropDismiss={!deleteBusy}
+            buttons={[
+              { text: t('settings.logoutConfirmCancel'), role: 'cancel', handler: () => setDeleteOpen(false) },
+              {
+                text: t('settings.deleteOwnAccountOk'),
+                role: 'destructive',
+                handler: () => {
+                  void onConfirmDelete();
+                  return false;
+                },
+              },
+            ]}
+            onDidDismiss={() => setDeleteOpen(false)}
+          />
+          <IonAlert
+            isOpen={deleteDueOpen}
+            backdropDismiss={false}
+            header={t('settings.deleteOwnAccountDueTitle')}
+            message={t('settings.deleteOwnAccountDue', { date: deleteDueLabel })}
+            buttons={[
+              { text: t('settings.deleteOwnAccountDueOk'), handler: onLogout },
+            ]}
+          />
+        </>
       }
     >
       <section className="profile-hero ag-enter">
@@ -182,9 +239,36 @@ const SettingsPage: React.FC = () => {
             <p>{t('settings.changeBrandHint')}</p>
           </IonLabel>
         </IonItem>
+        {canRequestAccountDeletion ? (
+          <IonItem button className="settings-item settings-item--danger" onClick={() => setDeleteOpen(true)}>
+            <IonIcon icon={trashOutline} slot="start" className="settings-icon settings-icon--danger" />
+            <IonLabel color="danger">
+              <h2>{t('settings.deleteOwnAccount')}</h2>
+              <p>{t('settings.deleteOwnAccountHint')}</p>
+            </IonLabel>
+          </IonItem>
+        ) : null}
         <IonItem button className="settings-item settings-item--danger" onClick={() => setLogoutOpen(true)}>
           <IonIcon icon={logOutOutline} slot="start" className="settings-icon settings-icon--danger" />
           <IonLabel color="danger">{t('settings.logout')}</IonLabel>
+        </IonItem>
+      </IonList>
+
+      <p className="settings-section-label">{t('settings.privacySection')}</p>
+      <IonList className="settings-list" lines="full">
+        <IonItem button className="settings-item" onClick={() => void openExternalUrl(PRIVACY_POLICY_URL)}>
+          <IonIcon icon={documentTextOutline} slot="start" className="settings-icon" />
+          <IonLabel>
+            <h2>{t('settings.privacy')}</h2>
+            <p>{t('settings.privacyHint')}</p>
+          </IonLabel>
+        </IonItem>
+        <IonItem button className="settings-item" onClick={() => void openExternalUrl(ACCOUNT_DELETION_URL)}>
+          <IonIcon icon={trashOutline} slot="start" className="settings-icon" />
+          <IonLabel>
+            <h2>{t('settings.deleteAccount')}</h2>
+            <p>{t('settings.deleteAccountHint')}</p>
+          </IonLabel>
         </IonItem>
       </IonList>
     </StackLayout>
