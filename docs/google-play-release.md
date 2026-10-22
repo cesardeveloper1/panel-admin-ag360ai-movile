@@ -18,6 +18,8 @@ En cada publicación se genera un único AAB firmado, se verifica su firma y sus
 6. Crear allí las variables `GOOGLE_PLAY_WORKLOAD_IDENTITY_PROVIDER` (nombre completo del proveedor) y `GOOGLE_PLAY_SERVICE_ACCOUNT` (correo de la cuenta de servicio).
 7. Al terminar el primer lanzamiento y comprobar los permisos, establecer la variable **de repositorio** `PLAY_AUTO_PUBLISH_ENABLED=true`. Hasta entonces solo se valida el código web; no se genera ni se envía ningún AAB. El siguiente push a main o la ejecución manual desde main inicia la publicación.
 
+Para comprobar la conexión antes de generar el AAB, ejecutar manualmente `Verify Google Play access` desde main. Obtiene credenciales temporales por OIDC, lee los detalles y canales de la app dentro de una edición temporal y la descarta sin publicar. No utiliza la clave de carga ni compila Android.
+
 Los pushes se serializan para no editar Play simultáneamente. GitHub puede sustituir ejecuciones pendientes por el push más reciente; ese commit contiene los cambios anteriores. Para detener publicaciones nuevas, quitar `PLAY_AUTO_PUBLISH_ENABLED` o ponerla en false. No cancela una versión ya enviada a Google.
 
 ## Referencias
