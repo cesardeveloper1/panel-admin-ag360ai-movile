@@ -37,6 +37,14 @@ jobs:
       - run: npm ci
       - run: python3 -m unittest discover -s scripts/tests -v
       - run: npm run build
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npx cap sync android
+      - name: Validate Android release configuration without creating a bundle
+        working-directory: android
+        run: bash gradlew --no-daemon :app:tasks -PreleaseVersionCode=10101 -PreleaseVersionName=1.0.1.1
       - name: Initial activation pending
         if: github.ref == 'refs/heads/main' && vars.PLAY_AUTO_PUBLISH_ENABLED != 'true'
         run: echo 'Automatic Play publishing is pending activation. See docs/google-play-release.md. No AAB was generated.' >> "$GITHUB_STEP_SUMMARY"
