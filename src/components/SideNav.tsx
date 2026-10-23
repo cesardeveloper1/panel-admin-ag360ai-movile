@@ -14,6 +14,7 @@ import {
 } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
+import { canNavigate } from '../navigation/navigationAccess';
 import { brandLabel } from '../utils/brandLabel';
 
 const SIDEBAR_COLLAPSED_KEY = 'agiliza360.sidebar.collapsed';
@@ -93,7 +94,7 @@ export function SideNav() {
       </div>
 
       <nav className="ag-side-nav-items">
-        {mobileNavItems.map(renderItem)}
+        {mobileNavItems.filter(item => session?.role === 'motorized' || canNavigate(session, item.path)).map(renderItem)}
       </nav>
 
       <div className="ag-side-nav-footer">

@@ -136,6 +136,20 @@
         "PIDIENDO": "Pidiendo",
         "HUMANO": "Humano",
         "CON_PEDIDO": "Con pedido"
+      },
+      "progress": {
+        "label": "Datos recopilados en la conversación",
+        "fields": {
+          "name": "Nombre",
+          "cart": "Carrito",
+          "delivery": "Modalidad",
+          "payment": "Método de pago"
+        },
+        "states": {
+          "received": "Recibido",
+          "pending": "Pendiente",
+          "unknown": "Sin información"
+        }
       }
     },
     "modeOperator": "Operador",
@@ -164,7 +178,70 @@
     "focusAria": "Foco de operaciones",
     "queueAria": "Cola de {{focus}}",
     "queueEmpty": "Sin pedidos aquí",
-    "collapseThree": "Contraer 3 tarjetas"
+    "collapseThree": "Contraer 3 tarjetas",
+    "reliability": {
+      "noInformation": "Sin información",
+      "chatUnavailable": "Esta orden no tiene una conversación vinculada disponible.",
+      "unavailable": "Servicio no disponible",
+      "retryDescription": "No pudimos actualizar esta lista. Las tarjetas se ocultaron para evitar operar con datos anteriores.",
+      "retry": "Reintentar",
+      "noMatches": "No hay coincidencias en esta vista.",
+      "loadedCounts": "Los contadores corresponden a los elementos cargados.",
+      "loadMore": "Cargar más resultados",
+      "loadingMore": "Cargando resultados...",
+      "syncedAt": "Actualizado {{time}}"
+    },
+    "actions": {
+      "saving": "Guardando...",
+      "details": "Detalle",
+      "created": "Creado {{time}}",
+      "branchUnknown": "Local sin información",
+      "changed": "El pedido cambió. Revisa su estado actual antes de continuar.",
+      "failed": "No se pudo confirmar el cambio. Reintenta para comprobar el estado antes de volver a enviarlo.",
+      "loadingDetail": "Cargando detalle...",
+      "detailFailed": "No se pudo cargar el detalle del pedido.",
+      "address": "Dirección",
+      "notes": "Notas",
+      "noItems": "El pedido no tiene productos detallados disponibles.",
+      "readOnly": "Solo lectura",
+      "dispatch": "Marcar en camino"
+    },
+    "filters": {
+      "title": "Filtros",
+      "cancel": "Cerrar",
+      "local": "Local de atención / entrega",
+      "loading": "Cargando alcance autorizado…",
+      "contextError": "No se pudo verificar tu alcance. Reintenta para aplicar filtros.",
+      "noLocals": "No hay locales disponibles",
+      "allLocals": "Todos mis locales",
+      "date": "Fecha de pedidos",
+      "all": "Todas las fechas",
+      "today": "Hoy",
+      "last12Hours": "Últimas 12 horas",
+      "day": "Día",
+      "range": "Rango",
+      "from": "Desde",
+      "to": "Hasta",
+      "channel": "Canal de venta",
+      "allChannels": "Todos los canales",
+      "digitalMenu": "Carta digital",
+      "connections": "Conexiones de WhatsApp",
+      "connectionMeaning": "Número receptor. Es independiente del local de entrega; esta lista es informativa.",
+      "numberUnavailable": "Número no disponible",
+      "shared": "Compartido",
+      "clear": "Limpiar",
+      "searchAction": "Buscar",
+      "filterLocal": "Filtrar por local",
+      "filterDate": "Filtrar por fecha",
+      "actions": "Acciones",
+      "alwaysOn": "Fijo",
+      "quickAccess": "Accesos rápidos",
+      "pin": "Fijar",
+      "quickMessages": "Mensajes rápidos",
+      "loadingMessages": "Cargando mensajes…",
+      "noMessages": "No hay mensajes rápidos activos",
+      "messagesHint": "Consulta tus mensajes activos. Para enviarlos, abre un chat y elige un mensaje rápido en el compositor."
+    }
   },
   "kitchen": {
     "title": "Modo cocina",
@@ -267,11 +344,18 @@
     "channel": {
       "whatsapp": "WA",
       "web": "Web",
-      "phone": "Tel"
+      "phone": "Tel",
+      "instagram": "Instagram",
+      "messenger": "Messenger",
+      "manual": "Orden manual",
+      "unknown": "Canal no informado"
     },
     "motorized": "Motorizado en camino",
     "consumo": "Consumo",
-    "item": "Producto"
+    "item": "Producto",
+    "dine_in": "Salón",
+    "scheduled": "Programado",
+    "unknown": "Modalidad no informada"
   },
   "notifications": {
     "title": "Alertas",

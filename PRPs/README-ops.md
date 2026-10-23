@@ -1,5 +1,7 @@
 # Epic: Operaciones restaurante — cola simple
 
+Continuación propuesta: [Operaciones móvil — segunda etapa, PRPs 024–028](./README-ops-mobile-v2.md). Esta página conserva el historial de 005/006.
+
 Vista de Operaciones orientada a **celular y tablet**: una cola por foco, mismos **nombres de estado** internos/i18n (sin renombrar), menos carga cognitiva que Pedidos/Todos + subtítulos anidados.
 
 ## Orden de ejecución

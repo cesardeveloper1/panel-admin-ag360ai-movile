@@ -26,6 +26,8 @@ import { ToastUx } from './components/ToastUx';
 import { BrandTransitionOverlay } from './components/BrandTransitionOverlay';
 import { AppLaunchSplash } from './components/AppLaunchSplash';
 import { branded } from './components/RequireBrand';
+import { navigationLandingPath } from './navigation/navigationAccess';
+import { MobileNavigation } from './components/MobileNavigation';
 import { useNativeChrome } from './hooks/useNativeChrome';
 
 import '@ionic/react/css/core.css';
@@ -67,39 +69,43 @@ const WelcomeRoute: React.FC = () => {
 
 const AppRoutes: React.FC = () => {
   useNativeChrome();
+  const { session } = useApp();
 
   return (
-    <IonRouterOutlet>
-      <Route exact path="/login" component={LoginPage} />
-      <Route exact path="/welcome" component={WelcomeRoute} />
-      <Route exact path="/app/onboarding" component={BrandedOnboardingPage} />
-      <Route exact path="/app/operations" component={BrandedOperationsPage} />
-      <Route exact path="/app/reports" component={BrandedReportsPage} />
-      <Route exact path="/app/agilito" component={BrandedAgilitoPage} />
-      <Route exact path="/app/payments" component={BrandedPaymentsHubPage} />
-      <Route exact path="/app/business">
-        <Redirect to="/app/agilito" />
-      </Route>
-      <Route exact path="/app/chats" component={BrandedChatsPage} />
-      <Route exact path="/app/products" component={BrandedProductsPage} />
-      <Route exact path="/app/productos" component={BrandedProductsPage} />
-      <Route exact path="/app/clients" component={BrandedMarketingPage} />
-      <Route exact path="/app/marketing/clientes" component={BrandedMarketingPage} />
-      <Route exact path="/app/locations" component={BrandedLocationsPage} />
-      <Route exact path="/app/locales" component={BrandedLocationsPage} />
-      <Route exact path="/app/datos-marca" component={BrandedBrandDataPage} />
-      <Route exact path="/app/brand-data" component={BrandedBrandDataPage} />
-      <Route exact path="/app/profile" component={BrandedSettingsPage} />
-      <Route exact path="/app/notifications" component={BrandedNotificationsPage} />
-      <Route exact path="/app/payment-capture" component={BrandedPaymentCapturePage} />
-      <Route exact path="/app/printing" component={BrandedPrinterSettingsPage} />
-      <Route exact path="/app">
-        <Redirect to="/app/agilito" />
-      </Route>
-      <Route exact path="/">
-        <Redirect to="/login" />
-      </Route>
-    </IonRouterOutlet>
+    <>
+      <IonRouterOutlet>
+        <Route exact path="/login" component={LoginPage} />
+        <Route exact path="/welcome" component={WelcomeRoute} />
+        <Route exact path="/app/onboarding" component={BrandedOnboardingPage} />
+        <Route exact path="/app/operations" component={BrandedOperationsPage} />
+        <Route exact path="/app/reports" component={BrandedReportsPage} />
+        <Route exact path="/app/agilito" component={BrandedAgilitoPage} />
+        <Route exact path="/app/payments" component={BrandedPaymentsHubPage} />
+        <Route exact path="/app/business">
+          <Redirect to="/app/agilito" />
+        </Route>
+        <Route exact path="/app/chats" component={BrandedChatsPage} />
+        <Route exact path="/app/products" component={BrandedProductsPage} />
+        <Route exact path="/app/productos" component={BrandedProductsPage} />
+        <Route exact path="/app/clients" component={BrandedMarketingPage} />
+        <Route exact path="/app/marketing/clientes" component={BrandedMarketingPage} />
+        <Route exact path="/app/locations" component={BrandedLocationsPage} />
+        <Route exact path="/app/locales" component={BrandedLocationsPage} />
+        <Route exact path="/app/datos-marca" component={BrandedBrandDataPage} />
+        <Route exact path="/app/brand-data" component={BrandedBrandDataPage} />
+        <Route exact path="/app/profile" component={BrandedSettingsPage} />
+        <Route exact path="/app/notifications" component={BrandedNotificationsPage} />
+        <Route exact path="/app/payment-capture" component={BrandedPaymentCapturePage} />
+        <Route exact path="/app/printing" component={BrandedPrinterSettingsPage} />
+        <Route exact path="/app">
+          <Redirect to={navigationLandingPath(session)} />
+        </Route>
+        <Route exact path="/">
+          <Redirect to="/login" />
+        </Route>
+      </IonRouterOutlet>
+      <MobileNavigation />
+    </>
   );
 };
 

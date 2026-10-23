@@ -4,7 +4,7 @@ import type { Brand } from '../types';
  * Filtros de listado alineados a panel
  * `buildOrdersQueryParams` (OrdersQueryMapper).
  */
-export type OrdersDateMode = 'today' | 'last12Hours' | 'range';
+export type OrdersDateMode = 'all' | 'today' | 'last12Hours' | 'day' | 'range';
 
 export interface OrdersListFilters {
   dateMode: OrdersDateMode;
@@ -12,11 +12,17 @@ export interface OrdersListFilters {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  source?: 1 | 2 | 5 | 6;
   branchId?: string;
   limit?: number;
+  page?: number;
 }
 
-export function toLocalIsoDate(date: Date = new Date()): string {
+export function toLocalIsoDate(date: Date = new Date(), timezone?: string): string {
+  if (timezone) {
+    const parts = new Intl.DateTimeFormat('en', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+    return ['year', 'month', 'day'].map(type => parts.find(part => part.type === type)?.value).join('-');
+  }
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -24,8 +30,8 @@ export function toLocalIsoDate(date: Date = new Date()): string {
 }
 
 /** Default Operaciones: hoy calendario (pill “Hoy”), no last12Hours. */
-export function defaultOrdersFilters(now: Date = new Date()): OrdersListFilters {
-  const today = toLocalIsoDate(now);
+export function defaultOrdersFilters(now: Date = new Date(), timezone?: string): OrdersListFilters {
+  const today = toLocalIsoDate(now, timezone);
   return {
     dateMode: 'today',
     dateFrom: today,
@@ -43,7 +49,7 @@ export function buildOrdersQueryString(
   filters: OrdersListFilters = defaultOrdersFilters(),
 ): string {
   const params = new URLSearchParams();
-  params.set('page', '1');
+  params.set('page', String(filters.page ?? 1));
   params.set('limit', String(filters.limit ?? 150));
 
   if (brand.subdomain) {
@@ -52,12 +58,14 @@ export function buildOrdersQueryString(
 
   if (filters.dateMode === 'last12Hours') {
     params.set('last12Hours', 'true');
-  } else {
-    const from = filters.dateFrom ?? toLocalIsoDate();
-    const to = filters.dateTo ?? from;
+  } else if (filters.dateMode !== 'all') {
+    const from = filters.dateFrom ?? toLocalIsoDate(new Date(), brand.timezone);
+    const to = filters.dateMode === 'today' || filters.dateMode === 'day' ? from : filters.dateTo ?? from;
     params.set('dateFrom', from <= to ? from : to);
     params.set('dateTo', from <= to ? to : from);
   }
+
+  if (filters.source) params.set('sources', String(filters.source));
 
   const search = filters.search?.trim();
   if (search) {
