@@ -36,6 +36,10 @@ it('does not duplicate mobile navigation on tablet or cover the composer with th
   rerender(<MemoryRouter initialEntries={['/app/chats']}><MobileNavigation /></MemoryRouter>);
   expect(screen.queryByRole('navigation')).toBeNull();
 });
+it('keeps Agilito free of the bottom bar so its own menu can cover the screen', () => {
+  render(<MemoryRouter initialEntries={['/app/agilito']}><MobileNavigation /></MemoryRouter>);
+  expect(screen.queryByRole('navigation')).toBeNull();
+});
 it('keeps delivery chrome unchanged and closes the menu on a new session scope', () => {
   const { rerender } = render(<MemoryRouter initialEntries={['/app/operations']}><MobileNavigation /></MemoryRouter>);
   fireEvent.click(screen.getByRole('button', { name: 'Menú' }));

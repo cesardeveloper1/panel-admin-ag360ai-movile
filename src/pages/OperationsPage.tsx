@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner, useIonViewDidEnter } from '@ionic/react';
+import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewDidEnter } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
 import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { OperationsQuickAccess } from '../components/OperationsQuickAccess';
-import { OperationsFilters, type OperationsScopeResult } from '../components/OperationsFilters';
+import { OperationsFilters, type FunnelChannel, type OperationsPanel, type OperationsScopeResult } from '../components/OperationsFilters';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { ContactCard } from '../components/ContactCard';
@@ -23,6 +23,7 @@ import { groupContactsByFunnel } from '../utils/funnelStage';
 import { sortOpsQueue } from '../utils/opsQueue';
 import { orderConversationPath } from '../utils/orderConversation';
 import { readOperationsView, writeOperationsView, operationsViewGeneration } from '../navigation/operationsViewState';
+import { contactAttentionLocation } from '../utils/contactPresentation';
 import { canNavigate } from '../navigation/navigationAccess';
 import { appendPage } from '../services/listPage';
 
@@ -70,7 +71,8 @@ const OperationsPage: React.FC = () => {
   const pendingDetailChat = useRef<string | null>(null);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; pendingDetailChat.current = null; }; }, []);
-  const [dateOpen, setDateOpen] = useState(false);
+  const [panel, setPanel] = useState<OperationsPanel | null>(null);
+  const [funnelChannel, setFunnelChannel] = useState<FunnelChannel>('all');
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
   const [visibleCount, setVisibleCount] = useState(initialView?.visibleCount ?? 6);
@@ -234,6 +236,7 @@ const OperationsPage: React.FC = () => {
     setOpsMode(mode);
     setVisibleCount(6);
     searchBootstrapped.current = false;
+    if (mode !== 'orders') setPanel(current => current === 'date' ? null : current);
   };
 
   const filtered = useMemo(() => {
@@ -267,7 +270,11 @@ const OperationsPage: React.FC = () => {
     return sortOpsQueue(scoped);
   }, [inFocus, subFilter]);
 
-  const groupedContacts = useMemo(() => groupContactsByFunnel(contacts), [contacts]);
+  const funnelContacts = useMemo(
+    () => funnelChannel === 'all' ? contacts : contacts.filter(contact => contact.channel === funnelChannel),
+    [contacts, funnelChannel],
+  );
+  const groupedContacts = useMemo(() => groupContactsByFunnel(funnelContacts), [funnelContacts]);
 
   const funnelQueue = useMemo(
     () => groupedContacts[funnelFocus] ?? [],
@@ -344,7 +351,11 @@ const OperationsPage: React.FC = () => {
         onIonScroll={isTablet ? undefined : handleOperationsScroll}
       >
         <AppShell>
-          <AppHeader title={t('ops.title')} subtitle={brand?.displayName} trailing={<OperationsQuickAccess onFilters={() => setDateOpen(true)} />} />
+          <AppHeader title={t('ops.title')} subtitle={brand?.displayName} trailing={
+            <OperationsQuickAccess mode={opsMode} query={query} onQueryChange={setQuery} panel={panel} onPanel={setPanel} branchCount={verifiedScope?.state === 'ready' ? scopedBranches.length : undefined}>
+              <OperationsFilters panel={panel} onClose={() => setPanel(null)} mode={opsMode} onScopeChange={setScopeContext} funnelChannel={funnelChannel} onFunnelChannel={setFunnelChannel} />
+            </OperationsQuickAccess>
+          } />
           <div className="ag-body module-body ops-body ag-page-stack">
             <div className="ops-view-switch ag-enter" role="tablist" aria-label={t('ops.modeAria')}>
               <button
@@ -368,19 +379,7 @@ const OperationsPage: React.FC = () => {
             </div>
 
             <p className="ops-applied-context"><span aria-hidden="true">{verifiedScope?.state === 'ready' && scopedBranches.length === 0 ? '⌖̸ ' : ''}</span>{localContext}</p>
-            {opsMode === 'orders' ? <p className="ops-applied-context">{t(`ops.filters.${ordersFilters.dateMode}`)}{ordersFilters.source ? ` · ${ordersFilters.source === 2 ? t('ops.filters.digitalMenu') : ({ 1: 'WhatsApp', 5: 'Instagram', 6: 'Messenger' } as Record<number, string>)[ordersFilters.source]}` : ''}</p> : null}
-
-            <div className="ops-sticky-controls ag-enter">
-              <IonSearchbar
-                className="ops-search"
-                value={query}
-                onIonInput={(e) => setQuery(e.detail.value ?? '')}
-                placeholder={
-                  opsMode === 'funnel' ? t('ops.funnel.search') : t('ops.search')
-                }
-                debounce={200}
-              />
-            </div>
+            {opsMode === 'orders' ? <p className="ops-applied-context">{t(`ops.filters.${ordersFilters.dateMode}`)}{ordersFilters.source ? ` · ${ordersFilters.source === 2 ? t('ops.filters.digitalMenu') : ({ 1: 'WhatsApp', 5: 'Instagram', 6: 'Messenger' } as Record<number, string>)[ordersFilters.source]}` : ''}</p> : funnelChannel !== 'all' ? <p className="ops-applied-context">{funnelChannel === 'whatsapp' ? 'WhatsApp' : funnelChannel === 'instagram' ? 'Instagram' : 'Messenger'}</p> : null}
 
             {!listError && !listLoading ? <p className="ops-loaded-note">{t('ops.reliability.loadedCounts')}{syncedTime ? ` · ${t('ops.reliability.syncedAt', { time: syncedTime })}` : ''}</p> : null}
             {listError ? (
@@ -436,6 +435,7 @@ const OperationsPage: React.FC = () => {
                         <ContactCard
                           key={contact._id}
                           contact={contact}
+                          attentionLocation={contactAttentionLocation(contact, verifiedScope?.data)}
                           onClick={() => openContactChat(contact)}
                           onChat={() => openContactChat(contact)}
                         />
@@ -607,7 +607,6 @@ const OperationsPage: React.FC = () => {
             }}
           />
 
-          <OperationsFilters onScopeChange={setScopeContext} open={dateOpen} onClose={() => setDateOpen(false)} mode={opsMode} />
         </AppShell>
       </IonContent>
     </IonPage>

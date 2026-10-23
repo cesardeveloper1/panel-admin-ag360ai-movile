@@ -131,6 +131,20 @@
         "PIDIENDO": "Ordering",
         "HUMANO": "Human",
         "CON_PEDIDO": "With order"
+      },
+      "progress": {
+        "label": "Information collected in this conversation",
+        "fields": {
+          "name": "Name",
+          "cart": "Cart",
+          "delivery": "Fulfillment",
+          "payment": "Payment method"
+        },
+        "states": {
+          "received": "Received",
+          "pending": "Pending",
+          "unknown": "No information"
+        }
       }
     },
     "modeOperator": "Operator",
@@ -216,6 +230,11 @@
       "numberUnavailable": "Number unavailable",
       "shared": "Shared",
       "clear": "Clear",
+      "searchAction": "Search",
+      "filterLocal": "Filter by location",
+      "filterDate": "Filter by date",
+      "actions": "Actions",
+      "alwaysOn": "Fixed",
       "quickAccess": "Quick access",
       "pin": "Pin",
       "quickMessages": "Quick messages",

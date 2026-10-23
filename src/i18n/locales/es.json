@@ -136,6 +136,20 @@
         "PIDIENDO": "Pidiendo",
         "HUMANO": "Humano",
         "CON_PEDIDO": "Con pedido"
+      },
+      "progress": {
+        "label": "Datos recopilados en la conversación",
+        "fields": {
+          "name": "Nombre",
+          "cart": "Carrito",
+          "delivery": "Modalidad",
+          "payment": "Método de pago"
+        },
+        "states": {
+          "received": "Recibido",
+          "pending": "Pendiente",
+          "unknown": "Sin información"
+        }
       }
     },
     "modeOperator": "Operador",
@@ -216,6 +230,11 @@
       "numberUnavailable": "Número no disponible",
       "shared": "Compartido",
       "clear": "Limpiar",
+      "searchAction": "Buscar",
+      "filterLocal": "Filtrar por local",
+      "filterDate": "Filtrar por fecha",
+      "actions": "Acciones",
+      "alwaysOn": "Fijo",
       "quickAccess": "Accesos rápidos",
       "pin": "Fijar",
       "quickMessages": "Mensajes rápidos",

@@ -12,6 +12,15 @@ export interface ContactInfo {
   waProfileName?: string | null;
   customerRecordName?: string | null;
   localId?: string | null;
+  channel?: 'whatsapp' | 'instagram' | 'messenger';
+  channelAccountId?: string;
+  /** Backend projection of conversation attention, never order fulfillment. */
+  attentionBranchId?: string | null;
+  branchId?: string | null;
+  branchName?: string | null;
+  progress?: { hasSession: boolean; name: boolean; cart: boolean; delivery: boolean; payment: boolean };
+  orderItems?: unknown[];
+  orderItemsSource?: 'session' | 'lastOrder' | 'none';
   threadId?: string | null;
   currentAgent: string;
   sessionData?: Record<string, unknown>;

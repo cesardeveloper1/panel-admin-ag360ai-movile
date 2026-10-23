@@ -7,7 +7,7 @@ import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useViewport } from '../hooks/useViewport';
 import { useKeyboardVisible } from '../hooks/useKeyboardVisible';
-import { getRoute, PROFILE_PATH, OPERATIONS_PATH, CHATS_PATH } from '../navigation/appRouteRegistry';
+import { getRoute, PROFILE_PATH, OPERATIONS_PATH, CHATS_PATH, AGILITO_PATH } from '../navigation/appRouteRegistry';
 import { mobileNavItems, alertsNavItem } from '../navigation/navConfig';
 import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { canNavigate } from '../navigation/navigationAccess';
@@ -24,7 +24,8 @@ export function MobileNavigation() {
   const keyboard = useKeyboardVisible();
   const [open, setOpen] = useState(false);
   const eligible = Boolean(session && brand && !authRestoring && !brandTransitioning && !isTablet &&
-    ['owner', 'superadmin', 'manager', 'worker'].includes(session.role) && getRoute(location.pathname)?.kind === 'tab');
+    ['owner', 'superadmin', 'manager', 'worker'].includes(session.role) && getRoute(location.pathname)?.kind === 'tab'
+    && location.pathname !== AGILITO_PATH);
   const showBar = eligible && !keyboard;
   useEffect(() => { setOpen(false); }, [location.pathname, location.search, authEpoch, brand?.id, isTablet]);
   useEffect(() => {
