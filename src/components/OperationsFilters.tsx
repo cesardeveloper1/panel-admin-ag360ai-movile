@@ -1,4 +1,6 @@
 import { useEffect, useId, useState } from 'react';
+import { IonIcon } from '@ionic/react';
+import { chatbubbleOutline, chatbubblesOutline, layersOutline, logoInstagram, paperPlaneOutline, storefrontOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../hooks/useApp';
 import { toLocalIsoDate, type OrdersListFilters, type OrdersDateMode } from '../services/ordersQuery';
@@ -9,6 +11,17 @@ export type OperationsPanel = 'local' | 'channel' | 'date';
 export type FunnelChannel = 'all' | 'whatsapp' | 'instagram' | 'messenger';
 const modes: OrdersDateMode[] = ['all', 'today', 'last12Hours', 'day', 'range'];
 const conversationChannels: FunnelChannel[] = ['all', 'whatsapp', 'instagram', 'messenger'];
+const sourceIcons = {
+  all: layersOutline,
+  whatsapp: chatbubbleOutline,
+  instagram: logoInstagram,
+  messenger: paperPlaneOutline,
+  digitalMenu: storefrontOutline,
+} as const;
+
+function SourceIcon({ kind }: { kind: keyof typeof sourceIcons }) {
+  return <IonIcon className="ops-channel-icon" icon={sourceIcons[kind]} aria-hidden="true" />;
+}
 
 export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 'all', onFunnelChannel }: {
   panel: OperationsPanel | null;
@@ -69,7 +82,7 @@ export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 
     <div role="alert"><p>{t('ops.filters.contextError')}</p><button className="ag-btn" type="button" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button></div>
   ) : null;
   return <div className="ops-filter-popover" role="dialog" aria-label={title}>
-    <div className="ops-filter-popover__bar"><h3>{title}</h3></div>
+    <div className="ops-filter-popover__bar"><h3>{panel === 'channel' ? <IonIcon className="ops-channel-title-icon" icon={chatbubblesOutline} aria-hidden="true" /> : null}{title}</h3></div>
     <div className="ops-filters-fields">
       {panel === 'local' ? <fieldset aria-label={title}>
         {status ?? (branches.length === 0 ? <p>{t('ops.filters.noLocals')}</p> : branches.length === 1 ? <p>{branches[0].name}</p> :
@@ -87,10 +100,14 @@ export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 
       </fieldset> : null}
       {panel === 'channel' ? <fieldset aria-label={title}>
         {mode === 'orders' ? status ?? <div className="ops-channel-options">{([
-          ['', t('ops.filters.allChannels')], ['1', 'WhatsApp'], ['2', t('ops.filters.digitalMenu')], ['5', 'Instagram'], ['6', 'Messenger'],
-        ] as const).map(([value, label]) => <label key={value || 'all'}><input type="radio" name={channelName} checked={(draft.source ? String(draft.source) : '') === value} onChange={() => commit({ source: value ? Number(value) as OrdersListFilters['source'] : undefined })} />{label}</label>)}</div>
+          ['', 'all', t('ops.filters.allChannels')],
+          ['1', 'whatsapp', 'WhatsApp'],
+          ['2', 'digitalMenu', t('ops.filters.digitalMenu')],
+          ['5', 'instagram', 'Instagram'],
+          ['6', 'messenger', 'Messenger'],
+        ] as const).map(([value, kind, label]) => <label key={value || 'all'}><input type="radio" name={channelName} checked={(draft.source ? String(draft.source) : '') === value} onChange={() => commit({ source: value ? Number(value) as OrdersListFilters['source'] : undefined })} /><SourceIcon kind={kind} />{label}</label>)}</div>
           : <div className="ops-channel-options">{conversationChannels.map(value =>
-          <label key={value}><input type="radio" name={channelName} checked={funnelChannel === value} onChange={() => onFunnelChannel?.(value)} />{value === 'all' ? t('ops.filters.allChannels') : value === 'whatsapp' ? 'WhatsApp' : value === 'instagram' ? 'Instagram' : 'Messenger'}</label>)}
+          <label key={value}><input type="radio" name={channelName} checked={funnelChannel === value} onChange={() => onFunnelChannel?.(value)} /><SourceIcon kind={value} />{value === 'all' ? t('ops.filters.allChannels') : value === 'whatsapp' ? 'WhatsApp' : value === 'instagram' ? 'Instagram' : 'Messenger'}</label>)}
         </div>}
         {current && current.whatsappAccounts.length > 0 ? <div className="ops-channel-connections"><p>{t('ops.filters.connections')}</p><p>{t('ops.filters.connectionMeaning')}</p>
           {current.whatsappAccounts.map(account => <div className="ops-connection" key={account.id}>

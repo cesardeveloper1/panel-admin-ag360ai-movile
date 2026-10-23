@@ -4,7 +4,6 @@ import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
   barChartOutline,
   cardOutline,
-  chatbubblesOutline,
   closeOutline,
   gridOutline,
   menuOutline,
@@ -18,6 +17,7 @@ import {
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
+import { PanelChatIcon } from '../components/PanelChatIcon';
 import { AgentToggle } from '../components/AgentToggle';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
@@ -117,7 +117,7 @@ const AgilitoPage: React.FC = () => {
 
   const destinations = [
     { path: OPERATIONS_PATH, icon: gridOutline, labelKey: 'ops.title' },
-    { path: CHATS_PATH, icon: chatbubblesOutline, labelKey: 'nav.chats' },
+    { path: CHATS_PATH, icon: '', labelKey: 'nav.chats' },
     { path: REPORTS_PATH, icon: barChartOutline, labelKey: 'nav.reports' },
     { path: PAYMENTS_PATH, icon: cardOutline, labelKey: 'nav.payments' },
     ...BUSINESS_MODULES.map((mod) => ({ path: mod.path, icon: mod.icon, labelKey: mod.i18n.agilitoLabel })),
@@ -351,7 +351,7 @@ const AgilitoPage: React.FC = () => {
               <nav className="agilito-nav__list">
                 {destinations.map((item) => (
                   <button key={item.path} type="button" className="agilito-nav__item" onClick={() => openDestination(item.path)}>
-                    <IonIcon icon={item.icon} aria-hidden="true" />
+                    {item.path === CHATS_PATH ? <PanelChatIcon /> : <IonIcon icon={item.icon} aria-hidden="true" />}
                     <span>{t(item.labelKey)}</span>
                   </button>
                 ))}
