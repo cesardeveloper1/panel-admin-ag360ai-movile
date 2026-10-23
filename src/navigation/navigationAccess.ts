@@ -36,5 +36,5 @@ export function canNavigate(session: UserSession | null, path: string): boolean 
 }
 
 export function navigationLandingPath(session: UserSession | null): string {
-  return [OPERATIONS_PATH, CHATS_PATH, AGILITO_PATH, REPORTS_PATH, PAYMENTS_PATH].find(path => canNavigate(session, path)) ?? PROFILE_PATH;
+  return [AGILITO_PATH, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, PAYMENTS_PATH].find(path => canNavigate(session, path)) ?? PROFILE_PATH;
 }

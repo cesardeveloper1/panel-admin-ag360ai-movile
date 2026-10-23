@@ -20,5 +20,6 @@ it('keeps authorized aliases and chooses an authorized landing page', () => {
   expect(canNavigate({ ...manager, role: 'owner' }, '/app/productos')).toBe(true);
   expect(canNavigate(manager, '/app/products')).toBe(false);
   expect(navigationLandingPath(manager)).toBe('/app/operations');
+  expect(navigationLandingPath({ ...manager, role: 'owner' })).toBe('/app/agilito');
   expect(navigationLandingPath({ ...manager, permissions: undefined })).toBe('/app/profile');
 });
