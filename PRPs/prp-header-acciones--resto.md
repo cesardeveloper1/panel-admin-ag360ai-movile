@@ -1,6 +1,6 @@
 # PRP: Pantallas que se quedan en título
 
-Fecha: 2026-10-23. Estado: borrador. Patrón A. Contrato: [índice](prp-header-acciones.md).
+Fecha: 2026-10-23. Estado: implementado en local. Patrón A. Contrato: [índice](prp-header-acciones.md).
 
 ## 1. Visión
 
