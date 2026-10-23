@@ -14,6 +14,7 @@ import {
   getChatNavFrom,
   hasExternalChatOrigin,
 } from '../navigation/chatNavFrom';
+import { CHATS_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';
 import {
   applyInboxMessageUpdate,
@@ -53,7 +54,7 @@ function phonesMatch(a?: string | null, b?: string | null): boolean {
 const ChatsPage: React.FC = () => {
   const { t } = useTranslation();
   const { brand, session, showToast } = useApp();
-  const { back } = useAppNavigation();
+  const { back, goRoot } = useAppNavigation();
   const location = useLocation();
   const {
     subscribeNewMessage,
@@ -221,7 +222,7 @@ const ChatsPage: React.FC = () => {
   }, [customerKeyFromUrl, phoneFromUrl, agentStateIdFromUrl]);
 
   useEffect(() => {
-    if (!hasDeepLink || loading) return;
+    if (!hasDeepLink || loading || location.pathname !== CHATS_PATH) return;
 
     let matching =
       (agentStateIdFromUrl
@@ -262,6 +263,7 @@ const ChatsPage: React.FC = () => {
     items,
     loading,
     hasDeepLink,
+    location.pathname,
     customerKeyFromUrl,
     phoneFromUrl,
     agentStateIdFromUrl,
@@ -470,7 +472,7 @@ const ChatsPage: React.FC = () => {
     setSelected(chat);
   };
 
-  const onBackFromThread = () => {
+  const onBackFromThread = useCallback(() => {
     if (openedFromExternal) {
       const origin = getChatNavFrom();
       clearChatNavFrom();
@@ -480,7 +482,18 @@ const ChatsPage: React.FC = () => {
       return;
     }
     setSelected(null);
-  };
+    if (hasDeepLink) goRoot(CHATS_PATH, 'replace', true);
+  }, [openedFromExternal, back, goRoot, hasDeepLink]);
+
+  useEffect(() => {
+    if (!showThread || location.pathname !== CHATS_PATH) return;
+    const nativeBack = (event: Event) => {
+      (event as CustomEvent<{ register: (priority: number, handler: () => void) => void }>).detail.register(10, onBackFromThread);
+    };
+    document.addEventListener('ionBackButton', nativeBack);
+    return () => document.removeEventListener('ionBackButton', nativeBack);
+  }, [showThread, location.pathname, onBackFromThread]);
+  useEffect(() => () => { inboxRequestIdRef.current += 1; }, []);
 
   const onToggleConversationBot = async () => {
     if (!selected || botStateUpdating) return;
@@ -532,7 +545,7 @@ const ChatsPage: React.FC = () => {
   const threadBreadcrumbs = [{ label: t('nav.chats') }, { label: threadTitle }];
 
   return (
-    <IonPage>
+    <IonPage data-ag-route="/app/chats" data-chat-thread={showThread ? "true" : undefined}>
       <IonContent className="ag-screen" scrollY={!showThread}>
         <AppShell lockScroll={showThread} hideMobileMenu={showThread}>
           {showThread ? (

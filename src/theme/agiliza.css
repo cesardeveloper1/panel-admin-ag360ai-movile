@@ -8770,3 +8770,22 @@ html.ag-native.ion-palette-dark .ag-header {
 
 .operations-page .ag-header-copy { min-width:125px; }
 .operations-page .ag-header-row { flex-wrap:wrap; }
+
+/* PRP 027: one mobile primary navigation; tablet retains the existing sidebar. */
+.ag-primary-nav { position:fixed; z-index:50; left:0; right:0; bottom:0; display:flex; justify-content:space-around; gap:4px; padding:6px max(12px, env(safe-area-inset-left)) max(6px, env(safe-area-inset-bottom)); background:var(--ag-paper); color:var(--ag-ink); border-top:1px solid #e3e8f0; }
+.ag-primary-nav button { flex:1; min-width:44px; min-height:52px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; border:0; border-radius:12px; background:transparent; color:var(--ag-muted); font:inherit; font-size:12px; font-weight:600; }
+.ag-primary-nav ion-icon { font-size:22px; }
+.ag-primary-nav [aria-current=page], .ag-primary-nav [aria-expanded=true] { color:var(--ag-pulse); background:color-mix(in srgb, var(--ag-pulse) 8%, transparent); }
+.ag-primary-nav button:focus-visible, .ag-mobile-menu-list button:focus-visible { outline:2px solid var(--ag-pulse); outline-offset:2px; }
+body.ag-primary-nav-visible { --ag-navigation-space:calc(70px + env(safe-area-inset-bottom)); }
+body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigation-space); }
+.ag-mobile-menu-modal { --width:min(100%, 520px); --height:min(85%, 720px); --border-radius:20px 20px 0 0; align-items:flex-end; }
+.ag-mobile-menu-content { --background:var(--ag-paper); color:var(--ag-ink); }
+.ag-mobile-menu-heading { display:flex; justify-content:space-between; align-items:center; padding:8px 16px; background:var(--ag-paper); color:var(--ag-ink); }
+.ag-mobile-menu-heading h2 { margin:0; font-size:20px; }
+.ag-mobile-menu-heading button { border:0; background:transparent; color:inherit; min-width:44px; min-height:44px; font-size:24px; }
+.ag-mobile-menu-list { display:grid; gap:8px; padding:12px 16px max(24px, env(safe-area-inset-bottom)); }
+.ag-mobile-menu-list p { margin:0 0 12px; color:var(--ag-muted); overflow-wrap:anywhere; }
+.ag-mobile-menu-list button { display:flex; align-items:center; gap:12px; min-height:48px; text-align:start; border:0; border-radius:12px; padding:12px; color:var(--ag-ink); background:var(--ag-mist); font:inherit; }
+.ag-mobile-menu-list ion-icon { font-size:22px; flex-shrink:0; }
+@media (min-width:768px) { .ag-primary-nav { display:none; } }

@@ -3,6 +3,7 @@ import { IonIcon } from '@ionic/react';
 import { optionsOutline, chatbubblesOutline, notificationsOutline, gridOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { OperationsQuickMessages } from './OperationsQuickMessages';
+import { canNavigate } from '../navigation/navigationAccess';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { CHATS_PATH, NOTIFICATIONS_PATH } from '../navigation/navConfig';
@@ -16,7 +17,7 @@ function readPins(): Access[] {
 }
 export function OperationsQuickAccess({ onFilters }: { onFilters: () => void }) {
   const { t } = useTranslation();
-  const { brand, authEpoch } = useApp();
+  const { session, brand, authEpoch } = useApp();
   const [messagesOpen, setMessagesOpen] = useState(false);
   useEffect(() => { setMessagesOpen(false); setOpen(false); }, [authEpoch, brand?.id]);
   const { go } = useAppNavigation();
@@ -36,7 +37,7 @@ export function OperationsQuickAccess({ onFilters }: { onFilters: () => void }) 
     { id: 'filters' as const, icon: optionsOutline, label: t('ops.filters.title'), run: onFilters },
     { id: 'chats' as const, icon: chatbubblesOutline, label: t('nav.chats'), run: () => go(CHATS_PATH) },
     { id: 'alerts' as const, icon: notificationsOutline, label: t('nav.alerts'), run: () => go(NOTIFICATIONS_PATH) },
-  ];
+  ].filter(action => action.id !== 'chats' || canNavigate(session, CHATS_PATH));
   const toggle = (id: Access) => {
     const next = pins.includes(id) ? pins.filter(key => key !== id) : [...pins, id];
     setPins(next);

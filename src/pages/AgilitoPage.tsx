@@ -136,7 +136,7 @@ const AgilitoPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage data-ag-route="/app/agilito">
       <IonContent className="ag-screen agilito-screen welcome-screen">
         <AppShell agilitoChrome>
           <div className="agilito-layout">

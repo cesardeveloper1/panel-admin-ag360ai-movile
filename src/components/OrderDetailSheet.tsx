@@ -8,9 +8,9 @@ import { getKanbanSubState } from '../utils/orderKanban';
 import { nextOrderAction } from '../utils/orderActions';
 import { orderAmount, orderCreatedTime } from '../utils/orderPresentation';
 
-interface OrderDetailSheetProps { order: Order | null; open: boolean; onClose: () => void }
+interface OrderDetailSheetProps { order: Order | null; open: boolean; onClose: () => void; onChat?: () => void }
 
-export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps) {
+export function OrderDetailSheet({ order, open, onClose, onChat }: OrderDetailSheetProps) {
   const { t, i18n } = useTranslation();
   const { brand, authEpoch, ordersFilters, advanceOrder, canChangeOrders, orderMutations } = useApp();
   const [detail, setDetail] = useState<{ key: string; data?: Order; failed?: boolean }>({ key: '' });
@@ -92,6 +92,7 @@ export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps
       </IonContent>
       <IonFooter className="order-sheet-footer">
         <div className="order-sheet-total"><span>{t('orderDetail.total')}</span><strong>{current.amountKnown === false ? t('ops.reliability.noInformation') : money(current.total)}</strong></div>
+        {loaded && onChat && current.agentStateId ? <button type="button" className="ag-btn" disabled={mutation?.pending} onClick={onChat}>{t('orders.openChat')}</button> : null}
         {mutation?.errorKey ? <p className="order-action-error" role="alert">{t(mutation.errorKey)}</p> : null}
         {action ? <button type="button" className="ag-btn ag-btn--primary order-sheet-cta" disabled={mutation?.pending} aria-busy={mutation?.pending} onClick={() => void advance()}>
           {t(mutation?.pending ? 'ops.actions.saving' : action.labelKey)}

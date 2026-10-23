@@ -9,6 +9,10 @@ import {
 } from '../services/ordersQuery';
 import { mergeConfirmedOrder, nextOrderAction, type OrderActionResult, type OrderMutation } from '../utils/orderActions';
 import { appendPage } from '../services/listPage';
+import { clearChatInboxCache } from '../services/chatInboxState';
+import { nextNavigationIntent } from '../navigation/navigationIntent';
+import { clearOperationsViews } from '../navigation/operationsViewState';
+import { clearChatNavFrom } from '../navigation/chatNavFrom';
 import { AppContext } from './appContextInstance';
 import { onSessionExpired } from '../utils/authSession';
 import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
@@ -41,6 +45,10 @@ function readAgentEnabled() {
 }
 
 function resetAuthStorage() {
+  nextNavigationIntent();
+  clearOperationsViews();
+  clearChatInboxCache();
+  clearChatNavFrom();
   void apiFacade.logout();
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(BRAND_KEY);
@@ -141,6 +149,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     return onSessionExpired(() => {
+      nextNavigationIntent();
+      clearOperationsViews();
+      clearChatInboxCache();
+      clearChatNavFrom();
       void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
       brandSelectionId.current += 1;
       ordersRequestId.current += 1;
@@ -384,6 +396,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const clearBrand = useCallback(() => {
+    nextNavigationIntent();
+    clearOperationsViews();
+    clearChatInboxCache();
+    clearChatNavFrom();
     brandSelectionId.current += 1;
     ordersRequestId.current += 1;
     notificationsRequestId.current += 1;
@@ -483,6 +499,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (brandSelectPromise.current) return brandSelectPromise.current;
 
       const run = (async () => {
+        nextNavigationIntent();
+        clearOperationsViews();
+        clearChatInboxCache();
+        clearChatNavFrom();
         const selectionId = ++brandSelectionId.current;
         try {
           setBrandLoading(true);

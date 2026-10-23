@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
+import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner, useIonViewDidEnter } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
 import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +22,8 @@ import { getKanbanGroup, getKanbanSubState } from '../utils/orderKanban';
 import { groupContactsByFunnel } from '../utils/funnelStage';
 import { sortOpsQueue } from '../utils/opsQueue';
 import { orderConversationPath } from '../utils/orderConversation';
+import { readOperationsView, writeOperationsView, operationsViewGeneration } from '../navigation/operationsViewState';
+import { canNavigate } from '../navigation/navigationAccess';
 import { appendPage } from '../services/listPage';
 
 type OpsMode = 'funnel' | 'orders';
@@ -41,10 +43,15 @@ const FOCUS_LABEL_KEY: Record<OpsFocus, string> = {
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
+  const { session, brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  const viewScope = `${authEpoch}|${brand?.id}`;
+  const initialView = useRef(readOperationsView(viewScope)).current;
+  const viewGeneration = useRef(operationsViewGeneration()).current;
+  const scrollPosition = useRef(initialView?.scrollTop ?? 0);
 
   const [scopeContext, setScopeContext] = useState<OperationsScopeResult | null>(null);
   const verifiedScope = scopeContext?.scope === `${authEpoch}|${brand?.id}|${brand?.subdomain}` ? scopeContext : null;
@@ -52,17 +59,21 @@ const OperationsPage: React.FC = () => {
   const localContext = verifiedScope?.state === 'error' ? t('ops.filters.contextError') : verifiedScope?.state !== 'ready' ? t('ops.filters.loading') :
     scopedBranches.length === 0 ? t('ops.filters.noLocals') : scopedBranches.length === 1 ? scopedBranches[0].name :
       scopedBranches.find(branch => branch.id === ordersFilters.branchId)?.name ?? t('ops.filters.allLocals');
-  const [opsMode, setOpsMode] = useState<OpsMode>('funnel');
-  const [query, setQuery] = useState(ordersFilters.search ?? '');
-  useEffect(() => { setQuery(''); setDateOpen(false); }, [authEpoch, brand?.id]);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [activeFocus, setActiveFocus] = useState<OpsFocus>('new');
-  const [subFilter, setSubFilter] = useState<OpsSubFilter>('all');
-  const [funnelFocus, setFunnelFocus] = useState<FunnelFocus>('INICIAL');
+  const [opsMode, setOpsMode] = useState<OpsMode>(initialView?.mode ?? 'funnel');
+  const [query, setQuery] = useState(initialView?.query ?? ordersFilters.search ?? '');
+
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(() => orders.find(order => order.id === initialView?.selectedOrderId) ?? null);
+  const [activeFocus, setActiveFocus] = useState<OpsFocus>(initialView?.focus ?? 'new');
+  const [subFilter, setSubFilter] = useState<OpsSubFilter>(initialView?.subFilter ?? 'all');
+  const [funnelFocus, setFunnelFocus] = useState<FunnelFocus>(initialView?.funnelFocus ?? 'INICIAL');
+  const [detailSuspended, setDetailSuspended] = useState(false);
+  const pendingDetailChat = useRef<string | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; pendingDetailChat.current = null; }; }, []);
   const [dateOpen, setDateOpen] = useState(false);
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(initialView?.visibleCount ?? 6);
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const lastScrollTopRef = useRef(0);
   const detailReturnFocus = useRef<HTMLElement | null>(null);
@@ -73,6 +84,7 @@ const OperationsPage: React.FC = () => {
   const [contactsError, setContactsError] = useState(false);
   const [contactsHasMore, setContactsHasMore] = useState(false);
   const [contactsLoadingMore, setContactsLoadingMore] = useState(false);
+  const previousBranch = useRef(ordersFilters.branchId);
   const contactsPage = useRef(1);
   const contactsRequestId = useRef(0);
   const contactsBusy = useRef(false);
@@ -133,7 +145,8 @@ const OperationsPage: React.FC = () => {
     setContactsError(false);
     setContactsHasMore(false);
     setContactsLoadingMore(false);
-    setSelectedOrder(null);
+    if (previousBranch.current !== ordersFilters.branchId) setSelectedOrder(null);
+    previousBranch.current = ordersFilters.branchId;
     return () => { contactsRequestId.current += 1; };
   }, [authEpoch, brand?.id, ordersFilters.branchId]);
 
@@ -162,8 +175,23 @@ const OperationsPage: React.FC = () => {
     return () => window.removeEventListener('online', reconnect);
   }, [opsMode, query, loadContacts, refreshOrders]);
 
+  useEffect(() => {
+    const state = { mode: opsMode, query, focus: activeFocus, subFilter, funnelFocus, visibleCount,
+      selectedOrderId: selectedOrder?.id, scrollTop: scrollPosition.current };
+    writeOperationsView(viewScope, state, viewGeneration);
+    return () => writeOperationsView(viewScope, { ...state, scrollTop: scrollPosition.current }, viewGeneration);
+  }, [viewScope, viewGeneration, opsMode, query, activeFocus, subFilter, funnelFocus, visibleCount, selectedOrder?.id]);
+  useIonViewDidEnter(() => {
+    if (!pendingDetailChat.current) setDetailSuspended(false);
+    const top = readOperationsView(viewScope)?.scrollTop ?? scrollPosition.current;
+    if (isTablet) {
+      const main = pageRef.current?.querySelector('.ag-app-shell-main');
+      if (main) main.scrollTop = top;
+    } else void contentRef.current?.scrollToPoint(0, top, 0);
+  });
   const applyScrollTop = (nextScrollTopRaw: number) => {
     const nextScrollTop = Math.max(0, nextScrollTopRaw);
+    scrollPosition.current = nextScrollTop;
     const previousScrollTop = lastScrollTopRef.current;
     setIsPageScrolled(nextScrollTop > 8);
     if (Math.abs(nextScrollTop - previousScrollTop) > 4) {
@@ -270,12 +298,12 @@ const OperationsPage: React.FC = () => {
     activeFocus === 'new' ? NEW_SUBSTATES : activeFocus === 'processing' ? PROCESSING_SUBSTATES : [];
 
   const openOrderChat = (order: Order) => {
-    setChatNavFrom(OPERATIONS_PATH);
     const path = orderConversationPath(order);
     if (!path) {
       showToast('ops.reliability.chatUnavailable');
       return;
     }
+    setChatNavFrom(OPERATIONS_PATH);
     go(path);
   };
 
@@ -305,11 +333,12 @@ const OperationsPage: React.FC = () => {
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
   return (
-    <IonPage
+    <IonPage data-ag-route="/app/operations"
       ref={pageRef}
       className={`operations-page${isPageScrolled ? ' operations-page--scrolled' : ''}${isScrollingUp ? ' operations-page--scroll-up' : ' operations-page--scroll-down'}`}
     >
       <IonContent
+        ref={contentRef}
         className="ag-screen"
         scrollEvents={!isTablet}
         onIonScroll={isTablet ? undefined : handleOperationsScroll}
@@ -555,8 +584,23 @@ const OperationsPage: React.FC = () => {
 
           <OrderDetailSheet
             order={ordersError ? null : orders.find(item => item.id === selectedOrder?.id) ?? selectedOrder}
-            open={!ordersError && !!selectedOrder}
+            open={!ordersError && !!selectedOrder && !detailSuspended}
+            onChat={canNavigate(session, CHATS_PATH) && selectedOrder ? () => {
+              const path = orderConversationPath(selectedOrder);
+              if (!path) { showToast('ops.reliability.chatUnavailable'); return; }
+              pendingDetailChat.current = path;
+              setDetailSuspended(true);
+            } : undefined}
             onClose={() => {
+              if (!mounted.current) return;
+              const destination = pendingDetailChat.current;
+              if (destination) {
+                pendingDetailChat.current = null;
+                setChatNavFrom(OPERATIONS_PATH);
+                go(destination);
+                return;
+              }
+              setDetailSuspended(false);
               setSelectedOrder(null);
               const target = detailReturnFocus.current;
               if (target?.isConnected) target.focus({ preventScroll: true });

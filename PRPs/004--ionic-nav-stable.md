@@ -149,3 +149,7 @@ Flujos mínimos:
 - Confidence: **6/10** hasta completar spike
 - Out of scope: rediseño de Agilito composer; reactivar BottomNav
 - Actualizar este PRP a **Ready** tras Task 0
+
+### Spike revalidado durante PRP 027 · 2026-10-23
+
+Decisión B incremental: mantener el outlet y las rutas actuales; usar atributos `data-ag-route` disponibles en StackLayout y añadirlos a raíces de Operaciones/Chats/Agilito. Barra móvil única a nivel de router. Se verifican con tests los flujos de selección de raíz, regreso de detalle y descarte de intenciones antiguas. Se conservan el pop/replace y las sincronizaciones existentes hasta disponer de prueba visual/nativa; ahora comprueban destino actual e intención vigente para evitar trabajo atrasado. Esto no cierra los criterios de retirada completa de workarounds de 004. Ver registro de 027 para limitaciones de QA.

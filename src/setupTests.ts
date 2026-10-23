@@ -9,6 +9,8 @@ window.matchMedia = window.matchMedia || function() {
   return {
       matches: false,
       addListener: function() {},
+      addEventListener: function() {},
+      removeEventListener: function() {},
       removeListener: function() {}
   };
 };

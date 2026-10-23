@@ -98,6 +98,8 @@ export interface UserSession {
   initials: string;
   role: UserRole;
   capabilities?: { changeOrderStatus: boolean };
+  /** Verified /auth/me module grants, never inferred from a local selection. */
+  permissions?: { modules?: Record<string, { enabled?: boolean; actions?: string[] } | null> };
   brandId?: string;
 }
 

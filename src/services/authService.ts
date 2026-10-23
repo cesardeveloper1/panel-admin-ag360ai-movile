@@ -69,6 +69,7 @@ function mapToUserSession(email: string, data: LoginDataPayload): UserSession {
     initials: initialsFromName(fullName, email),
     role,
     capabilities: { changeOrderStatus: authenticatedOrderCapability(data.user) },
+    permissions: data.user.permissions,
   };
 }
 

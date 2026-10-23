@@ -115,3 +115,5 @@ Limitaciones de integración:
 No marcar Completed: esta entrega es parcial. No se hizo push ni despliegue.
 
 Validación de esta etapa: suite completa 27 archivos / 91 pruebas aprobadas; build de producción aprobado con advertencias previas de tamaño de bundle y apiMock compartido. TypeScript y lint focalizados sin errores. Nuevas pruebas: borrador sin aplicación anticipada, único local autorizado, fallo de contexto, marca ajena, todas las fechas sin límites ocultos, Carta digital y día futuro sin fin de rango residual. La suite completa volvió a pasar tras integrar accesos rápidos y contexto visible.
+
+Avances anteriores comiteados como `017ad43` antes de ejecutar 027. Se conservan las limitaciones de integración y QA descritas arriba.
