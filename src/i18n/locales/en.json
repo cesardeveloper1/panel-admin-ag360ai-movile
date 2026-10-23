@@ -93,7 +93,7 @@
     "orders": "Orders",
     "business": "Business",
     "chats": "Chats",
-    "payments": "Payments",
+    "payments": "Business",
     "agilito": "Agilito",
     "profileHint": "Open profile",
     "expandSidebar": "Expand sidebar",
@@ -822,7 +822,7 @@
     "msgAna2": "Yes, today we have anticucho combo for S/ 28."
   },
   "payments": {
-    "title": "Payments",
+    "title": "Business",
     "intro": "Menu, marketing, locations and brand from one hub.",
     "menuTitle": "Menu & products",
     "menuDesc": "Catalog, prices and availability",
@@ -848,7 +848,7 @@
     "replyDefault": "Got it. In the full app I will run real actions; for now I guide you step by step.",
     "replyOrders": "You have orders in New, In progress and Delivered. Open Orders for the vertical kanban.",
     "replyReports": "Reports shows KPIs, trends and rankings like the web panel.",
-    "replyPayments": "Payments hub covers menu, clients, locations and brand data.",
+    "replyPayments": "Business covers menu, clients, locations and brand data.",
     "modulesTitle": "Your business",
     "chatTitle": "Ask Agilito",
     "menuTitle": "Menu & products",

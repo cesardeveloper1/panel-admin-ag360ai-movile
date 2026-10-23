@@ -93,7 +93,7 @@
     "orders": "Operaciones",
     "business": "Negocio",
     "chats": "Chats",
-    "payments": "Pagos",
+    "payments": "Negocio",
     "agilito": "Agilito",
     "profileHint": "Abrir perfil",
     "expandSidebar": "Expandir barra lateral",
@@ -867,7 +867,7 @@
     "msgAna2": "Sí, hoy tenemos combo anticuchero a S/ 28."
   },
   "payments": {
-    "title": "Pagos",
+    "title": "Negocio",
     "intro": "Menú, marketing, locales y marca desde un solo lugar.",
     "menuTitle": "Menú y productos",
     "menuDesc": "Carta, precios y disponibilidad",
@@ -893,7 +893,7 @@
     "replyDefault": "Entendido. En la app completa conectaré acciones reales; por ahora te guío paso a paso.",
     "replyOrders": "Tienes pedidos en Nuevo, En proceso y Entregado. Abre Pedidos para ver el kanban vertical.",
     "replyReports": "En Reportes verás KPIs, tendencias y rankings como en el panel web.",
-    "replyPayments": "En Pagos gestionas menú, clientes, locales y datos de marca.",
+    "replyPayments": "En Negocio gestionas menú, clientes, locales y datos de marca.",
     "modulesTitle": "Tu negocio",
     "chatTitle": "Pregúntale a Agilito",
     "menuTitle": "Menú y productos",

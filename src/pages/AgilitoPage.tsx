@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
   barChartOutline,
-  cardOutline,
   closeOutline,
   gridOutline,
   menuOutline,
@@ -119,7 +118,7 @@ const AgilitoPage: React.FC = () => {
     { path: OPERATIONS_PATH, icon: gridOutline, labelKey: 'ops.title' },
     { path: CHATS_PATH, icon: '', labelKey: 'nav.chats' },
     { path: REPORTS_PATH, icon: barChartOutline, labelKey: 'nav.reports' },
-    { path: PAYMENTS_PATH, icon: cardOutline, labelKey: 'nav.payments' },
+    { path: PAYMENTS_PATH, icon: storefrontOutline, labelKey: 'nav.payments' },
     ...BUSINESS_MODULES.map((mod) => ({ path: mod.path, icon: mod.icon, labelKey: mod.i18n.agilitoLabel })),
     { path: NOTIFICATIONS_PATH, icon: notificationsOutline, labelKey: 'nav.alerts' },
     { path: PROFILE_PATH, icon: personOutline, labelKey: 'nav.profile' },
