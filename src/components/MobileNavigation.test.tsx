@@ -36,6 +36,16 @@ it('does not duplicate mobile navigation on tablet or cover the composer with th
   rerender(<MemoryRouter initialEntries={['/app/chats']}><MobileNavigation /></MemoryRouter>);
   expect(screen.queryByRole('navigation')).toBeNull();
 });
+it('hides the footer while a chat thread is open', () => {
+  render(<MemoryRouter initialEntries={['/app/chats']}><MobileNavigation /></MemoryRouter>);
+  expect(screen.getByRole('navigation')).toBeTruthy();
+  document.body.classList.add('ag-chat-thread-open');
+  fireEvent(window, new Event('ag:chat-thread'));
+  expect(screen.queryByRole('navigation')).toBeNull();
+  document.body.classList.remove('ag-chat-thread-open');
+  fireEvent(window, new Event('ag:chat-thread'));
+  expect(screen.getByRole('navigation')).toBeTruthy();
+});
 it('keeps Agilito free of the bottom bar so its own menu can cover the screen', () => {
   render(<MemoryRouter initialEntries={['/app/agilito']}><MobileNavigation /></MemoryRouter>);
   expect(screen.queryByRole('navigation')).toBeNull();

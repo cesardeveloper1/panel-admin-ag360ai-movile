@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseConversationHistory } from './chatService';
+import { encodeHistoryCursor, parseConversationHistory } from './chatService';
 
 describe('parseConversationHistory', () => {
   it('parsea { success, data }', () => {
@@ -39,5 +39,18 @@ describe('parseConversationHistory', () => {
     );
     expect(msgs).toHaveLength(1);
     expect(msgs[0].role).toBe('agent');
+  });
+});
+
+describe('encodeHistoryCursor', () => {
+  it('codifica createdAt e id en base64url', () => {
+    const cursor = encodeHistoryCursor('2026-01-01T10:00:00.000Z', 'abc123');
+    expect(cursor).toBeTruthy();
+    const json = JSON.parse(
+      new TextDecoder().decode(
+        Uint8Array.from(atob(cursor!.replace(/-/g, '+').replace(/_/g, '/')), (char) => char.charCodeAt(0)),
+      ),
+    );
+    expect(json).toEqual({ createdAt: '2026-01-01T10:00:00.000Z', id: 'abc123' });
   });
 });

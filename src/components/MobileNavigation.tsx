@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { IonContent, IonHeader, IonModal, IonToolbar, IonIcon } from '@ionic/react';
 import { closeOutline } from 'ionicons/icons';
 import { useLocation } from 'react-router-dom';
@@ -23,10 +23,21 @@ export function MobileNavigation() {
   const location = useLocation();
   const keyboard = useKeyboardVisible();
   const [open, setOpen] = useState(false);
+  const [threadOpen, setThreadOpen] = useState(false);
   const eligible = Boolean(session && brand && !authRestoring && !brandTransitioning && !isTablet &&
     ['owner', 'superadmin', 'manager', 'worker'].includes(session.role) && getRoute(location.pathname)?.kind === 'tab'
     && location.pathname !== AGILITO_PATH);
-  const showBar = eligible && !keyboard;
+  const showBar = eligible && !keyboard && !threadOpen;
+  useLayoutEffect(() => {
+    const syncThread = () => {
+      const openThread = document.body.classList.contains('ag-chat-thread-open');
+      setThreadOpen(openThread);
+      if (openThread) setOpen(false);
+    };
+    syncThread();
+    window.addEventListener('ag:chat-thread', syncThread);
+    return () => window.removeEventListener('ag:chat-thread', syncThread);
+  }, []);
   useEffect(() => { setOpen(false); }, [location.pathname, location.search, authEpoch, brand?.id, isTablet]);
   useEffect(() => {
     document.body.classList.toggle('ag-primary-nav-visible', showBar);

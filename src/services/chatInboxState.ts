@@ -6,6 +6,7 @@ export interface InboxMessageUpdate {
   createdAt?: string;
   phoneNumber?: string;
   sender?: string;
+  messageType?: string;
 }
 
 const sessionInboxCache = new Map<string, ChatConversation[]>();
@@ -83,6 +84,7 @@ export function applyInboxMessageUpdate(
       Boolean(chat.clientBsuid && chat.clientBsuid === update.clientBsuid),
   );
   if (index < 0) return null;
+  if (update.messageType === 'bot_status') return chats;
 
   const current = chats[index];
   const next: ChatConversation = {

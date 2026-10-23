@@ -1,4 +1,14 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  parseInteractiveMessage,
+  type InteractiveChatBlock,
+} from './interactiveChatMarker';
+import {
+  locationFromMessage,
+  resolveChatMessageMedia,
+  type ChatMediaItem,
+} from './chatMessageMedia';
 
 /**
  * Formato de mensajes de chat:
@@ -39,12 +49,6 @@ export function shouldRenderAsImage(url: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
   const hasImageExt = imageExtensions.some((ext) => url.toLowerCase().includes(ext));
   return hasImageExt || isKnownImageHost(url);
-}
-
-function shouldRenderAsAudio(url: string, mediaType?: string): boolean {
-  if (mediaType === 'audio') return true;
-  const audioExtensions = ['.ogg', '.opus', '.webm', '.mp3', '.mpeg', '.mp4', '.m4a', '.aac', '.amr'];
-  return audioExtensions.some((ext) => url.toLowerCase().includes(ext));
 }
 
 /** Negrita estilo WhatsApp (`*texto*`) + `/n` como salto de línea. */
@@ -94,138 +98,190 @@ export function formatTextWithMarkdown(text: string): ReactNode {
   });
 }
 
+function InteractiveOptions({ blocks }: { blocks: InteractiveChatBlock[] }) {
+  if (!blocks.length) return null;
+  return (
+    <div className="chat-bubble__options">
+      {blocks.map((block, index) =>
+        block.kind === 'quick_replies' ? (
+          <Fragment key={index}>
+            {block.options.map((label, optionIndex) => (
+              <div key={`${index}-${optionIndex}`} className="chat-bubble__option">
+                {label}
+              </div>
+            ))}
+          </Fragment>
+        ) : (
+          <div key={index} className="chat-bubble__option chat-bubble__option--list">
+            <span className="chat-bubble__option-title">
+              <svg viewBox="0 0 16 16" className="chat-bubble__option-icon" aria-hidden="true">
+                <path d="M2 3.5h12M2 8h12M2 12.5h12" />
+              </svg>
+              Ver opciones
+            </span>
+            {block.options.length > 0 ? (
+              <span className="chat-bubble__option-values">{block.options.join(' · ')}</span>
+            ) : null}
+          </div>
+        ),
+      )}
+    </div>
+  );
+}
+
+function withInteractive(node: ReactNode, blocks: InteractiveChatBlock[]) {
+  if (!blocks.length) return node;
+  return (
+    <>
+      {node}
+      <InteractiveOptions blocks={blocks} />
+    </>
+  );
+}
+
 export interface ChatMessageBodyProps {
   content: string;
   mediaUrl?: string;
   mediaType?: string;
+  messageType?: string;
+  attachments?: Array<{ type?: string; url?: string; name?: string }>;
+  interactiveReply?: { kind?: string; title?: string };
+  storyMentionUrl?: string;
+  contentNoticeAccepted?: boolean;
+  referral?: { sourceType?: string; headline?: string; body?: string; sourceId?: string };
+}
+
+function safeStoryUrl(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol === 'https:' && !parsed.username && !parsed.password) return parsed.href;
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function MediaPiece({ item }: { item: ChatMediaItem }) {
+  const { t } = useTranslation();
+  if (item.type === 'image') {
+    return (
+      <div className="chat-bubble__media">
+        <img src={item.url} alt="Imagen" loading="lazy" />
+      </div>
+    );
+  }
+  if (item.type === 'audio') {
+    return (
+      <div className="chat-bubble__media chat-bubble__media--audio">
+        <audio controls preload="metadata" src={item.url}>
+          <a href={item.url} target="_blank" rel="noopener noreferrer">{item.name || item.url}</a>
+        </audio>
+      </div>
+    );
+  }
+  if (item.type === 'video') {
+    return <video controls src={item.url} className="chat-bubble__video" />;
+  }
+  return (
+    <a className="chat-bubble__doc" href={item.url} target="_blank" rel="noopener noreferrer">
+      {item.name || t('chats.openDocument')}
+    </a>
+  );
 }
 
 /**
- * Cuerpo de burbuja: texto con negrita + imágenes/audio embebidos.
+ * Cuerpo de burbuja: texto, adjuntos y los mismos avisos que el panel.
  */
-export function ChatMessageBody({ content, mediaUrl, mediaType }: ChatMessageBodyProps) {
-  const text = content ?? '';
-  const imageUrls = extractImageUrls(text);
-  const attachmentIsAudio =
-    Boolean(mediaUrl) && shouldRenderAsAudio(mediaUrl!, mediaType);
-  const attachmentIsImage =
-    Boolean(mediaUrl) &&
-    !attachmentIsAudio &&
-    (mediaType === 'image' || shouldRenderAsImage(mediaUrl!));
-
-  if (attachmentIsAudio && mediaUrl) {
-    return (
-      <div className="chat-bubble__rich">
-        {text.trim() && text.trim().toLowerCase() !== 'audio' ? (
-          <div className="chat-bubble__body">{formatTextWithMarkdown(text)}</div>
-        ) : null}
-        <div className="chat-bubble__media chat-bubble__media--audio">
-          <audio controls preload="metadata" src={mediaUrl}>
-            <a href={mediaUrl} target="_blank" rel="noopener noreferrer">
-              Abrir audio
-            </a>
-          </audio>
+export function ChatMessageBody({
+  content,
+  mediaUrl,
+  mediaType,
+  messageType,
+  attachments,
+  interactiveReply,
+  storyMentionUrl,
+  contentNoticeAccepted,
+  referral,
+}: ChatMessageBodyProps) {
+  const { t } = useTranslation();
+  const extras = (
+    <>
+      {interactiveReply ? (
+        <div className="chat-bubble__reply">
+          <strong>{interactiveReply.kind === 'quick_reply' ? t('chats.quickReply') : t('chats.buttonReply')}:</strong>{' '}
+          {interactiveReply.title || t('chats.selectedAction')}
         </div>
+      ) : null}
+      {referral ? (
+        <div className="chat-bubble__reply">
+          <strong>
+            {referral.sourceType === 'ad' ? t('chats.referralAd') : referral.sourceType === 'post' ? t('chats.referralPost') : t('chats.referralOther')}
+          </strong>
+          {referral.headline ? <span>{referral.headline}</span> : null}
+          {referral.body ? <span>{referral.body}</span> : null}
+        </div>
+      ) : null}
+    </>
+  );
+
+  if (messageType === 'empty_template') {
+    return (
+      <div className="chat-bubble__notice">
+        <strong>{t('chats.emptyTemplateTitle')}</strong>
+        <span>{t('chats.emptyTemplateDetails')}</span>
+      </div>
+    );
+  }
+  if (messageType === 'story_mention') {
+    const storyUrl = safeStoryUrl(storyMentionUrl);
+    return (
+      <div className="chat-bubble__notice">
+        <strong>{t('chats.storyTitle')}</strong>
+        {content ? <span>{content}</span> : null}
+        {storyUrl ? <a href={storyUrl} target="_blank" rel="noopener noreferrer">{t('chats.storyOpen')}</a> : <span>{t('chats.storyUnavailable')}</span>}
+        {storyUrl ? <span>{t('chats.storyExpires')}</span> : null}
+      </div>
+    );
+  }
+  if (messageType === 'unsupported' || messageType === 'unknown') {
+    return (
+      <div className="chat-bubble__notice">
+        <span>{t('chats.contentUnavailable')}</span>
+        {contentNoticeAccepted ? <span>{t('chats.resendRequested')}</span> : null}
       </div>
     );
   }
 
-  if (imageUrls.length === 0 && !attachmentIsImage) {
-    return <div className="chat-bubble__body">{formatTextWithMarkdown(text)}</div>;
+  const location = locationFromMessage(content ?? '', messageType);
+  if (location) {
+    const mapsUrl = `https://www.google.com/maps?q=${location.lat},${location.lng}`;
+    return (
+      <a className="chat-bubble__location" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+        <strong>{Number(location.lat).toFixed(4)}, {Number(location.lng).toFixed(4)}</strong>
+        <span>{t('chats.openMaps')}</span>
+      </a>
+    );
   }
 
+  const merged = [
+    ...(mediaUrl ? [{ type: mediaType, url: mediaUrl }] : []),
+    ...(attachments ?? []),
+  ];
+  const resolved = resolveChatMessageMedia(content, { messageType, attachments: merged });
+  const parsed = parseInteractiveMessage(resolved.text);
   const elements: ReactNode[] = [];
-
-  if (attachmentIsImage && mediaUrl && !imageUrls.includes(mediaUrl)) {
-    if (text.trim()) {
-      elements.push(
-        <div key="text-before-att" className="chat-bubble__body">
-          {formatTextWithMarkdown(text)}
-        </div>,
-      );
-    }
-    elements.push(
-      <div key="att-img" className="chat-bubble__media">
-        <img
-          src={mediaUrl}
-          alt="Imagen del mensaje"
-          loading="lazy"
-          onError={(e) => {
-            const target = e.currentTarget;
-            target.style.display = 'none';
-            const link = document.createElement('a');
-            link.href = mediaUrl;
-            link.textContent = 'Ver imagen';
-            link.className = 'chat-bubble__media-fallback';
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            target.parentElement?.appendChild(link);
-          }}
-        />
-      </div>,
-    );
-    return <div className="chat-bubble__rich">{elements}</div>;
+  if (parsed.text) {
+    elements.push(<div key="text" className="chat-bubble__body">{formatTextWithMarkdown(parsed.text)}</div>);
   }
-
-  let remainingText = text;
-  imageUrls.forEach((url, index) => {
-    const urlIndex = remainingText.indexOf(url);
-    if (urlIndex > 0) {
-      const before = remainingText.substring(0, urlIndex).trim();
-      if (before) {
-        elements.push(
-          <div key={`text-${index}`} className="chat-bubble__body">
-            {formatTextWithMarkdown(before)}
-          </div>,
-        );
-      }
-    }
-
-    if (shouldRenderAsImage(url)) {
-      elements.push(
-        <div key={`image-${index}`} className="chat-bubble__media">
-          <img
-            src={url}
-            alt="Imagen del mensaje"
-            loading="lazy"
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              const link = document.createElement('a');
-              link.href = url;
-              link.textContent = 'Ver imagen';
-              link.className = 'chat-bubble__media-fallback';
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              target.parentElement?.appendChild(link);
-            }}
-          />
-        </div>,
-      );
-    } else {
-      elements.push(
-        <a
-          key={`link-${index}`}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="chat-bubble__media-fallback"
-        >
-          {url}
-        </a>,
-      );
-    }
-
-    remainingText = remainingText.substring(urlIndex + url.length);
+  resolved.media.forEach((item, index) => {
+    elements.push(<MediaPiece key={`${item.type}-${index}`} item={item} />);
   });
-
-  if (remainingText.trim()) {
-    elements.push(
-      <div key="text-final" className="chat-bubble__body">
-        {formatTextWithMarkdown(remainingText.trim())}
-      </div>,
-    );
-  }
-
-  return <div className="chat-bubble__rich">{elements}</div>;
+  return withInteractive(
+    <div className="chat-bubble__rich">
+      {elements}
+      {extras}
+    </div>,
+    parsed.blocks,
+  );
 }

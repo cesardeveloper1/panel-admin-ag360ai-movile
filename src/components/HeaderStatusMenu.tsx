@@ -6,6 +6,7 @@ import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useViewport } from '../hooks/useViewport';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
+import { AgentControls } from './AgentControls';
 import { AgentToggle } from './AgentToggle';
 
 type HeaderStatusMenuProps = {
@@ -52,8 +53,13 @@ export function HeaderStatusMenu({ className = '' }: HeaderStatusMenuProps) {
 
   if (isTablet) {
     return (
-      <div className={`ag-header-status ag-header-status--inline ${className}`.trim()}>
-        <AgentToggle />
+      <div ref={rootRef} className={`ag-header-status ag-header-status--inline ${className}`.trim()}>
+        <AgentToggle onPress={() => setOpen((current) => !current)} expanded={open} controlsId={menuId} />
+        {open ? (
+          <div id={menuId} className="ag-header-status__panel" role="menu">
+            <AgentControls />
+          </div>
+        ) : null}
         <button
           type="button"
           className="ag-header-bell"
@@ -88,7 +94,7 @@ export function HeaderStatusMenu({ className = '' }: HeaderStatusMenuProps) {
       {open ? (
         <div id={menuId} className="ag-header-status__panel" role="menu">
           <div className="ag-header-status__row" role="none">
-            <AgentToggle />
+            <AgentControls />
           </div>
           <button
             type="button"
