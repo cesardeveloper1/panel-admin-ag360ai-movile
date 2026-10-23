@@ -4,6 +4,9 @@ import { mapStatusFromApi } from './orderStatusMapper';
 /** Item de listado GET /orders (OrderFoodListItem del panel). */
 export interface ApiOrderListItem {
   orderId?: string;
+  agentStateId?: string | null;
+  channelAccountId?: string | null;
+  channel?: string | null;
   orderNumber?: string;
   status?: string;
   brandSubdomain?: string;
@@ -73,6 +76,9 @@ export function mapOrderFromApi(raw: ApiOrderListItem, brandId: string): Order |
 
   return {
     id,
+    agentStateId: raw.agentStateId?.trim() || undefined,
+    channelAccountId: raw.channelAccountId?.trim() || undefined,
+    messagingChannel: raw.channel?.trim() || undefined,
     orderNumber: raw.orderNumber ? String(raw.orderNumber) : undefined,
     customerKey: 'customers.generic',
     customerName,
@@ -87,8 +93,8 @@ export function mapOrderFromApi(raw: ApiOrderListItem, brandId: string): Order |
         : undefined,
     needsHuman: Boolean(raw.humanInteraction?.withHumanInteraction),
     brandId,
-    locationKey: 'locations.central',
-    phone: raw.customerPhone ? String(raw.customerPhone) : undefined,
+    locationKey: 'ops.reliability.noInformation',
+    phone: raw.customerPhone?.trim() || undefined,
     createdAt: raw.createdAt ? String(raw.createdAt) : undefined,
   };
 }

@@ -19,6 +19,8 @@ import type { KanbanGroup, KanbanSubState, Order } from '../types';
 import { getKanbanGroup, getKanbanSubState } from '../utils/orderKanban';
 import { groupContactsByFunnel } from '../utils/funnelStage';
 import { sortOpsQueue } from '../utils/opsQueue';
+import { orderConversationPath } from '../utils/orderConversation';
+import { appendPage } from '../services/listPage';
 
 type OpsMode = 'funnel' | 'orders';
 type OpsFocus = KanbanGroup;
@@ -46,7 +48,7 @@ const localIsoDate = (date: Date) =>
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, orders, loading, setOrdersFilters, showToast } = useApp();
+  const { brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
@@ -69,66 +71,81 @@ const OperationsPage: React.FC = () => {
   const lastScrollTopRef = useRef(0);
   const searchBootstrapped = useRef(false);
 
-  const [contacts, setContacts] = useState<ContactInfo[]>([]);
+  const [contactResult, setContactResult] = useState<{ scope: string; data: ContactInfo[]; syncedAt?: number }>({ scope: '', data: [] });
   const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactsError, setContactsError] = useState(false);
+  const [contactsHasMore, setContactsHasMore] = useState(false);
+  const [contactsLoadingMore, setContactsLoadingMore] = useState(false);
+  const contactsPage = useRef(1);
   const contactsRequestId = useRef(0);
-  const contactsCacheRef = useRef(new Map<string, ContactInfo[]>());
+  const contactsBusy = useRef(false);
+  const contactsScope = `${authEpoch}|${brand?.id}|${brand?.subdomain}|${ordersFilters.branchId ?? ''}|${query.trim()}`;
+  const contactsScopeRef = useRef(contactsScope);
+  contactsScopeRef.current = contactsScope;
+  const contacts = useMemo(() => contactResult.scope === contactsScope ? contactResult.data : [], [contactResult, contactsScope]);
+  const contactsRef = useRef(contacts);
+  contactsRef.current = contacts;
 
-  const loadContacts = useCallback(
-    async (search?: string) => {
-      const subdomain = brand?.subdomain?.trim();
-      if (!subdomain) {
-        setContacts([]);
-        return;
+  const loadContacts = useCallback(async (search?: string, more = false) => {
+    const subdomain = brand?.subdomain?.trim();
+    if (!subdomain || (more && contactsBusy.current)) return;
+    const scope = contactsScopeRef.current;
+    const requestId = ++contactsRequestId.current;
+    contactsBusy.current = true;
+    setContactsError(false);
+    if (more) setContactsLoadingMore(true);
+    else {
+      setContactsLoading(true);
+      setContactResult({ scope, data: [] });
+      setContactsHasMore(false);
+    }
+    try {
+      const page = more ? contactsPage.current + 1 : 1;
+      const result = await apiFacade.listContacts({ subDomain: subdomain, page, limit: 150,
+        branchId: ordersFilters.branchId, search: search?.trim() || undefined });
+      if (requestId !== contactsRequestId.current || scope !== contactsScopeRef.current) return;
+      const pagination = result.meta.pagination;
+      const hasMore = pagination?.hasNextPage ?? result.data.length >= 150;
+      if (more && result.data.length > 0 && !result.data.some(item => !contactsRef.current.some(old => old._id === item._id))) {
+        throw new Error('Pagination made no progress');
       }
-      const normalizedSearch = search?.trim().toLowerCase() || '';
-      const cacheKey = `${subdomain}|${normalizedSearch}`;
-      const cached = contactsCacheRef.current.get(cacheKey);
-      if (cached) {
-        setContacts(cached);
+      setContactResult(previous => ({ scope, syncedAt: Date.now(),
+        data: more ? appendPage(previous.data, result.data, item => item._id) : result.data }));
+      contactsPage.current = page;
+      setContactsHasMore(hasMore);
+    } catch {
+      if (requestId === contactsRequestId.current && scope === contactsScopeRef.current) {
+        setContactResult({ scope, data: [] });
+        setContactsHasMore(false);
+        setContactsError(true);
+      }
+    } finally {
+      if (requestId === contactsRequestId.current) {
+        contactsBusy.current = false;
         setContactsLoading(false);
+        setContactsLoadingMore(false);
       }
-      const requestId = ++contactsRequestId.current;
-      if (!cached) setContactsLoading(true);
-      try {
-        const result = await apiFacade.listContacts({
-          subDomain: subdomain,
-          page: 1,
-          limit: 150,
-          search: search?.trim() || undefined,
-        });
-        if (requestId !== contactsRequestId.current) return;
-        contactsCacheRef.current.set(cacheKey, result.data);
-        setContacts(result.data);
-      } catch {
-        if (requestId === contactsRequestId.current) {
-          if (cached) {
-            setContacts(cached);
-          } else {
-            setContacts([]);
-            showToast('ops.funnel.loadError');
-          }
-        }
-      } finally {
-        if (requestId === contactsRequestId.current) {
-          setContactsLoading(false);
-        }
-      }
-    },
-    [brand?.subdomain, showToast],
-  );
+    }
+  }, [brand?.subdomain, ordersFilters.branchId]);
 
+  // Invalidate requests/caches immediately when auth, brand or branch changes.
   useEffect(() => {
-    if (opsMode !== 'funnel') return;
-    void loadContacts(query);
-  }, [opsMode, brand?.subdomain, loadContacts]);
+    contactsRequestId.current += 1;
+    contactsBusy.current = false;
+    setContactResult({ scope: '', data: [] });
+    setContactsError(false);
+    setContactsHasMore(false);
+    setContactsLoadingMore(false);
+    setSelectedOrder(null);
+    return () => { contactsRequestId.current += 1; };
+  }, [authEpoch, brand?.id, ordersFilters.branchId]);
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
       const search = query.trim();
       if (!searchBootstrapped.current) {
         searchBootstrapped.current = true;
-        if (!search) return;
+        if (!search && opsMode === 'orders') return;
       }
       if (opsMode === 'orders') {
         void setOrdersFilters({ search: search || undefined });
@@ -137,7 +154,16 @@ const OperationsPage: React.FC = () => {
       }
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [query, opsMode, setOrdersFilters, loadContacts]);
+  }, [query, opsMode, setOrdersFilters, loadContacts, authEpoch, brand?.id]);
+
+  useEffect(() => {
+    const reconnect = () => {
+      if (opsMode === 'funnel') void loadContacts(query);
+      else void refreshOrders();
+    };
+    window.addEventListener('online', reconnect);
+    return () => window.removeEventListener('online', reconnect);
+  }, [opsMode, query, loadContacts, refreshOrders]);
 
   const applyOrdersDateFilters = useCallback(() => {
     const today = localIsoDate(new Date());
@@ -199,6 +225,7 @@ const OperationsPage: React.FC = () => {
   };
 
   const filtered = useMemo(() => {
+    if (loading || ordersError || query.trim() !== (ordersFilters.search ?? '')) return [];
     const q = query.trim().toLowerCase();
     if (!q) return orders;
     return orders.filter(
@@ -206,9 +233,10 @@ const OperationsPage: React.FC = () => {
         o.id.toLowerCase().includes(q) ||
         o.orderNumber?.toLowerCase().includes(q) ||
         o.customerName?.toLowerCase().includes(q) ||
+        o.phone?.toLowerCase().includes(q) ||
         t(o.customerKey).toLowerCase().includes(q),
     );
-  }, [orders, query, t]);
+  }, [orders, query, t, loading, ordersError, ordersFilters.search]);
 
   const groups = useMemo(
     () => ({
@@ -342,12 +370,17 @@ const OperationsPage: React.FC = () => {
 
   const openOrderChat = (order: Order) => {
     setChatNavFrom(OPERATIONS_PATH);
-    if (order.phone?.trim()) {
-      go(`${CHATS_PATH}?phone=${encodeURIComponent(order.phone.trim())}`);
+    const path = orderConversationPath(order);
+    if (!path) {
+      showToast('ops.reliability.chatUnavailable');
       return;
     }
-    go(`${CHATS_PATH}?customer=${encodeURIComponent(order.customerKey)}`);
+    go(path);
   };
+
+  useEffect(() => {
+    if (ordersError) setSelectedOrder(null);
+  }, [ordersError]);
 
   const openContactChat = (contact: ContactInfo) => {
     const params = new URLSearchParams();
@@ -361,8 +394,13 @@ const OperationsPage: React.FC = () => {
     go(`${CHATS_PATH}?${params.toString()}`);
   };
 
-  const listLoading = opsMode === 'funnel' ? contactsLoading : loading;
-  const emptyKey = opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
+  const listLoading = opsMode === 'funnel' ? contactsLoading || contactResult.scope !== contactsScope : loading || query.trim() !== (ordersFilters.search ?? '');
+  const listError = opsMode === 'funnel' ? contactsError && contactResult.scope === contactsScope : ordersError && query.trim() === (ordersFilters.search ?? '');
+  const hasMore = opsMode === 'funnel' ? contactsHasMore : ordersHasMore;
+  const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : ordersLoadingMore;
+  const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
+  const lastSyncedAt = opsMode === 'funnel' ? contactResult.syncedAt : ordersLastSyncedAt;
+  const syncedTime = lastSyncedAt ? new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(lastSyncedAt) : null;
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
   return (
@@ -426,7 +464,17 @@ const OperationsPage: React.FC = () => {
               />
             </div>
 
-            {opsMode === 'funnel' ? (
+            {!listError && !listLoading ? <p className="ops-loaded-note">{t('ops.reliability.loadedCounts')}{syncedTime ? ` · ${t('ops.reliability.syncedAt', { time: syncedTime })}` : ''}</p> : null}
+            {listError ? (
+              <section className="ops-service-error" role="alert">
+                <h2>{t('ops.reliability.unavailable')}</h2>
+                <p>{t('ops.reliability.retryDescription')}</p>
+                <button type="button" className="ag-btn ag-btn--primary" onClick={() => {
+                  if (opsMode === 'funnel') void loadContacts(query);
+                  else void refreshOrders();
+                }}>{t('ops.reliability.retry')}</button>
+              </section>
+            ) : opsMode === 'funnel' ? (
               <>
                 <div
                   className="ops-summary ops-summary--funnel ag-enter"
@@ -630,11 +678,17 @@ const OperationsPage: React.FC = () => {
                 </section>
               </>
             )}
+            {!listError && !listLoading && hasMore ? (
+              <button type="button" className="ag-btn ops-load-more" disabled={loadingMore} onClick={() => {
+                if (opsMode === 'funnel') void loadContacts(query, true);
+                else void loadMoreOrders();
+              }}>{t(loadingMore ? 'ops.reliability.loadingMore' : 'ops.reliability.loadMore')}</button>
+            ) : null}
           </div>
 
           <OrderDetailSheet
-            order={selectedOrder}
-            open={!!selectedOrder}
+            order={ordersError ? null : selectedOrder}
+            open={!ordersError && !!selectedOrder}
             onClose={() => setSelectedOrder(null)}
           />
 

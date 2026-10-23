@@ -108,6 +108,8 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     ordersSocket.on('event', handleOrdersEvent);
+    // A socket connection is not proof of fresh data: revalidate the list.
+    ordersSocket.on('connect', scheduleRefresh);
 
     if (config.environment === 'development') {
       ordersSocket.on('connect', () => {

@@ -72,7 +72,7 @@ export function OrderDetailSheet({ order, open, onClose }: OrderDetailSheetProps
           </div>
           <div className="order-sheet-row">
             <span className="order-sheet-label">{t('orderDetail.paymentMethod')}</span>
-            <span>{t(`orderDetail.payment.${order.paymentMethod ?? 'yape'}`)}</span>
+            <span>{order.paymentMethod ? t(`orderDetail.payment.${order.paymentMethod}`) : t('ops.reliability.noInformation')}</span>
           </div>
 
           <h3 className="order-sheet-section">{t('orderDetail.cart')}</h3>

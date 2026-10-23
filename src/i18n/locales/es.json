@@ -164,7 +164,19 @@
     "focusAria": "Foco de operaciones",
     "queueAria": "Cola de {{focus}}",
     "queueEmpty": "Sin pedidos aquí",
-    "collapseThree": "Contraer 3 tarjetas"
+    "collapseThree": "Contraer 3 tarjetas",
+    "reliability": {
+      "noInformation": "Sin información",
+      "chatUnavailable": "Esta orden no tiene una conversación vinculada disponible.",
+      "unavailable": "Servicio no disponible",
+      "retryDescription": "No pudimos actualizar esta lista. Las tarjetas se ocultaron para evitar operar con datos anteriores.",
+      "retry": "Reintentar",
+      "noMatches": "No hay coincidencias en esta vista.",
+      "loadedCounts": "Los contadores corresponden a los elementos cargados.",
+      "loadMore": "Cargar más resultados",
+      "loadingMore": "Cargando resultados...",
+      "syncedAt": "Actualizado {{time}}"
+    }
   },
   "kitchen": {
     "title": "Modo cocina",

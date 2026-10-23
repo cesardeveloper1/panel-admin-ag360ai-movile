@@ -7,6 +7,11 @@ export interface AppContextValue {
   authRestoring: boolean;
   brand: Brand | null;
   orders: Order[];
+  ordersError: boolean;
+  ordersLastSyncedAt: number | null;
+  ordersHasMore: boolean;
+  ordersLoadingMore: boolean;
+  loadMoreOrders: () => Promise<void>;
   ordersFilters: OrdersListFilters;
   notifications: NotificationItem[];
   loading: boolean;

@@ -8690,3 +8690,16 @@ html.ag-native.ion-palette-dark .ag-header {
     animation: none;
   }
 }
+
+/* Operations availability: one persistent notice for the affected list. */
+.ops-service-error {
+  padding: 20px;
+  border: 1px solid var(--ion-color-danger, #c63838);
+  border-radius: 13px;
+  background: var(--ion-background-color, #fff);
+}
+.ops-service-error h2 { margin: 0 0 8px; font-size: 18px; }
+.ops-service-error p { margin: 0 0 16px; line-height: 1.5; }
+.ops-service-error button, .ops-load-more { min-height: 44px; }
+.ops-load-more { width: 100%; margin-block: 12px; }
+.ops-loaded-note { font-size: 12px; color: var(--ion-color-medium-shade, #5d6170); margin: 4px 0; }

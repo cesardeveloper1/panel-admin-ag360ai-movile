@@ -25,9 +25,14 @@ describe('parseContactListResponse', () => {
     expect(result.meta.totalAgentStates).toBe(1);
   });
 
-  it('devuelve vacío si la forma no se reconoce', () => {
-    const result = parseContactListResponse(null);
-    expect(result.data).toEqual([]);
-    expect(result.meta.totalAgentStates).toBe(0);
+  it('preserva metadatos de la segunda página', () => {
+    const result = parseContactListResponse({ data: { data: [], meta: { pagination: { currentPage: 2, hasNextPage: false, totalPages: 2 } } } });
+    expect(result.meta.pagination?.currentPage).toBe(2);
+  });
+
+  it('no confunde respuestas inválidas con listas vacías', () => {
+    expect(() => parseContactListResponse(null)).toThrow();
+    expect(() => parseContactListResponse({ success: false, data: [] })).toThrow();
+    expect(parseContactListResponse({ data: [] }).data).toEqual([]);
   });
 });

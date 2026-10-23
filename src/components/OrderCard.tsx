@@ -16,13 +16,7 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
   const { t } = useTranslation();
   const group = getKanbanGroup(order.status);
   const subState = getKanbanSubState(order);
-  const fallbackPhones: Record<string, string> = {
-    'customers.lucia': '+51999888777',
-    'customers.carlos': '+51912345678',
-    'customers.pedro': '+51955111222',
-    'customers.ana': '+51988777666',
-  };
-  const phone = order.phone ?? fallbackPhones[order.customerKey] ?? '+51900000000';
+  const phone = order.phone?.trim() || '';
   const displayPhone = phone.replace(/^(\+51)(\d{3})(\d{3})(\d{3})$/, '$1 $2 $3 $4');
 
   const primaryAction: 'chat' | 'status' | null =
@@ -44,7 +38,7 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
       <div className="order-customer-row">
         <div className="order-customer-identity">
           <div className="order-customer">{order.customerName ?? t(order.customerKey)}</div>
-          <span>{displayPhone}</span>
+          <span>{displayPhone || t('ops.reliability.noInformation')}</span>
         </div>
         <div className="order-card__meta">
           <span className={`order-card__state-badge order-card__state-badge--${group ?? 'new'}`}>
@@ -74,10 +68,10 @@ export function OrderCard({ order, onClick, onChat, style }: OrderCardProps) {
           <IonIcon icon={chatbubbleEllipsesOutline} aria-hidden="true" />
           {t('orders.openChat')}
         </button>
-        <a href={`tel:${phone}`}>
+        {phone ? <a href={`tel:${phone}`}>
           <IonIcon icon={callOutline} aria-hidden="true" />
           {t('orders.call')}
-        </a>
+        </a> : null}
       </div>
     </article>
   );

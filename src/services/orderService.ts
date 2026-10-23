@@ -1,4 +1,5 @@
 import { api } from './api';
+import { parseListPage, type ListPage } from './listPage';
 import type { Brand, Order, OrderStatus } from '../types';
 import { unwrapApiPayload } from '../utils/apiPayload';
 import { mapOrdersFromApi, type ApiOrderListItem } from './mappers/orderMapper';
@@ -42,26 +43,6 @@ export async function resolveCanonicalOrderId(
   return canonicalId;
 }
 
-function extractOrderRows(response: unknown): ApiOrderListItem[] {
-  const payload = unwrapApiPayload<unknown>(response);
-
-  if (Array.isArray(payload)) {
-    return payload as ApiOrderListItem[];
-  }
-
-  if (payload && typeof payload === 'object') {
-    const obj = payload as Record<string, unknown>;
-    if (Array.isArray(obj.data)) {
-      return obj.data as ApiOrderListItem[];
-    }
-    if (Array.isArray(obj.orders)) {
-      return obj.orders as ApiOrderListItem[];
-    }
-  }
-
-  return [];
-}
-
 export const orderService = {
   /**
    * GET /orders — mismos filtros que panel Operaciones (Órdenes).
@@ -71,10 +52,17 @@ export const orderService = {
     brand: Brand,
     filters: OrdersListFilters = defaultOrdersFilters(),
   ): Promise<Order[]> {
-    const query = buildOrdersQueryString(brand, filters);
-    const response = await api.get(`/orders?${query}`);
-    const rows = extractOrderRows(response);
-    return mapOrdersFromApi(rows, brand.id);
+    return (await orderService.getOrdersPage(brand, filters)).data;
+  },
+
+  async getOrdersPage(brand: Brand, filters: OrdersListFilters): Promise<ListPage<Order>> {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 150;
+    const response = await api.get(`/orders?${buildOrdersQueryString(brand, filters)}`);
+    const result = parseListPage<ApiOrderListItem>(response, page, limit);
+    const data = mapOrdersFromApi(result.data, brand.id);
+    if (data.length !== result.data.length) throw new Error('Invalid order identity');
+    return { ...result, data };
   },
 
   /**

@@ -164,7 +164,19 @@
     "focusAria": "Operations focus",
     "queueAria": "{{focus}} queue",
     "queueEmpty": "No orders here",
-    "collapseThree": "Collapse 3 cards"
+    "collapseThree": "Collapse 3 cards",
+    "reliability": {
+      "noInformation": "No information",
+      "chatUnavailable": "This order has no available linked conversation.",
+      "unavailable": "Service unavailable",
+      "retryDescription": "We could not update this list. Cards were hidden to prevent acting on outdated data.",
+      "retry": "Retry",
+      "noMatches": "No matches in this view.",
+      "loadedCounts": "Counts reflect loaded items.",
+      "loadMore": "Load more results",
+      "loadingMore": "Loading results...",
+      "syncedAt": "Updated {{time}}"
+    }
   },
   "kitchen": {
     "title": "Kitchen mode",

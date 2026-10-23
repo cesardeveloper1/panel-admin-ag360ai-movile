@@ -14,6 +14,7 @@ export interface OrdersListFilters {
   search?: string;
   branchId?: string;
   limit?: number;
+  page?: number;
 }
 
 export function toLocalIsoDate(date: Date = new Date()): string {
@@ -43,7 +44,7 @@ export function buildOrdersQueryString(
   filters: OrdersListFilters = defaultOrdersFilters(),
 ): string {
   const params = new URLSearchParams();
-  params.set('page', '1');
+  params.set('page', String(filters.page ?? 1));
   params.set('limit', String(filters.limit ?? 150));
 
   if (brand.subdomain) {

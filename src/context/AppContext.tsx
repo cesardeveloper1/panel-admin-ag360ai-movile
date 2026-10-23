@@ -7,6 +7,7 @@ import {
   defaultOrdersFilters,
   type OrdersListFilters,
 } from '../services/ordersQuery';
+import { appendPage } from '../services/listPage';
 import { AppContext } from './appContextInstance';
 import { onSessionExpired } from '../utils/authSession';
 import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
@@ -55,6 +56,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [authRestoring, setAuthRestoring] = useState(true);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersError, setOrdersError] = useState(false);
+  const [ordersLastSyncedAt, setOrdersLastSyncedAt] = useState<number | null>(null);
+  const [ordersHasMore, setOrdersHasMore] = useState(false);
+  const [ordersLoadingMore, setOrdersLoadingMore] = useState(false);
+  const ordersPage = useRef(1);
+  const ordersMoreBusy = useRef(false);
   const [ordersFilters, setOrdersFiltersState] = useState<OrdersListFilters>(defaultOrdersFilters);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,6 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [authEpoch, setAuthEpoch] = useState(0);
 
   const ordersRequestId = useRef(0);
+  const brandSelectionId = useRef(0);
   const notificationsRequestId = useRef(0);
   const brandSelectPromise = useRef<Promise<boolean> | null>(null);
   // En desarrollo, StrictMode vuelve a ejecutar el efecto de montaje. Ambas
@@ -110,12 +118,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     return onSessionExpired(() => {
       void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
+      brandSelectionId.current += 1;
       ordersRequestId.current += 1;
       brandSelectPromise.current = null;
       flushSync(() => {
         setSession(null);
         setBrand(null);
         setOrders([]);
+        setOrdersError(false);
+        setOrdersHasMore(false);
+        setOrdersLastSyncedAt(null);
+        setOrdersLoadingMore(false);
         setKitchenMode(false);
         setBrandLoading(false);
         setLoading(false);
@@ -214,10 +227,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     async (nextBrand: Brand, filters?: OrdersListFilters): Promise<Order[]> => {
       const requestId = ++ordersRequestId.current;
       const resolved = filters ?? ordersFiltersRef.current;
-      const data = await apiFacade.getOrders(nextBrand, resolved);
-      if (requestId !== ordersRequestId.current) return data;
-      setOrders(data);
-      return data;
+      setOrdersError(false);
+      setOrdersLastSyncedAt(null);
+      setOrders([]);
+      setOrdersHasMore(false);
+      setOrdersLoadingMore(false);
+      ordersMoreBusy.current = false;
+      try {
+        const result = await apiFacade.getOrdersPage(nextBrand, { ...resolved, page: 1 });
+        if (requestId !== ordersRequestId.current) return [];
+        ordersPage.current = 1;
+        setOrders(result.data);
+        setOrdersLastSyncedAt(Date.now());
+        setOrdersHasMore(result.hasMore);
+        return result.data;
+      } catch {
+        if (requestId === ordersRequestId.current) {
+          setOrders([]);
+          setOrdersError(true);
+          setOrdersHasMore(false);
+        }
+        return [];
+      } finally {
+        if (requestId === ordersRequestId.current) setLoading(false);
+      }
     },
     [],
   );
@@ -239,8 +272,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await loadOrdersForBrand(brand, ordersFiltersRef.current);
     } catch {
       showToast('toast.ordersLoadError');
-    } finally {
-      setLoading(false);
     }
   }, [brand, loadOrdersForBrand, showToast]);
 
@@ -264,12 +295,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await loadOrdersForBrand(brand, next);
       } catch {
         showToast('toast.ordersLoadError');
-      } finally {
-        setLoading(false);
       }
     },
     [brand, loadOrdersForBrand, showToast],
   );
+
+  const loadMoreOrders = useCallback(async () => {
+    if (!brand || !ordersHasMore || ordersMoreBusy.current || loading || ordersError) return;
+    const requestId = ordersRequestId.current;
+    ordersMoreBusy.current = true;
+    setOrdersLoadingMore(true);
+    try {
+      const result = await apiFacade.getOrdersPage(brand, {
+        ...ordersFiltersRef.current, page: ordersPage.current + 1,
+      });
+      if (requestId !== ordersRequestId.current) return;
+      if (result.data.length > 0 && !result.data.some(item => !orders.some(old => old.id === item.id))) {
+        throw new Error('Pagination made no progress');
+      }
+      setOrders(previous => appendPage(previous, result.data, item => item.id));
+      setOrdersLastSyncedAt(Date.now());
+      ordersPage.current = result.page;
+      setOrdersHasMore(result.hasMore);
+    } catch {
+      if (requestId === ordersRequestId.current) {
+        setOrders([]);
+        setOrdersHasMore(false);
+        setOrdersError(true);
+      }
+    } finally {
+      if (requestId === ordersRequestId.current) {
+        ordersMoreBusy.current = false;
+        setOrdersLoadingMore(false);
+      }
+    }
+  }, [brand, orders, ordersHasMore, loading, ordersError]);
 
   const syncAgentForBrand = useCallback(async (nextBrand: Brand) => {
     const subdomain = nextBrand.subdomain?.trim();
@@ -291,11 +351,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const clearBrand = useCallback(() => {
+    brandSelectionId.current += 1;
     ordersRequestId.current += 1;
     notificationsRequestId.current += 1;
     brandSelectPromise.current = null;
     setBrand(null);
     setOrders([]);
+    setOrdersError(false);
+    setOrdersLastSyncedAt(null);
+    setOrdersHasMore(false);
+    setOrdersLoadingMore(false);
     setNotifications([]);
     const resetFilters = defaultOrdersFilters();
     ordersFiltersRef.current = resetFilters;
@@ -318,6 +383,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     flushSync(() => setBrandTransitioning(true));
     void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
+    brandSelectionId.current += 1;
     ordersRequestId.current += 1;
     brandSelectPromise.current = null;
     prepareBrandPick();
@@ -335,6 +401,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const user = await apiFacade.login(email, password);
         if (!user) return false;
+        brandSelectionId.current += 1;
         ordersRequestId.current += 1;
         brandSelectPromise.current = null;
         sessionStorage.removeItem(PICK_BRAND_KEY);
@@ -356,6 +423,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logout = useCallback(() => {
     void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
+    brandSelectionId.current += 1;
     ordersRequestId.current += 1;
     notificationsRequestId.current += 1;
     brandSelectPromise.current = null;
@@ -363,6 +431,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSession(null);
       setBrand(null);
       setOrders([]);
+      setOrdersError(false);
+      setOrdersLastSyncedAt(null);
+      setOrdersHasMore(false);
+      setOrdersLoadingMore(false);
       setNotifications([]);
       setKitchenMode(false);
       setBrandLoading(false);
@@ -378,7 +450,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (brandSelectPromise.current) return brandSelectPromise.current;
 
       const run = (async () => {
-        const requestId = ++ordersRequestId.current;
+        const selectionId = ++brandSelectionId.current;
         try {
           setBrandLoading(true);
           setBrand(next);
@@ -387,20 +459,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.setItem(BRAND_KEY, next.id);
           sessionStorage.removeItem(PICK_BRAND_KEY);
 
-          const data = await apiFacade.getOrders(next, ordersFiltersRef.current);
-          if (requestId !== ordersRequestId.current) return false;
-
-          flushSync(() => {
-            setBrand(next);
-            setOrders(data);
-            setBrandLoading(false);
-          });
+          setLoading(true);
+          await loadOrdersForBrand(next, ordersFiltersRef.current);
+          // loadOrdersForBrand owns request sequencing; brand/session changes invalidate it.
+          if (brandSelectionId.current !== selectionId) return false;
+          setBrandLoading(false);
 
           void syncAgentForBrand(next);
           void refreshNotifications(next.id);
           return true;
         } catch {
-          if (requestId === ordersRequestId.current) {
+          if (selectionId === brandSelectionId.current) {
             setBrand(null);
             setOrders([]);
             localStorage.removeItem(BRAND_KEY);
@@ -409,7 +478,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
           return false;
         } finally {
-          if (requestId === ordersRequestId.current) {
+          if (selectionId === brandSelectionId.current) {
             setBrandLoading(false);
           }
         }
@@ -419,10 +488,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         return await run;
       } finally {
-        brandSelectPromise.current = null;
+        if (brandSelectPromise.current === run) brandSelectPromise.current = null;
       }
     },
-    [refreshNotifications, session, showToast, syncAgentForBrand],
+    [loadOrdersForBrand, refreshNotifications, session, showToast, syncAgentForBrand],
   );
 
   const setDarkMode = useCallback((value: boolean) => {
@@ -546,6 +615,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       authRestoring,
       brand,
       orders,
+      ordersError,
+      ordersLastSyncedAt,
+      ordersHasMore,
+      ordersLoadingMore,
+      loadMoreOrders,
       ordersFilters,
       notifications,
       loading,
@@ -581,6 +655,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       authRestoring,
       brand,
       orders,
+      ordersError,
+      ordersLastSyncedAt,
+      ordersHasMore,
+      ordersLoadingMore,
+      loadMoreOrders,
       ordersFilters,
       notifications,
       loading,

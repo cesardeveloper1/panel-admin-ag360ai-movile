@@ -45,6 +45,9 @@ export interface Order {
   id: string;
   /** orderNumber del backend (orquestación / detalle). */
   orderNumber?: string;
+  agentStateId?: string;
+  channelAccountId?: string;
+  messagingChannel?: string;
   customerKey: string;
   customerName?: string;
   leadTag?: 'new' | 'recurring' | 'vip';

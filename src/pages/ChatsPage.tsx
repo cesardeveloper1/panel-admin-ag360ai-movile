@@ -230,10 +230,10 @@ const ChatsPage: React.FC = () => {
               item.agentStateId === agentStateIdFromUrl || item.id === agentStateIdFromUrl,
           )
         : undefined) ||
-      (phoneFromUrl
+      (!agentStateIdFromUrl && phoneFromUrl
         ? items.find((item) => phonesMatch(item.phone, phoneFromUrl))
         : undefined) ||
-      (customerKeyFromUrl
+      (!agentStateIdFromUrl && customerKeyFromUrl
         ? items.find((item) => item.nameKey === customerKeyFromUrl)
         : undefined);
 

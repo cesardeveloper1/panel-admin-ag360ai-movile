@@ -127,6 +127,17 @@ export const apiFacade = {
     return orderService.getOrders(brand, filters);
   },
 
+  async getOrdersPage(brand: Brand, filters: OrdersListFilters) {
+    if (config.useApiMock) {
+      const rows = await apiMock.getOrders(brand.id, filters);
+      const page = filters.page ?? 1;
+      const limit = filters.limit ?? 150;
+      return { data: rows.slice((page - 1) * limit, page * limit), page,
+        hasMore: page * limit < rows.length, total: rows.length };
+    }
+    return orderService.getOrdersPage(brand, filters);
+  },
+
   async updateOrderStatus(
     orderId: string,
     status: OrderStatus,
