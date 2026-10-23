@@ -4,17 +4,14 @@ import { searchOutline, locationOutline, calendarOutline, chatbubblesOutline, ch
 import { useTranslation } from 'react-i18next';
 import { OperationsQuickMessages } from './OperationsQuickMessages';
 import type { OperationsPanel } from './OperationsFilters';
-import { canNavigate } from '../navigation/navigationAccess';
 import { useApp } from '../hooks/useApp';
-import { useAppNavigation } from '../hooks/useAppNavigation';
-import { CHATS_PATH } from '../navigation/navConfig';
 
 const storageKey = 'ag.operations.actions.v1';
-type Pin = 'date' | 'messages' | 'chats';
+type Pin = 'date' | 'messages';
 function readPins(): Pin[] {
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null');
-    return Array.isArray(stored) ? stored.filter((key): key is Pin => ['date', 'messages', 'chats'].includes(key)) : ['date'];
+    return Array.isArray(stored) ? stored.filter((key): key is Pin => key === 'date' || key === 'messages') : ['date'];
   } catch { return ['date']; }
 }
 
@@ -44,11 +41,10 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const { session, brand, authEpoch } = useApp();
+  const { brand, authEpoch } = useApp();
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { go } = useAppNavigation();
   const root = useRef<HTMLDivElement>(null);
   const [pins, setPins] = useState<Pin[]>(readPins);
   useEffect(() => { setMessagesOpen(false); setSearchOpen(false); setMenuOpen(false); onPanel(null); }, [authEpoch, brand?.id, onPanel]);
@@ -64,7 +60,6 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
     document.addEventListener('keydown', escape);
     return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('keydown', escape); };
   }, [searchOpen, menuOpen, panel, onPanel]);
-  const chatsAllowed = canNavigate(session, CHATS_PATH);
   const toggle = (id: Pin) => {
     const next = pins.includes(id) ? pins.filter(key => key !== id) : [...pins, id];
     setPins(next);
@@ -80,7 +75,6 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
   const pinned = [
     { id: 'date' as const, icon: calendarOutline, label: t('ops.filters.filterDate'), show: mode === 'orders', run: () => openPanel('date') },
     { id: 'messages' as const, icon: chatboxEllipsesOutline, label: t('ops.filters.quickMessages'), show: true, run: () => { setMenuOpen(false); onPanel(null); setMessagesOpen(true); } },
-    { id: 'chats' as const, icon: chatbubblesOutline, label: t('nav.chats'), show: chatsAllowed, run: () => { onPanel(null); go(CHATS_PATH); } },
   ];
   return <div ref={root} className="ops-tools">
     <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.searchAction')} aria-expanded={searchOpen} onClick={() => { onPanel(null); setMenuOpen(false); setSearchOpen(open => !open); }}><IonIcon icon={searchOutline} aria-hidden="true" /></button>
@@ -88,7 +82,7 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
     {showLocal ? <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.filterLocal')} aria-expanded={panel === 'local'} disabled={localDisabled} title={localDisabled ? t('ops.filters.noLocals') : t('ops.filters.filterLocal')} onClick={() => openPanel('local')}><IonIcon icon={locationOutline} aria-hidden="true" /></button> : null}
     {pinned.filter(action => action.show && pins.includes(action.id)).map(action =>
       <button className="ops-tool-btn" type="button" key={action.id} aria-label={action.label} aria-expanded={action.id === 'date' ? panel === 'date' : undefined} onClick={action.run}><IonIcon icon={action.icon} aria-hidden="true" /></button>)}
-    <button className="ops-actions-toggle" type="button" aria-label={t('ops.filters.actions')} aria-expanded={menuOpen} onClick={() => { setSearchOpen(false); onPanel(null); setMenuOpen(open => !open); }}><IonIcon icon={optionsOutline} aria-hidden="true" />{t('ops.filters.actions')}</button>
+    <button className="ops-actions-toggle" type="button" aria-label={t('ops.filters.actions')} aria-expanded={menuOpen} onClick={() => { setSearchOpen(false); onPanel(null); setMenuOpen(open => !open); }}><IonIcon icon={optionsOutline} aria-hidden="true" /><span className="ops-actions-toggle__label">{t('ops.filters.actions')}</span></button>
     {searchOpen ? <div className="ops-filter-popover" role="dialog" aria-label={t('ops.filters.searchAction')}>
       <div className="ops-filter-popover__bar"><h3>{t('ops.filters.searchAction')}</h3></div>
       <IonSearchbar className="ops-search" value={query} onIonInput={event => onQueryChange(event.detail.value ?? '')} placeholder={mode === 'funnel' ? t('ops.funnel.search') : t('ops.search')} debounce={200} />
