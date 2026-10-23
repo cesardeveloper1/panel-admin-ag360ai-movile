@@ -15,6 +15,13 @@ export interface ApiChatMessage {
   metadata?: {
     messageType?: string;
     attachments?: Array<{ type?: string; url?: string; name?: string }>;
+    interactive?: { kind?: string; buttonTitle?: string };
+    additional?: {
+      kind?: string;
+      incoming?: { storyMentionUrl?: string };
+      contentNotice?: { state?: string };
+    };
+    referral?: { sourceType?: string; headline?: string; body?: string; sourceId?: string };
   };
   mediaUrl?: string;
   mediaType?: string;
@@ -53,6 +60,7 @@ export function mapContactToConversation(
     unread: contact.unreadMessages ?? 0,
     botActive: contact.isActive === true,
     brandId,
+    channel: contact.channel,
   };
 }
 
@@ -68,7 +76,12 @@ export function mapApiMessageToChatMessage(
       : undefined;
   const firstAttachment = msg.metadata?.attachments?.[0];
   const mediaUrl = msg.mediaUrl || firstAttachment?.url;
-  const mediaType = msg.mediaType || firstAttachment?.type || msg.metadata?.messageType;
+  const declaredType = msg.metadata?.messageType;
+  const mediaFromType = declaredType === 'image' || declaredType === 'audio'
+    || declaredType === 'video' || declaredType === 'document'
+    ? declaredType
+    : undefined;
+  const mediaType = msg.mediaType || firstAttachment?.type || mediaFromType;
   return {
     id,
     chatId,
@@ -79,6 +92,15 @@ export function mapApiMessageToChatMessage(
     status: msg.status,
     mediaUrl,
     mediaType,
+    messageType: msg.metadata?.messageType,
+    attachments: msg.metadata?.attachments,
+    interactiveReply: msg.metadata?.interactive
+      ? { kind: msg.metadata.interactive.kind, title: msg.metadata.interactive.buttonTitle }
+      : undefined,
+    storyMentionUrl: msg.metadata?.additional?.incoming?.storyMentionUrl,
+    contentNoticeAccepted: msg.metadata?.additional?.contentNotice?.state === 'accepted',
+    referral: msg.metadata?.referral,
+    botStatusKind: msg.metadata?.additional?.kind,
     senderRaw,
   };
 }

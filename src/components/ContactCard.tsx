@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { IonIcon } from '@ionic/react';
-import { personOutline, cartOutline, cardOutline, locationOutline, logoWhatsapp, logoInstagram } from 'ionicons/icons';
+import { personOutline, cartOutline, cardOutline, locationOutline } from 'ionicons/icons';
+import { ChannelIcon, channelLabel } from './ChannelIcon';
 import type { CSSProperties } from 'react';
 import type { ContactInfo } from '../types/contact';
 import { contactProgress } from '../utils/contactPresentation';
 import { getFunnelStage, resolveContactDisplayName } from '../utils/funnelStage';
+import { interactivePreview } from '../utils/interactiveChatMarker';
 
 interface ContactCardProps {
   contact: ContactInfo;
@@ -26,10 +28,10 @@ export function ContactCard({ contact, attentionLocation, onClick, onChat, style
   const stage = getFunnelStage(contact);
   const name = resolveContactDisplayName(contact);
   const phone = contact.clientPhone?.trim() || '—';
-  const preview = contact.lastMessageContent?.trim() || t('ops.funnel.noPreview');
+  const preview = interactivePreview(contact.lastMessageContent ?? '') || t('ops.funnel.noPreview');
   const steps = contactProgress(contact);
   const icons = { name: personOutline, cart: cartOutline, delivery: cardOutline, payment: cardOutline };
-  const channel = contact.channel === 'instagram' ? 'Instagram' : contact.channel === 'messenger' ? 'Messenger' : 'WhatsApp';
+  const channel = channelLabel(contact.channel);
   const unread = contact.unreadMessages > 0 ? contact.unreadMessages : 0;
 
   return (
@@ -86,11 +88,7 @@ export function ContactCard({ contact, attentionLocation, onClick, onChat, style
             onChat();
           }}
         >
-          {contact.channel === 'messenger' ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.46 5.51 3.75 7.2V22l3.43-1.88c.9.25 1.84.38 2.82.38 5.52 0 10-4.14 10-9.25S17.52 2 12 2Zm1 12.46-2.55-2.72-4.97 2.72 5.47-5.81 2.61 2.72 4.91-2.72L13 14.46Z" />
-            </svg>
-          ) : <IonIcon icon={contact.channel === 'instagram' ? logoInstagram : logoWhatsapp} aria-hidden="true" />}
+          <ChannelIcon channel={contact.channel} />
         </button>
       ) : null}
       </div>

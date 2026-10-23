@@ -75,6 +75,24 @@ export function parseConversationHistoryPage(raw: unknown, chatId: string): {
   return { messages, nextCursor: typeof meta.nextCursor === 'string' ? meta.nextCursor : undefined };
 }
 
+/** Cursor del historial paginado: mensajes más viejos que este createdAt + id. */
+export function encodeHistoryCursor(createdAt: string, id: string): string | undefined {
+  const date = new Date(createdAt);
+  if (!id || Number.isNaN(date.getTime())) return undefined;
+  const json = JSON.stringify({ createdAt: date.toISOString(), id });
+  const bytes = new TextEncoder().encode(json);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function olderCursor(messages: ChatMessage[], limit: number): string | undefined {
+  if (messages.length < limit) return undefined;
+  const oldest = messages[0];
+  if (!oldest?.createdAt) return undefined;
+  return encodeHistoryCursor(oldest.createdAt, oldest.id);
+}
+
 export const chatService = {
   async getHistoryPage(params: {
     chatId: string;
@@ -84,16 +102,34 @@ export const chatService = {
     cursor?: string;
     limit?: number;
   }): Promise<{ messages: ChatMessage[]; nextCursor?: string }> {
-    const limit = Math.min(Math.max(params.limit ?? 40, 1), 200);
-    const qs = new URLSearchParams({ paginated: 'true', limit: String(limit) });
-    if (params.cursor) qs.set('cursor', params.cursor);
-    if (params.agentStateId?.trim()) {
-      const id = encodeURIComponent(params.agentStateId.trim());
-      const raw = await api.get(`/chats/history/agent-state/${id}?${qs.toString()}`);
-      return parseConversationHistoryPage(raw, params.chatId);
-    }
+    const limit = Math.min(Math.max(params.limit ?? 60, 1), 200);
+    const agentStateId = params.agentStateId?.trim();
     const phone = params.phone?.trim();
     const subDomain = params.subDomain?.trim();
+    if (!params.cursor) {
+      let raw: unknown;
+      if (agentStateId) {
+        raw = await api.get(
+          `/chats/history/agent-state/${encodeURIComponent(agentStateId)}?limit=${limit}`,
+        );
+      } else if (phone && subDomain) {
+        raw = await api.get(
+          `/chats/history/${encodeURIComponent(phone)}/${encodeURIComponent(subDomain)}?limit=${limit}`,
+        );
+      } else {
+        return { messages: [] };
+      }
+      const messages = parseConversationHistory(raw, params.chatId);
+      return { messages, nextCursor: olderCursor(messages, limit) };
+    }
+    const qs = new URLSearchParams({ paginated: 'true', limit: String(limit) });
+    qs.set('cursor', params.cursor);
+    if (agentStateId) {
+      const raw = await api.get(
+        `/chats/history/agent-state/${encodeURIComponent(agentStateId)}?${qs.toString()}`,
+      );
+      return parseConversationHistoryPage(raw, params.chatId);
+    }
     if (!phone || !subDomain) return { messages: [] };
     const raw = await api.get(
       `/chats/history/${encodeURIComponent(phone)}/${encodeURIComponent(subDomain)}?${qs.toString()}`,
@@ -101,10 +137,13 @@ export const chatService = {
     return parseConversationHistoryPage(raw, params.chatId);
   },
 
-  async getHistoryByAgentStateId(agentStateId: string): Promise<ChatMessage[]> {
+  async getHistoryByAgentStateId(agentStateId: string, limit = 60): Promise<ChatMessage[]> {
     const id = agentStateId.trim();
     if (!id) return [];
-    const raw = await api.get(`/chats/history/agent-state/${encodeURIComponent(id)}`);
+    const resolvedLimit = Math.min(Math.max(limit, 1), 200);
+    const raw = await api.get(
+      `/chats/history/agent-state/${encodeURIComponent(id)}?limit=${resolvedLimit}`,
+    );
     return parseConversationHistory(raw, id);
   },
 

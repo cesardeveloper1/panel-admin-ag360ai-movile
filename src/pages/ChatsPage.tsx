@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
-import { chatbubbleEllipsesOutline, logoWhatsapp } from 'ionicons/icons';
+import { logoWhatsapp } from 'ionicons/icons';
+import { ChannelIcon } from '../components/ChannelIcon';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { AppHeader } from '../components/AppHeader';
@@ -29,6 +30,9 @@ import { mapApiMessageToChatMessage, mapContactToConversation } from '../service
 import type { ChatConversation, ChatMessage } from '../types';
 import { avatarColor } from '../utils/avatarColor';
 import { ChatMessageBody } from '../utils/chatMessageFormat';
+import { interactivePreview } from '../utils/interactiveChatMarker';
+import { botStatusLabel } from '../utils/botStatusLabel';
+import { formatMessageDayLabel } from '../utils/messageDayLabel';
 
 function conversationLabel(
   chat: ChatConversation | null,
@@ -109,6 +113,15 @@ const ChatsPage: React.FC = () => {
 
   const awaitingDeepLink = hasDeepLink && !selected && !deepLinkSettled;
   const showThread = Boolean(selected) || awaitingDeepLink;
+
+  useLayoutEffect(() => {
+    document.body.classList.toggle('ag-chat-thread-open', showThread);
+    window.dispatchEvent(new CustomEvent('ag:chat-thread', { detail: { open: showThread } }));
+    return () => {
+      document.body.classList.remove('ag-chat-thread-open');
+      window.dispatchEvent(new CustomEvent('ag:chat-thread', { detail: { open: false } }));
+    };
+  }, [showThread]);
 
   const searchBootstrapped = useRef(false);
   const inboxCacheScope = useMemo(
@@ -377,15 +390,20 @@ const ChatsPage: React.FC = () => {
         }
       }
 
+      const sameAgent = Boolean(
+        current &&
+        payload.agentStateId &&
+        (payload.agentStateId === current.agentStateId || payload.agentStateId === current.id),
+      );
       const samePhone = Boolean(current && phonesMatch(payload.phoneNumber, current.phone));
       const sameBsuid =
         Boolean(current && payload.clientBsuid && current.clientBsuid) &&
         payload.clientBsuid === current?.clientBsuid;
-      const isCurrentConversation = samePhone || sameBsuid;
+      const isCurrentConversation = sameAgent || samePhone || sameBsuid;
       const updateInbox = (chats: ChatConversation[]) =>
         applyInboxMessageUpdate(
           chats,
-          payload,
+          { ...payload, messageType: payload.metadata?.messageType },
           !isCurrentConversation && payload.sender === 'user',
         );
       const updatedInbox = updateInbox(itemsRef.current);
@@ -408,6 +426,7 @@ const ChatsPage: React.FC = () => {
           createdAt: payload.createdAt || new Date().toISOString(),
           phoneNumber: payload.phoneNumber,
           clientName: payload.clientName,
+          metadata: payload.metadata,
         },
         current.id,
       );
@@ -590,21 +609,42 @@ const ChatsPage: React.FC = () => {
                           {olderMessagesLoading ? <IonSpinner name="crescent" /> : t('chats.loadOlder')}
                         </button>
                       ) : null}
-                      {messages.map((msg) => {
+                      {messages.map((msg, index) => {
+                        const dayLabel = formatMessageDayLabel(msg.createdAt, brand?.timezone);
+                        const previousDay = index > 0
+                          ? formatMessageDayLabel(messages[index - 1].createdAt, brand?.timezone)
+                          : '';
+                        const showDay = Boolean(dayLabel) && dayLabel !== previousDay;
+                        if (msg.messageType === 'bot_status') {
+                          return (
+                            <div key={msg.id} className="chat-thread-marker">
+                              {showDay ? <p className="chat-system-note">{dayLabel}</p> : null}
+                              <p className="chat-system-note">{`--🤖 ${botStatusLabel(msg)}--`}</p>
+                            </div>
+                          );
+                        }
                         const isOutbound = msg.role === 'agent' || msg.role === 'bot';
                         const body = msg.textKey ? t(msg.textKey) : msg.text ?? '';
                         return (
-                          <div
-                            key={msg.id}
-                            className={`chat-bubble-row${isOutbound ? ' chat-bubble-row--out' : ' chat-bubble-row--in'}`}
-                          >
-                            <div className={`chat-bubble chat-bubble--${msg.role}`}>
-                              <ChatMessageBody
-                                content={body}
-                                mediaUrl={msg.mediaUrl}
-                                mediaType={msg.mediaType}
-                              />
-                              <span className="chat-bubble__time">{msg.time}</span>
+                          <div key={msg.id} className="chat-thread-marker">
+                            {showDay ? <p className="chat-system-note">{dayLabel}</p> : null}
+                            <div
+                              className={`chat-bubble-row${isOutbound ? ' chat-bubble-row--out' : ' chat-bubble-row--in'}`}
+                            >
+                              <div className={`chat-bubble chat-bubble--${msg.role}`}>
+                                <ChatMessageBody
+                                  content={body}
+                                  mediaUrl={msg.mediaUrl}
+                                  mediaType={msg.mediaType}
+                                  messageType={msg.messageType}
+                                  attachments={msg.attachments}
+                                  interactiveReply={msg.interactiveReply}
+                                  storyMentionUrl={msg.storyMentionUrl}
+                                  contentNoticeAccepted={msg.contentNoticeAccepted}
+                                  referral={msg.referral}
+                                />
+                                <span className="chat-bubble__time">{msg.time}</span>
+                              </div>
                             </div>
                           </div>
                         );
@@ -655,9 +695,10 @@ const ChatsPage: React.FC = () => {
                     ) : (
                       filtered.map((chat) => {
                         const label = conversationLabel(chat, t);
-                        const preview =
+                        const preview = interactivePreview(
                           chat.lastMessage ||
-                          (chat.lastMessageKey ? t(chat.lastMessageKey) : '');
+                            (chat.lastMessageKey ? t(chat.lastMessageKey) : ''),
+                        ).replace(/\s+/g, ' ').trim();
                         return (
                           <button
                             key={chat.id}
@@ -687,7 +728,9 @@ const ChatsPage: React.FC = () => {
                                 {chat.botActive ? t('chats.botOn') : t('chats.botOff')}
                               </span>
                             </div>
-                            <IonIcon icon={chatbubbleEllipsesOutline} className="chat-row-chevron" />
+                            <span className="chat-row-channel">
+                              <ChannelIcon channel={chat.channel} />
+                            </span>
                           </button>
                         );
                       })

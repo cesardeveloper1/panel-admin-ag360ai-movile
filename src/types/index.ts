@@ -285,6 +285,7 @@ export interface ChatConversation {
   unread: number;
   botActive: boolean;
   brandId: string;
+  channel?: 'whatsapp' | 'instagram' | 'messenger';
 }
 
 export type ChatMessageRole = 'customer' | 'agent' | 'bot';
@@ -300,6 +301,13 @@ export interface ChatMessage {
   status?: string;
   mediaUrl?: string;
   mediaType?: string;
+  messageType?: string;
+  attachments?: Array<{ type?: string; url?: string; name?: string }>;
+  interactiveReply?: { kind?: string; title?: string };
+  storyMentionUrl?: string;
+  contentNoticeAccepted?: boolean;
+  referral?: { sourceType?: string; headline?: string; body?: string; sourceId?: string };
+  botStatusKind?: string;
   /** Sender crudo del backend (user | ai | device). */
   senderRaw?: 'user' | 'ai' | 'device';
 }
