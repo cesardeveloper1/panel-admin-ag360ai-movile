@@ -2371,7 +2371,23 @@ ion-page {
 }
 
 .product-list {
-  padding-bottom: 5.5rem;
+  padding-bottom: 1rem;
+}
+
+.carta-search {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--ag-line);
+  border-radius: 12px;
+  background: var(--ag-mist);
+  color: var(--ag-ink);
+  font: 600 0.875rem var(--ag-font-body);
+}
+
+ion-page[data-ag-route="/app/products"] .ag-header,
+ion-page[data-ag-route="/app/products"] .ag-header-actions,
+ion-page[data-ag-route="/app/products"] .ag-header-trailing {
+  overflow: visible;
 }
 
 .location-list {

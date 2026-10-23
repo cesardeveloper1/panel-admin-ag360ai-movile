@@ -1,6 +1,6 @@
 # PRP: Header de Carta
 
-Fecha: 2026-10-23. Estado: borrador. Patrón B. Contrato: [índice](prp-header-acciones.md).
+Fecha: 2026-10-23. Estado: implementado en local. Patrón B. Contrato: [índice](prp-header-acciones.md).
 
 ## 1. Visión
 
@@ -43,7 +43,7 @@ Ninguno nuevo. `query` e `isCreateOpen` siguen en la página.
 
 ## 9. UI
 
-Atrás, título, ícono de buscar, ícono de crear, campana. Sin FAB.
+Atrás, título «Productos», ícono de buscar e ícono de crear. Sin FAB. La campana sigue oculta en este módulo.
 
 ## 10. Riesgos
 
