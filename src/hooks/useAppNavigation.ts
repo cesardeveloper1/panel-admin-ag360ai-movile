@@ -4,12 +4,16 @@ import { useHistory } from 'react-router-dom';
 import { blurActiveElement } from '../utils/navFocus';
 import { fadeNavAnimation, instantNavAnimation } from '../utils/instantNavAnimation';
 import { syncOutletVisibility } from '../utils/syncTabVisibility';
-import { getTabRoots } from '../navigation/appRouteRegistry';
+import { nextNavigationIntent, isCurrentNavigationIntent } from '../navigation/navigationIntent';
+import { getTabRoots, normalizePath } from '../navigation/appRouteRegistry';
 
 const TAB_ROOT_PATHS = getTabRoots();
 
+
 function scheduleOutletSync(path: string, delayMs: number) {
-  window.setTimeout(() => syncOutletVisibility(path), delayMs);
+  window.setTimeout(() => {
+    if (normalizePath(window.location.pathname) === normalizePath(path.split('?')[0])) syncOutletVisibility(path.split('?')[0]);
+  }, delayMs);
 }
 
 /**
@@ -21,6 +25,7 @@ function pushTabRoot(
   path: string,
   instant = false,
 ) {
+  const intent = nextNavigationIntent();
   const anim = instant ? instantNavAnimation : fadeNavAnimation;
   const current = window.location.pathname;
   const onChild = !TAB_ROOT_PATHS.has(current);
@@ -28,6 +33,7 @@ function pushTabRoot(
   if (onChild && ionRouter.canGoBack()) {
     ionRouter.goBack(anim);
     window.setTimeout(() => {
+      if (!isCurrentNavigationIntent(intent)) return;
       if (window.location.pathname !== path) {
         ionRouter.push(path, 'root', 'replace', undefined, anim);
       }
@@ -61,6 +67,7 @@ export function useAppNavigation() {
         pushTabRoot(ionRouter, path);
         return;
       }
+      nextNavigationIntent();
       /**
        * Entrada a módulos: animación instantánea.
        * El fade + sync temprano ocultaba Pagos mientras el hijo aún tenía opacity 0 → negro.
@@ -79,6 +86,7 @@ export function useAppNavigation() {
         pushTabRoot(ionRouter, path);
         return;
       }
+      nextNavigationIntent();
       ionRouter.push(path, 'root', 'replace', undefined, instantNavAnimation);
       scheduleOutletSync(path, 30);
     },
@@ -88,6 +96,7 @@ export function useAppNavigation() {
   const back = useCallback(
     (fallbackPath?: string) => {
       blurActiveElement();
+      const intent = nextNavigationIntent();
       /**
        * Pop real del stack (no root+replace): root+replace deja Productos montado
        * con ion-page-hidden y al reentrar la URL cambia pero Pagos sigue visible.
@@ -97,6 +106,7 @@ export function useAppNavigation() {
         ionRouter.goBack(instantNavAnimation);
         const hub = fallbackPath && TAB_ROOT_PATHS.has(fallbackPath) ? fallbackPath : null;
         window.setTimeout(() => {
+          if (!isCurrentNavigationIntent(intent)) return;
           if (hub && window.location.pathname !== hub) {
             ionRouter.push(hub, 'root', 'replace', undefined, instantNavAnimation);
             scheduleOutletSync(hub, 30);

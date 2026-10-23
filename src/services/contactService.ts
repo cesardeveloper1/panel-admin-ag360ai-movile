@@ -5,6 +5,7 @@ import type {
   ListContactsParams,
 } from '../types/contact';
 import { api } from './api';
+import { parseListPage } from './listPage';
 
 const EMPTY_META: ContactListMetadata = {
   totalAgentStates: 0,
@@ -15,19 +16,20 @@ const EMPTY_META: ContactListMetadata = {
 
 function asContactArray(value: unknown): ContactInfo[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(
+  const rows = value.filter(
     (item): item is ContactInfo =>
       typeof item === 'object' && item !== null && typeof (item as ContactInfo)._id === 'string',
   );
+  if (rows.length !== value.length) throw new Error('Invalid contact identity');
+  return rows;
 }
 
 /**
  * Parsea la respuesta de GET /contact/list (misma forma anidada que el panel).
  */
 export function parseContactListResponse(raw: unknown): ContactListResult {
-  if (!raw || typeof raw !== 'object') {
-    return { data: [], meta: EMPTY_META };
-  }
+  parseListPage<ContactInfo>(raw, 1, 150, false);
+  if (!raw || typeof raw !== 'object') throw new Error('Invalid contacts response');
 
   const root = raw as Record<string, unknown>;
   const outer = root.data;
@@ -75,6 +77,7 @@ export const contactService = {
     if (params.clientType) qs.set('clientType', params.clientType);
 
     const raw = await api.get(`/contact/list?${qs.toString()}`);
+    parseListPage<ContactInfo>(raw, params.page ?? 1, params.limit ?? 150);
     return parseContactListResponse(raw);
   },
 

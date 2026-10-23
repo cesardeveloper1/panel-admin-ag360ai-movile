@@ -6,9 +6,11 @@ interface KitchenOrderCardProps {
   order: Order;
   onAction: () => void;
   style?: CSSProperties;
+  actionLabel?: string;
+  disabled?: boolean;
 }
 
-export function KitchenOrderCard({ order, onAction, style }: KitchenOrderCardProps) {
+export function KitchenOrderCard({ order, onAction, style, actionLabel, disabled }: KitchenOrderCardProps) {
   const { t } = useTranslation();
   const isCooking = order.status === 'in_kitchen';
   const isReady = order.status === 'ready';
@@ -44,8 +46,8 @@ export function KitchenOrderCard({ order, onAction, style }: KitchenOrderCardPro
           </li>
         ))}
       </ul>
-      <button type="button" className={ctaClass} onClick={onAction}>
-        {ctaLabel}
+      <button type="button" className={ctaClass} onClick={onAction} disabled={disabled}>
+        {actionLabel || ctaLabel}
       </button>
     </article>
   );

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
+import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewDidEnter } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
 import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
+import { OperationsQuickAccess } from '../components/OperationsQuickAccess';
+import { OperationsFilters, type FunnelChannel, type OperationsPanel, type OperationsScopeResult } from '../components/OperationsFilters';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { ContactCard } from '../components/ContactCard';
@@ -19,6 +21,11 @@ import type { KanbanGroup, KanbanSubState, Order } from '../types';
 import { getKanbanGroup, getKanbanSubState } from '../utils/orderKanban';
 import { groupContactsByFunnel } from '../utils/funnelStage';
 import { sortOpsQueue } from '../utils/opsQueue';
+import { orderConversationPath } from '../utils/orderConversation';
+import { readOperationsView, writeOperationsView, operationsViewGeneration } from '../navigation/operationsViewState';
+import { contactAttentionLocation } from '../utils/contactPresentation';
+import { canNavigate } from '../navigation/navigationAccess';
+import { appendPage } from '../services/listPage';
 
 type OpsMode = 'funnel' | 'orders';
 type OpsFocus = KanbanGroup;
@@ -29,106 +36,128 @@ const NEW_SUBSTATES: KanbanSubState[] = ['pre_order', 'accepted'];
 const PROCESSING_SUBSTATES: KanbanSubState[] = ['in_kitchen', 'ready', 'on_the_way'];
 const FUNNEL_FOCI: FunnelFocus[] = ['INICIAL', 'PIDIENDO', 'HUMANO', 'CON_PEDIDO'];
 
-const OPS_SEGMENT_COLORS = {
-  new: 'var(--ag-pulse)',
-  processing: 'var(--ag-hot)',
-  delivered: 'var(--ag-done)',
-} as const;
-
 const FOCUS_LABEL_KEY: Record<OpsFocus, string> = {
   new: 'ops.kanbanNew',
   processing: 'ops.kanbanProcessing',
   delivered: 'ops.kanbanDelivered',
 };
 
-const localIsoDate = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, orders, loading, setOrdersFilters, showToast } = useApp();
+  const { session, brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  const viewScope = `${authEpoch}|${brand?.id}`;
+  const initialView = useRef(readOperationsView(viewScope)).current;
+  const viewGeneration = useRef(operationsViewGeneration()).current;
+  const scrollPosition = useRef(initialView?.scrollTop ?? 0);
 
-  const [opsMode, setOpsMode] = useState<OpsMode>('funnel');
-  const [query, setQuery] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [activeFocus, setActiveFocus] = useState<OpsFocus>('new');
-  const [subFilter, setSubFilter] = useState<OpsSubFilter>('all');
-  const [funnelFocus, setFunnelFocus] = useState<FunnelFocus>('INICIAL');
-  const [dateOpen, setDateOpen] = useState(false);
-  const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
-  const [dateEnd, setDateEnd] = useState<string | null>(null);
-  const [dateClicks, setDateClicks] = useState(0);
-  const [dateMode, setDateMode] = useState<'today' | 'range'>('today');
+  const [scopeContext, setScopeContext] = useState<OperationsScopeResult | null>(null);
+  const verifiedScope = scopeContext?.scope === `${authEpoch}|${brand?.id}|${brand?.subdomain}` ? scopeContext : null;
+  const scopedBranches = verifiedScope?.data?.branches ?? [];
+  const localContext = verifiedScope?.state === 'error' ? t('ops.filters.contextError') : verifiedScope?.state !== 'ready' ? t('ops.filters.loading') :
+    scopedBranches.length === 0 ? t('ops.filters.noLocals') : scopedBranches.length === 1 ? scopedBranches[0].name :
+      scopedBranches.find(branch => branch.id === ordersFilters.branchId)?.name ?? t('ops.filters.allLocals');
+  const [opsMode, setOpsMode] = useState<OpsMode>(initialView?.mode ?? 'funnel');
+  const [query, setQuery] = useState(initialView?.query ?? ordersFilters.search ?? '');
+
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(() => orders.find(order => order.id === initialView?.selectedOrderId) ?? null);
+  const [activeFocus, setActiveFocus] = useState<OpsFocus>(initialView?.focus ?? 'new');
+  const [subFilter, setSubFilter] = useState<OpsSubFilter>(initialView?.subFilter ?? 'all');
+  const [funnelFocus, setFunnelFocus] = useState<FunnelFocus>(initialView?.funnelFocus ?? 'INICIAL');
+  const [detailSuspended, setDetailSuspended] = useState(false);
+  const pendingDetailChat = useRef<string | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; pendingDetailChat.current = null; }; }, []);
+  const [panel, setPanel] = useState<OperationsPanel | null>(null);
+  const [funnelChannel, setFunnelChannel] = useState<FunnelChannel>('all');
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(initialView?.visibleCount ?? 6);
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const lastScrollTopRef = useRef(0);
+  const detailReturnFocus = useRef<HTMLElement | null>(null);
   const searchBootstrapped = useRef(false);
 
-  const [contacts, setContacts] = useState<ContactInfo[]>([]);
+  const [contactResult, setContactResult] = useState<{ scope: string; data: ContactInfo[]; syncedAt?: number }>({ scope: '', data: [] });
   const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactsError, setContactsError] = useState(false);
+  const [contactsHasMore, setContactsHasMore] = useState(false);
+  const [contactsLoadingMore, setContactsLoadingMore] = useState(false);
+  const previousBranch = useRef(ordersFilters.branchId);
+  const contactsPage = useRef(1);
   const contactsRequestId = useRef(0);
-  const contactsCacheRef = useRef(new Map<string, ContactInfo[]>());
+  const contactsBusy = useRef(false);
+  const contactsScope = `${authEpoch}|${brand?.id}|${brand?.subdomain}|${ordersFilters.branchId ?? ''}|${query.trim()}`;
+  const contactsScopeRef = useRef(contactsScope);
+  contactsScopeRef.current = contactsScope;
+  const contacts = useMemo(() => contactResult.scope === contactsScope ? contactResult.data : [], [contactResult, contactsScope]);
+  const contactsRef = useRef(contacts);
+  contactsRef.current = contacts;
 
-  const loadContacts = useCallback(
-    async (search?: string) => {
-      const subdomain = brand?.subdomain?.trim();
-      if (!subdomain) {
-        setContacts([]);
-        return;
+  const loadContacts = useCallback(async (search?: string, more = false) => {
+    const subdomain = brand?.subdomain?.trim();
+    if (!subdomain || (more && contactsBusy.current)) return;
+    const scope = contactsScopeRef.current;
+    const requestId = ++contactsRequestId.current;
+    contactsBusy.current = true;
+    setContactsError(false);
+    if (more) setContactsLoadingMore(true);
+    else {
+      setContactsLoading(true);
+      setContactResult({ scope, data: [] });
+      setContactsHasMore(false);
+    }
+    try {
+      const page = more ? contactsPage.current + 1 : 1;
+      const result = await apiFacade.listContacts({ subDomain: subdomain, page, limit: 150,
+        branchId: ordersFilters.branchId, search: search?.trim() || undefined });
+      if (requestId !== contactsRequestId.current || scope !== contactsScopeRef.current) return;
+      const pagination = result.meta.pagination;
+      const hasMore = pagination?.hasNextPage ?? result.data.length >= 150;
+      if (more && result.data.length > 0 && !result.data.some(item => !contactsRef.current.some(old => old._id === item._id))) {
+        throw new Error('Pagination made no progress');
       }
-      const normalizedSearch = search?.trim().toLowerCase() || '';
-      const cacheKey = `${subdomain}|${normalizedSearch}`;
-      const cached = contactsCacheRef.current.get(cacheKey);
-      if (cached) {
-        setContacts(cached);
+      setContactResult(previous => ({ scope, syncedAt: Date.now(),
+        data: more ? appendPage(previous.data, result.data, item => item._id) : result.data }));
+      contactsPage.current = page;
+      setContactsHasMore(hasMore);
+    } catch {
+      if (requestId === contactsRequestId.current && scope === contactsScopeRef.current) {
+        setContactResult({ scope, data: [] });
+        setContactsHasMore(false);
+        setContactsError(true);
+      }
+    } finally {
+      if (requestId === contactsRequestId.current) {
+        contactsBusy.current = false;
         setContactsLoading(false);
+        setContactsLoadingMore(false);
       }
-      const requestId = ++contactsRequestId.current;
-      if (!cached) setContactsLoading(true);
-      try {
-        const result = await apiFacade.listContacts({
-          subDomain: subdomain,
-          page: 1,
-          limit: 150,
-          search: search?.trim() || undefined,
-        });
-        if (requestId !== contactsRequestId.current) return;
-        contactsCacheRef.current.set(cacheKey, result.data);
-        setContacts(result.data);
-      } catch {
-        if (requestId === contactsRequestId.current) {
-          if (cached) {
-            setContacts(cached);
-          } else {
-            setContacts([]);
-            showToast('ops.funnel.loadError');
-          }
-        }
-      } finally {
-        if (requestId === contactsRequestId.current) {
-          setContactsLoading(false);
-        }
-      }
-    },
-    [brand?.subdomain, showToast],
-  );
+    }
+  }, [brand?.subdomain, ordersFilters.branchId]);
 
+  // Invalidate requests/caches immediately when auth, brand or branch changes.
   useEffect(() => {
-    if (opsMode !== 'funnel') return;
-    void loadContacts(query);
-  }, [opsMode, brand?.subdomain, loadContacts]);
+    contactsRequestId.current += 1;
+    contactsBusy.current = false;
+    setContactResult({ scope: '', data: [] });
+    setContactsError(false);
+    setContactsHasMore(false);
+    setContactsLoadingMore(false);
+    if (previousBranch.current !== ordersFilters.branchId) setSelectedOrder(null);
+    previousBranch.current = ordersFilters.branchId;
+    return () => { contactsRequestId.current += 1; };
+  }, [authEpoch, brand?.id, ordersFilters.branchId]);
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
       const search = query.trim();
       if (!searchBootstrapped.current) {
         searchBootstrapped.current = true;
-        if (!search) return;
+        if (!search && opsMode === 'orders') return;
       }
       if (opsMode === 'orders') {
         void setOrdersFilters({ search: search || undefined });
@@ -137,23 +166,34 @@ const OperationsPage: React.FC = () => {
       }
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [query, opsMode, setOrdersFilters, loadContacts]);
+  }, [query, opsMode, setOrdersFilters, loadContacts, authEpoch, brand?.id]);
 
-  const applyOrdersDateFilters = useCallback(() => {
-    const today = localIsoDate(new Date());
-    const end = dateEnd ?? dateStart;
-    const isTodayOnly = dateMode === 'today' || (!dateEnd && dateStart === today);
-    void setOrdersFilters({
-      dateMode: isTodayOnly ? 'today' : 'range',
-      dateFrom: dateStart,
-      dateTo: end,
-      search: query.trim() || undefined,
-    });
-    setDateOpen(false);
-  }, [dateEnd, dateMode, dateStart, query, setOrdersFilters]);
+  useEffect(() => {
+    const reconnect = () => {
+      if (opsMode === 'funnel') void loadContacts(query);
+      else void refreshOrders();
+    };
+    window.addEventListener('online', reconnect);
+    return () => window.removeEventListener('online', reconnect);
+  }, [opsMode, query, loadContacts, refreshOrders]);
 
+  useEffect(() => {
+    const state = { mode: opsMode, query, focus: activeFocus, subFilter, funnelFocus, visibleCount,
+      selectedOrderId: selectedOrder?.id, scrollTop: scrollPosition.current };
+    writeOperationsView(viewScope, state, viewGeneration);
+    return () => writeOperationsView(viewScope, { ...state, scrollTop: scrollPosition.current }, viewGeneration);
+  }, [viewScope, viewGeneration, opsMode, query, activeFocus, subFilter, funnelFocus, visibleCount, selectedOrder?.id]);
+  useIonViewDidEnter(() => {
+    if (!pendingDetailChat.current) setDetailSuspended(false);
+    const top = readOperationsView(viewScope)?.scrollTop ?? scrollPosition.current;
+    if (isTablet) {
+      const main = pageRef.current?.querySelector('.ag-app-shell-main');
+      if (main) main.scrollTop = top;
+    } else void contentRef.current?.scrollToPoint(0, top, 0);
+  });
   const applyScrollTop = (nextScrollTopRaw: number) => {
     const nextScrollTop = Math.max(0, nextScrollTopRaw);
+    scrollPosition.current = nextScrollTop;
     const previousScrollTop = lastScrollTopRef.current;
     setIsPageScrolled(nextScrollTop > 8);
     if (Math.abs(nextScrollTop - previousScrollTop) > 4) {
@@ -196,9 +236,11 @@ const OperationsPage: React.FC = () => {
     setOpsMode(mode);
     setVisibleCount(6);
     searchBootstrapped.current = false;
+    if (mode !== 'orders') setPanel(current => current === 'date' ? null : current);
   };
 
   const filtered = useMemo(() => {
+    if (loading || ordersError || query.trim() !== (ordersFilters.search ?? '')) return [];
     const q = query.trim().toLowerCase();
     if (!q) return orders;
     return orders.filter(
@@ -206,9 +248,10 @@ const OperationsPage: React.FC = () => {
         o.id.toLowerCase().includes(q) ||
         o.orderNumber?.toLowerCase().includes(q) ||
         o.customerName?.toLowerCase().includes(q) ||
+        o.phone?.toLowerCase().includes(q) ||
         t(o.customerKey).toLowerCase().includes(q),
     );
-  }, [orders, query, t]);
+  }, [orders, query, t, loading, ordersError, ordersFilters.search]);
 
   const groups = useMemo(
     () => ({
@@ -219,17 +262,6 @@ const OperationsPage: React.FC = () => {
     [filtered],
   );
 
-  const proportionSegments = useMemo(
-    () => [
-      { id: 'new' as const, count: groups.new.length, label: t('ops.kanbanNew') },
-      { id: 'processing' as const, count: groups.processing.length, label: t('ops.kanbanProcessing') },
-      { id: 'delivered' as const, count: groups.delivered.length, label: t('ops.kanbanDelivered') },
-    ],
-    [groups, t],
-  );
-
-  const proportionTotal = proportionSegments.reduce((sum, seg) => sum + seg.count, 0);
-
   const inFocus = useMemo(() => groups[activeFocus], [groups, activeFocus]);
 
   const queueItems = useMemo(() => {
@@ -238,7 +270,11 @@ const OperationsPage: React.FC = () => {
     return sortOpsQueue(scoped);
   }, [inFocus, subFilter]);
 
-  const groupedContacts = useMemo(() => groupContactsByFunnel(contacts), [contacts]);
+  const funnelContacts = useMemo(
+    () => funnelChannel === 'all' ? contacts : contacts.filter(contact => contact.channel === funnelChannel),
+    [contacts, funnelChannel],
+  );
+  const groupedContacts = useMemo(() => groupContactsByFunnel(funnelContacts), [funnelContacts]);
 
   const funnelQueue = useMemo(
     () => groupedContacts[funnelFocus] ?? [],
@@ -268,86 +304,19 @@ const OperationsPage: React.FC = () => {
   const subChips: KanbanSubState[] =
     activeFocus === 'new' ? NEW_SUBSTATES : activeFocus === 'processing' ? PROCESSING_SUBSTATES : [];
 
-  const highlightedOperationDates = useMemo(() => {
-    const end = dateEnd ?? dateStart;
-    const cursor = new Date(`${dateStart}T12:00:00`);
-    const last = new Date(`${end}T12:00:00`);
-    const dates = [];
-    while (cursor <= last) {
-      const date = localIsoDate(cursor);
-      const boundary = date === dateStart || date === end;
-      dates.push({
-        date,
-        textColor: boundary ? '#ffffff' : '#5f2fc5',
-        backgroundColor: boundary ? '#8746ff' : 'rgba(135, 70, 255, 0.16)',
-      });
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    return dates;
-  }, [dateStart, dateEnd]);
-
-  const selectOperationDate = (rawValue: string | string[] | null | undefined) => {
-    const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
-    if (!selected) return;
-
-    if (dateMode === 'today') {
-      setDateStart(selected);
-      setDateEnd(null);
-      setDateClicks(0);
-      return;
-    }
-
-    if (dateClicks === 0 || dateEnd) {
-      setDateStart(selected);
-      setDateEnd(null);
-      setDateClicks(1);
-    } else if (selected < dateStart) {
-      setDateEnd(dateStart);
-      setDateStart(selected);
-      setDateClicks(2);
-    } else {
-      setDateEnd(selected);
-      setDateClicks(2);
-    }
-  };
-
-  const openDatePicker = () => {
-    const today = localIsoDate(new Date());
-    const isRange = Boolean(dateEnd && dateEnd !== dateStart);
-    setDateMode(isRange ? 'range' : dateStart === today ? 'today' : 'range');
-    setDateClicks(0);
-    setDateOpen(true);
-  };
-
-  const pickToday = () => {
-    const today = localIsoDate(new Date());
-    setDateMode('today');
-    setDateStart(today);
-    setDateEnd(null);
-    setDateClicks(0);
-  };
-
-  const pickRangeMode = () => {
-    setDateMode('range');
-    setDateClicks(0);
-    setDateEnd(null);
-  };
-
-  const formatOpsDate = (iso: string) => {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short' }).format(
-      new Date(y, m - 1, d),
-    );
-  };
-
   const openOrderChat = (order: Order) => {
-    setChatNavFrom(OPERATIONS_PATH);
-    if (order.phone?.trim()) {
-      go(`${CHATS_PATH}?phone=${encodeURIComponent(order.phone.trim())}`);
+    const path = orderConversationPath(order);
+    if (!path) {
+      showToast('ops.reliability.chatUnavailable');
       return;
     }
-    go(`${CHATS_PATH}?customer=${encodeURIComponent(order.customerKey)}`);
+    setChatNavFrom(OPERATIONS_PATH);
+    go(path);
   };
+
+  useEffect(() => {
+    if (ordersError) setSelectedOrder(null);
+  }, [ordersError]);
 
   const openContactChat = (contact: ContactInfo) => {
     const params = new URLSearchParams();
@@ -361,22 +330,32 @@ const OperationsPage: React.FC = () => {
     go(`${CHATS_PATH}?${params.toString()}`);
   };
 
-  const listLoading = opsMode === 'funnel' ? contactsLoading : loading;
-  const emptyKey = opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
+  const listLoading = opsMode === 'funnel' ? contactsLoading || contactResult.scope !== contactsScope : loading || query.trim() !== (ordersFilters.search ?? '');
+  const listError = opsMode === 'funnel' ? contactsError && contactResult.scope === contactsScope : ordersError && query.trim() === (ordersFilters.search ?? '');
+  const hasMore = opsMode === 'funnel' ? contactsHasMore : ordersHasMore;
+  const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : ordersLoadingMore;
+  const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
+  const lastSyncedAt = opsMode === 'funnel' ? contactResult.syncedAt : ordersLastSyncedAt;
+  const syncedTime = lastSyncedAt ? new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(lastSyncedAt) : null;
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
   return (
-    <IonPage
+    <IonPage data-ag-route="/app/operations"
       ref={pageRef}
       className={`operations-page${isPageScrolled ? ' operations-page--scrolled' : ''}${isScrollingUp ? ' operations-page--scroll-up' : ' operations-page--scroll-down'}`}
     >
       <IonContent
+        ref={contentRef}
         className="ag-screen"
         scrollEvents={!isTablet}
         onIonScroll={isTablet ? undefined : handleOperationsScroll}
       >
         <AppShell>
-          <AppHeader centeredCompact title={t('ops.title')} showAlerts />
+          <AppHeader title={t('ops.title')} subtitle={brand?.displayName} trailing={
+            <OperationsQuickAccess mode={opsMode} query={query} onQueryChange={setQuery} panel={panel} onPanel={setPanel} branchCount={verifiedScope?.state === 'ready' ? scopedBranches.length : undefined}>
+              <OperationsFilters panel={panel} onClose={() => setPanel(null)} mode={opsMode} onScopeChange={setScopeContext} funnelChannel={funnelChannel} onFunnelChannel={setFunnelChannel} />
+            </OperationsQuickAccess>
+          } />
           <div className="ag-body module-body ops-body ag-page-stack">
             <div className="ops-view-switch ag-enter" role="tablist" aria-label={t('ops.modeAria')}>
               <button
@@ -399,34 +378,20 @@ const OperationsPage: React.FC = () => {
               </button>
             </div>
 
-            {opsMode === 'orders' ? (
-              <button
-                type="button"
-                className="reports-range-summary ag-enter"
-                onClick={openDatePicker}
-                aria-label={t('ops.selectDate')}
-              >
-                {dateEnd
-                  ? `${dateStart.slice(8)}–${dateEnd.slice(8)}`
-                  : dateStart === localIsoDate(new Date())
-                    ? t('ops.dateToday')
-                    : dateStart.slice(8)}
-              </button>
-            ) : null}
+            <p className="ops-applied-context"><span aria-hidden="true">{verifiedScope?.state === 'ready' && scopedBranches.length === 0 ? '⌖̸ ' : ''}</span>{localContext}</p>
+            {opsMode === 'orders' ? <p className="ops-applied-context">{t(`ops.filters.${ordersFilters.dateMode}`)}{ordersFilters.source ? ` · ${ordersFilters.source === 2 ? t('ops.filters.digitalMenu') : ({ 1: 'WhatsApp', 5: 'Instagram', 6: 'Messenger' } as Record<number, string>)[ordersFilters.source]}` : ''}</p> : funnelChannel !== 'all' ? <p className="ops-applied-context">{funnelChannel === 'whatsapp' ? 'WhatsApp' : funnelChannel === 'instagram' ? 'Instagram' : 'Messenger'}</p> : null}
 
-            <div className="ops-sticky-controls ag-enter">
-              <IonSearchbar
-                className="ops-search"
-                value={query}
-                onIonInput={(e) => setQuery(e.detail.value ?? '')}
-                placeholder={
-                  opsMode === 'funnel' ? t('ops.funnel.search') : t('ops.search')
-                }
-                debounce={200}
-              />
-            </div>
-
-            {opsMode === 'funnel' ? (
+            {!listError && !listLoading ? <p className="ops-loaded-note">{t('ops.reliability.loadedCounts')}{syncedTime ? ` · ${t('ops.reliability.syncedAt', { time: syncedTime })}` : ''}</p> : null}
+            {listError ? (
+              <section className="ops-service-error" role="alert">
+                <h2>{t('ops.reliability.unavailable')}</h2>
+                <p>{t('ops.reliability.retryDescription')}</p>
+                <button type="button" className="ag-btn ag-btn--primary" onClick={() => {
+                  if (opsMode === 'funnel') void loadContacts(query);
+                  else void refreshOrders();
+                }}>{t('ops.reliability.retry')}</button>
+              </section>
+            ) : opsMode === 'funnel' ? (
               <>
                 <div
                   className="ops-summary ops-summary--funnel ag-enter"
@@ -470,6 +435,7 @@ const OperationsPage: React.FC = () => {
                         <ContactCard
                           key={contact._id}
                           contact={contact}
+                          attentionLocation={contactAttentionLocation(contact, verifiedScope?.data)}
                           onClick={() => openContactChat(contact)}
                           onChat={() => openContactChat(contact)}
                         />
@@ -529,36 +495,6 @@ const OperationsPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="ops-proportion ag-enter" aria-hidden={proportionTotal === 0}>
-                  <div
-                    className="ops-proportion-bar"
-                    role="group"
-                    aria-label={t('ops.proportionAria', { total: proportionTotal })}
-                  >
-                    {proportionTotal > 0 ? (
-                      proportionSegments.map((seg) =>
-                        seg.count > 0 ? (
-                          <button
-                            key={seg.id}
-                            type="button"
-                            className={`ops-proportion-segment ops-proportion-segment--btn${activeFocus === seg.id ? ' is-active' : ''}`}
-                            style={{
-                              flex: seg.count,
-                              background: OPS_SEGMENT_COLORS[seg.id],
-                            }}
-                            title={`${seg.label}: ${seg.count}`}
-                            aria-label={`${seg.label}: ${seg.count}`}
-                            aria-pressed={activeFocus === seg.id}
-                            onClick={() => selectFocus(seg.id)}
-                          />
-                        ) : null,
-                      )
-                    ) : (
-                      <span className="ops-proportion-segment ops-proportion-segment--empty" />
-                    )}
-                  </div>
-                </div>
-
                 {subChips.length > 0 ? (
                   <div
                     className="ops-subfilter ag-enter"
@@ -612,7 +548,15 @@ const OperationsPage: React.FC = () => {
                         <OrderCard
                           key={order.id}
                           order={order}
-                          onClick={() => setSelectedOrder(order)}
+                          brand={brand}
+                          showBranch={!ordersFilters.branchId && (brand?.locations ?? 0) > 1}
+                          canChangeStatus={canChangeOrders}
+                          mutation={orderMutations[order.id]}
+                          onAdvance={() => advanceOrder(order.id, order.status)}
+                          onClick={() => {
+                            detailReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+                            setSelectedOrder(order);
+                          }}
                           onChat={() => openOrderChat(order)}
                         />
                       ))
@@ -630,57 +574,39 @@ const OperationsPage: React.FC = () => {
                 </section>
               </>
             )}
+            {!listError && !listLoading && hasMore ? (
+              <button type="button" className="ag-btn ops-load-more" disabled={loadingMore} onClick={() => {
+                if (opsMode === 'funnel') void loadContacts(query, true);
+                else void loadMoreOrders();
+              }}>{t(loadingMore ? 'ops.reliability.loadingMore' : 'ops.reliability.loadMore')}</button>
+            ) : null}
           </div>
 
           <OrderDetailSheet
-            order={selectedOrder}
-            open={!!selectedOrder}
-            onClose={() => setSelectedOrder(null)}
+            order={ordersError ? null : orders.find(item => item.id === selectedOrder?.id) ?? selectedOrder}
+            open={!ordersError && !!selectedOrder && !detailSuspended}
+            onChat={canNavigate(session, CHATS_PATH) && selectedOrder ? () => {
+              const path = orderConversationPath(selectedOrder);
+              if (!path) { showToast('ops.reliability.chatUnavailable'); return; }
+              pendingDetailChat.current = path;
+              setDetailSuspended(true);
+            } : undefined}
+            onClose={() => {
+              if (!mounted.current) return;
+              const destination = pendingDetailChat.current;
+              if (destination) {
+                pendingDetailChat.current = null;
+                setChatNavFrom(OPERATIONS_PATH);
+                go(destination);
+                return;
+              }
+              setDetailSuspended(false);
+              setSelectedOrder(null);
+              const target = detailReturnFocus.current;
+              if (target?.isConnected) target.focus({ preventScroll: true });
+            }}
           />
 
-          <IonModal isOpen={dateOpen} onDidDismiss={() => setDateOpen(false)} className="ops-date-modal">
-            <div className="ops-date-picker">
-              <div className="ops-date-picker__modes" role="tablist" aria-label={t('ops.selectDate')}>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={dateMode === 'today'}
-                  className={dateMode === 'today' ? 'active' : ''}
-                  onClick={pickToday}
-                >
-                  {t('ops.dateToday')}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={dateMode === 'range'}
-                  className={dateMode === 'range' ? 'active' : ''}
-                  onClick={pickRangeMode}
-                >
-                  {t('ops.dateRange')}
-                </button>
-              </div>
-
-              <div className="ops-date-picker__selection" aria-live="polite">
-                {dateMode === 'today' || !dateEnd || dateEnd === dateStart
-                  ? formatOpsDate(dateStart)
-                  : `${formatOpsDate(dateStart)} — ${formatOpsDate(dateEnd)}`}
-              </div>
-
-              <IonDatetime
-                presentation="date"
-                locale="es-PE"
-                value={dateEnd ?? dateStart}
-                highlightedDates={dateMode === 'range' ? highlightedOperationDates : []}
-                max={localIsoDate(new Date())}
-                onIonChange={(event) => selectOperationDate(event.detail.value)}
-              />
-
-              <button className="ops-date-picker__apply" type="button" onClick={applyOrdersDateFilters}>
-                {t('ops.dateApply')}
-              </button>
-            </div>
-          </IonModal>
         </AppShell>
       </IonContent>
     </IonPage>

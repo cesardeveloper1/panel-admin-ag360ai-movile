@@ -131,6 +131,20 @@
         "PIDIENDO": "Ordering",
         "HUMANO": "Human",
         "CON_PEDIDO": "With order"
+      },
+      "progress": {
+        "label": "Information collected in this conversation",
+        "fields": {
+          "name": "Name",
+          "cart": "Cart",
+          "delivery": "Fulfillment",
+          "payment": "Payment method"
+        },
+        "states": {
+          "received": "Received",
+          "pending": "Pending",
+          "unknown": "No information"
+        }
       }
     },
     "modeOperator": "Operator",
@@ -164,7 +178,70 @@
     "focusAria": "Operations focus",
     "queueAria": "{{focus}} queue",
     "queueEmpty": "No orders here",
-    "collapseThree": "Collapse 3 cards"
+    "collapseThree": "Collapse 3 cards",
+    "reliability": {
+      "noInformation": "No information",
+      "chatUnavailable": "This order has no available linked conversation.",
+      "unavailable": "Service unavailable",
+      "retryDescription": "We could not update this list. Cards were hidden to prevent acting on outdated data.",
+      "retry": "Retry",
+      "noMatches": "No matches in this view.",
+      "loadedCounts": "Counts reflect loaded items.",
+      "loadMore": "Load more results",
+      "loadingMore": "Loading results...",
+      "syncedAt": "Updated {{time}}"
+    },
+    "actions": {
+      "saving": "Saving...",
+      "details": "Details",
+      "created": "Created {{time}}",
+      "branchUnknown": "Branch information unavailable",
+      "changed": "The order changed. Review its current status before continuing.",
+      "failed": "Could not confirm the change. Retry to check its status before sending again.",
+      "loadingDetail": "Loading details...",
+      "detailFailed": "Could not load order details.",
+      "address": "Address",
+      "notes": "Notes",
+      "noItems": "Detailed items are unavailable for this order.",
+      "readOnly": "Read only",
+      "dispatch": "Mark on the way"
+    },
+    "filters": {
+      "title": "Filters",
+      "cancel": "Close",
+      "local": "Attention / fulfillment location",
+      "loading": "Loading authorized scope…",
+      "contextError": "Your scope could not be verified. Retry before applying filters.",
+      "noLocals": "No locations available",
+      "allLocals": "All my locations",
+      "date": "Order date",
+      "all": "All dates",
+      "today": "Today",
+      "last12Hours": "Last 12 hours",
+      "day": "Day",
+      "range": "Range",
+      "from": "From",
+      "to": "To",
+      "channel": "Sales channel",
+      "allChannels": "All channels",
+      "digitalMenu": "Digital menu",
+      "connections": "WhatsApp connections",
+      "connectionMeaning": "Receiving number. Separate from fulfillment location; this list is informational.",
+      "numberUnavailable": "Number unavailable",
+      "shared": "Shared",
+      "clear": "Clear",
+      "searchAction": "Search",
+      "filterLocal": "Filter by location",
+      "filterDate": "Filter by date",
+      "actions": "Actions",
+      "alwaysOn": "Fixed",
+      "quickAccess": "Quick access",
+      "pin": "Pin",
+      "quickMessages": "Quick messages",
+      "loadingMessages": "Loading messages…",
+      "noMessages": "No active quick messages",
+      "messagesHint": "Review active messages. To send one, open a chat and choose a quick message in the composer."
+    }
   },
   "kitchen": {
     "title": "Kitchen mode",
@@ -233,11 +310,18 @@
     "channel": {
       "whatsapp": "WA",
       "web": "Web",
-      "phone": "Phone"
+      "phone": "Phone",
+      "instagram": "Instagram",
+      "messenger": "Messenger",
+      "manual": "Manual order",
+      "unknown": "Channel not specified"
     },
     "motorized": "Driver on the way",
     "consumo": "Order total",
-    "item": "Item"
+    "item": "Item",
+    "dine_in": "Dine in",
+    "scheduled": "Scheduled",
+    "unknown": "Fulfillment not specified"
   },
   "notifications": {
     "title": "Alerts",

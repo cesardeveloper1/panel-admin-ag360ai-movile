@@ -74,11 +74,10 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
 };
 
 export function branded(Page: React.ComponentType): React.FC {
-  const Wrapped: React.FC = () => (
-    <RequireBrand>
-      <Page />
-    </RequireBrand>
-  );
+  const Wrapped: React.FC = () => {
+    const { authEpoch, brand } = useApp();
+    return <RequireBrand><Page key={`${authEpoch}|${brand?.id ?? ''}`} /></RequireBrand>;
+  };
   Wrapped.displayName = `Branded(${Page.displayName ?? Page.name ?? 'Page'})`;
   return Wrapped;
 }

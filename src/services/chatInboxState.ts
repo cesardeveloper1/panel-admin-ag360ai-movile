@@ -10,6 +10,8 @@ export interface InboxMessageUpdate {
 
 const sessionInboxCache = new Map<string, ChatConversation[]>();
 
+export function clearChatInboxCache(): void { sessionInboxCache.clear(); }
+
 function phonesMatch(a?: string | null, b?: string | null): boolean {
   if (!a || !b) return false;
   const left = a.replace(/\D/g, '');

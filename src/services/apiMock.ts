@@ -605,9 +605,9 @@ export const apiMock = {
     await delay();
     if (!password.trim()) return null;
     if (email.includes('soporte')) {
-      return { email, nameKey: 'users.laura', initials: 'SA', role: 'superadmin' };
+      return { email, nameKey: 'users.laura', initials: 'SA', role: 'superadmin', capabilities: { changeOrderStatus: true } };
     }
-    return { email, nameKey: 'users.maria', initials: 'MG', role: 'owner' };
+    return { email, nameKey: 'users.maria', initials: 'MG', role: 'owner', capabilities: { changeOrderStatus: true } };
   },
 
   async getBrands() {

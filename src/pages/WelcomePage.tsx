@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
 import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
+import { navigationLandingPath } from '../navigation/navigationAccess';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';
@@ -101,7 +102,7 @@ const WelcomePage: React.FC = () => {
         const ok = await selectBrandAndLoad(selected);
         if (ok) {
           setLeaving(true);
-          goRoot('/app/agilito', 'replace', true);
+          goRoot(navigationLandingPath(session), 'replace', true);
         } else {
           showToast('toast.brandLoading');
           autoStartedRef.current = false;
@@ -111,7 +112,7 @@ const WelcomePage: React.FC = () => {
         setSelectingId(null);
       }
     },
-    [brandLoading, goRoot, selectBrandAndLoad, showToast],
+    [brandLoading, goRoot, selectBrandAndLoad, session, showToast],
   );
 
   useEffect(() => {
