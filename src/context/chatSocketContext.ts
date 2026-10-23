@@ -10,6 +10,7 @@ export interface ChatNewMessagePayload {
   clientBsuid?: string;
   content?: string;
   sender?: string;
+  isNewConversation?: boolean;
   createdAt?: string;
   clientName?: string;
   metadata?: {

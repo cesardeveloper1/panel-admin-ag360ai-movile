@@ -436,6 +436,17 @@
     "orderUpdateError": "No se pudo actualizar el pedido",
     "socketNewOrder": "Nuevo pedido recibido"
   },
+  "cues": {
+    "orderTitle": "Nuevo pedido",
+    "orderStatusTitle": "Pedido actualizado",
+    "orderBody": "Pedido {{number}}",
+    "chatTitle": "Nuevo chat",
+    "humanTitle": "Atención de una persona",
+    "chatBody": "Mensaje de {{name}}",
+    "chatBodyPlain": "Mensaje de un cliente",
+    "complaintTitle": "Reclamo",
+    "complaintBody": "Un cliente dejó un reclamo"
+  },
   "users": {
     "maria": "María González",
     "laura": "Laura Soporte"

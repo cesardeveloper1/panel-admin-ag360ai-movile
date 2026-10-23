@@ -402,6 +402,17 @@
     "orderUpdateError": "Could not update order",
     "socketNewOrder": "New order received"
   },
+  "cues": {
+    "orderTitle": "New order",
+    "orderStatusTitle": "Order updated",
+    "orderBody": "Order {{number}}",
+    "chatTitle": "New chat",
+    "humanTitle": "A person needs attention",
+    "chatBody": "Message from {{name}}",
+    "chatBodyPlain": "Message from a customer",
+    "complaintTitle": "Complaint",
+    "complaintBody": "A customer left a complaint"
+  },
   "users": {
     "maria": "María González",
     "laura": "Laura Support"
