@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonDatetime, IonIcon, IonModal, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
+import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
 import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
+import { OperationsQuickAccess } from '../components/OperationsQuickAccess';
+import { OperationsFilters, type OperationsScopeResult } from '../components/OperationsFilters';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { ContactCard } from '../components/ContactCard';
@@ -31,20 +33,11 @@ const NEW_SUBSTATES: KanbanSubState[] = ['pre_order', 'accepted'];
 const PROCESSING_SUBSTATES: KanbanSubState[] = ['in_kitchen', 'ready', 'on_the_way'];
 const FUNNEL_FOCI: FunnelFocus[] = ['INICIAL', 'PIDIENDO', 'HUMANO', 'CON_PEDIDO'];
 
-const OPS_SEGMENT_COLORS = {
-  new: 'var(--ag-pulse)',
-  processing: 'var(--ag-hot)',
-  delivered: 'var(--ag-done)',
-} as const;
-
 const FOCUS_LABEL_KEY: Record<OpsFocus, string> = {
   new: 'ops.kanbanNew',
   processing: 'ops.kanbanProcessing',
   delivered: 'ops.kanbanDelivered',
 };
-
-const localIsoDate = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -53,17 +46,20 @@ const OperationsPage: React.FC = () => {
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
 
+  const [scopeContext, setScopeContext] = useState<OperationsScopeResult | null>(null);
+  const verifiedScope = scopeContext?.scope === `${authEpoch}|${brand?.id}|${brand?.subdomain}` ? scopeContext : null;
+  const scopedBranches = verifiedScope?.data?.branches ?? [];
+  const localContext = verifiedScope?.state === 'error' ? t('ops.filters.contextError') : verifiedScope?.state !== 'ready' ? t('ops.filters.loading') :
+    scopedBranches.length === 0 ? t('ops.filters.noLocals') : scopedBranches.length === 1 ? scopedBranches[0].name :
+      scopedBranches.find(branch => branch.id === ordersFilters.branchId)?.name ?? t('ops.filters.allLocals');
   const [opsMode, setOpsMode] = useState<OpsMode>('funnel');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(ordersFilters.search ?? '');
+  useEffect(() => { setQuery(''); setDateOpen(false); }, [authEpoch, brand?.id]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeFocus, setActiveFocus] = useState<OpsFocus>('new');
   const [subFilter, setSubFilter] = useState<OpsSubFilter>('all');
   const [funnelFocus, setFunnelFocus] = useState<FunnelFocus>('INICIAL');
   const [dateOpen, setDateOpen] = useState(false);
-  const [dateStart, setDateStart] = useState(() => localIsoDate(new Date()));
-  const [dateEnd, setDateEnd] = useState<string | null>(null);
-  const [dateClicks, setDateClicks] = useState(0);
-  const [dateMode, setDateMode] = useState<'today' | 'range'>('today');
   const [isPageScrolled, setIsPageScrolled] = useState(false);
   const [isScrollingUp, setIsScrollingUp] = useState(true);
   const [visibleCount, setVisibleCount] = useState(6);
@@ -166,19 +162,6 @@ const OperationsPage: React.FC = () => {
     return () => window.removeEventListener('online', reconnect);
   }, [opsMode, query, loadContacts, refreshOrders]);
 
-  const applyOrdersDateFilters = useCallback(() => {
-    const today = localIsoDate(new Date());
-    const end = dateEnd ?? dateStart;
-    const isTodayOnly = dateMode === 'today' || (!dateEnd && dateStart === today);
-    void setOrdersFilters({
-      dateMode: isTodayOnly ? 'today' : 'range',
-      dateFrom: dateStart,
-      dateTo: end,
-      search: query.trim() || undefined,
-    });
-    setDateOpen(false);
-  }, [dateEnd, dateMode, dateStart, query, setOrdersFilters]);
-
   const applyScrollTop = (nextScrollTopRaw: number) => {
     const nextScrollTop = Math.max(0, nextScrollTopRaw);
     const previousScrollTop = lastScrollTopRef.current;
@@ -248,17 +231,6 @@ const OperationsPage: React.FC = () => {
     [filtered],
   );
 
-  const proportionSegments = useMemo(
-    () => [
-      { id: 'new' as const, count: groups.new.length, label: t('ops.kanbanNew') },
-      { id: 'processing' as const, count: groups.processing.length, label: t('ops.kanbanProcessing') },
-      { id: 'delivered' as const, count: groups.delivered.length, label: t('ops.kanbanDelivered') },
-    ],
-    [groups, t],
-  );
-
-  const proportionTotal = proportionSegments.reduce((sum, seg) => sum + seg.count, 0);
-
   const inFocus = useMemo(() => groups[activeFocus], [groups, activeFocus]);
 
   const queueItems = useMemo(() => {
@@ -296,78 +268,6 @@ const OperationsPage: React.FC = () => {
 
   const subChips: KanbanSubState[] =
     activeFocus === 'new' ? NEW_SUBSTATES : activeFocus === 'processing' ? PROCESSING_SUBSTATES : [];
-
-  const highlightedOperationDates = useMemo(() => {
-    const end = dateEnd ?? dateStart;
-    const cursor = new Date(`${dateStart}T12:00:00`);
-    const last = new Date(`${end}T12:00:00`);
-    const dates = [];
-    while (cursor <= last) {
-      const date = localIsoDate(cursor);
-      const boundary = date === dateStart || date === end;
-      dates.push({
-        date,
-        textColor: boundary ? '#ffffff' : '#5f2fc5',
-        backgroundColor: boundary ? '#8746ff' : 'rgba(135, 70, 255, 0.16)',
-      });
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    return dates;
-  }, [dateStart, dateEnd]);
-
-  const selectOperationDate = (rawValue: string | string[] | null | undefined) => {
-    const selected = (Array.isArray(rawValue) ? rawValue[0] : rawValue)?.slice(0, 10);
-    if (!selected) return;
-
-    if (dateMode === 'today') {
-      setDateStart(selected);
-      setDateEnd(null);
-      setDateClicks(0);
-      return;
-    }
-
-    if (dateClicks === 0 || dateEnd) {
-      setDateStart(selected);
-      setDateEnd(null);
-      setDateClicks(1);
-    } else if (selected < dateStart) {
-      setDateEnd(dateStart);
-      setDateStart(selected);
-      setDateClicks(2);
-    } else {
-      setDateEnd(selected);
-      setDateClicks(2);
-    }
-  };
-
-  const openDatePicker = () => {
-    const today = localIsoDate(new Date());
-    const isRange = Boolean(dateEnd && dateEnd !== dateStart);
-    setDateMode(isRange ? 'range' : dateStart === today ? 'today' : 'range');
-    setDateClicks(0);
-    setDateOpen(true);
-  };
-
-  const pickToday = () => {
-    const today = localIsoDate(new Date());
-    setDateMode('today');
-    setDateStart(today);
-    setDateEnd(null);
-    setDateClicks(0);
-  };
-
-  const pickRangeMode = () => {
-    setDateMode('range');
-    setDateClicks(0);
-    setDateEnd(null);
-  };
-
-  const formatOpsDate = (iso: string) => {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short' }).format(
-      new Date(y, m - 1, d),
-    );
-  };
 
   const openOrderChat = (order: Order) => {
     setChatNavFrom(OPERATIONS_PATH);
@@ -415,7 +315,7 @@ const OperationsPage: React.FC = () => {
         onIonScroll={isTablet ? undefined : handleOperationsScroll}
       >
         <AppShell>
-          <AppHeader centeredCompact title={t('ops.title')} showAlerts />
+          <AppHeader title={t('ops.title')} subtitle={brand?.displayName} trailing={<OperationsQuickAccess onFilters={() => setDateOpen(true)} />} />
           <div className="ag-body module-body ops-body ag-page-stack">
             <div className="ops-view-switch ag-enter" role="tablist" aria-label={t('ops.modeAria')}>
               <button
@@ -438,20 +338,8 @@ const OperationsPage: React.FC = () => {
               </button>
             </div>
 
-            {opsMode === 'orders' ? (
-              <button
-                type="button"
-                className="reports-range-summary ag-enter"
-                onClick={openDatePicker}
-                aria-label={t('ops.selectDate')}
-              >
-                {dateEnd
-                  ? `${dateStart.slice(8)}–${dateEnd.slice(8)}`
-                  : dateStart === localIsoDate(new Date())
-                    ? t('ops.dateToday')
-                    : dateStart.slice(8)}
-              </button>
-            ) : null}
+            <p className="ops-applied-context"><span aria-hidden="true">{verifiedScope?.state === 'ready' && scopedBranches.length === 0 ? '⌖̸ ' : ''}</span>{localContext}</p>
+            {opsMode === 'orders' ? <p className="ops-applied-context">{t(`ops.filters.${ordersFilters.dateMode}`)}{ordersFilters.source ? ` · ${ordersFilters.source === 2 ? t('ops.filters.digitalMenu') : ({ 1: 'WhatsApp', 5: 'Instagram', 6: 'Messenger' } as Record<number, string>)[ordersFilters.source]}` : ''}</p> : null}
 
             <div className="ops-sticky-controls ag-enter">
               <IonSearchbar
@@ -578,36 +466,6 @@ const OperationsPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="ops-proportion ag-enter" aria-hidden={proportionTotal === 0}>
-                  <div
-                    className="ops-proportion-bar"
-                    role="group"
-                    aria-label={t('ops.proportionAria', { total: proportionTotal })}
-                  >
-                    {proportionTotal > 0 ? (
-                      proportionSegments.map((seg) =>
-                        seg.count > 0 ? (
-                          <button
-                            key={seg.id}
-                            type="button"
-                            className={`ops-proportion-segment ops-proportion-segment--btn${activeFocus === seg.id ? ' is-active' : ''}`}
-                            style={{
-                              flex: seg.count,
-                              background: OPS_SEGMENT_COLORS[seg.id],
-                            }}
-                            title={`${seg.label}: ${seg.count}`}
-                            aria-label={`${seg.label}: ${seg.count}`}
-                            aria-pressed={activeFocus === seg.id}
-                            onClick={() => selectFocus(seg.id)}
-                          />
-                        ) : null,
-                      )
-                    ) : (
-                      <span className="ops-proportion-segment ops-proportion-segment--empty" />
-                    )}
-                  </div>
-                </div>
-
                 {subChips.length > 0 ? (
                   <div
                     className="ops-subfilter ag-enter"
@@ -705,49 +563,7 @@ const OperationsPage: React.FC = () => {
             }}
           />
 
-          <IonModal isOpen={dateOpen} onDidDismiss={() => setDateOpen(false)} className="ops-date-modal">
-            <div className="ops-date-picker">
-              <div className="ops-date-picker__modes" role="tablist" aria-label={t('ops.selectDate')}>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={dateMode === 'today'}
-                  className={dateMode === 'today' ? 'active' : ''}
-                  onClick={pickToday}
-                >
-                  {t('ops.dateToday')}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={dateMode === 'range'}
-                  className={dateMode === 'range' ? 'active' : ''}
-                  onClick={pickRangeMode}
-                >
-                  {t('ops.dateRange')}
-                </button>
-              </div>
-
-              <div className="ops-date-picker__selection" aria-live="polite">
-                {dateMode === 'today' || !dateEnd || dateEnd === dateStart
-                  ? formatOpsDate(dateStart)
-                  : `${formatOpsDate(dateStart)} — ${formatOpsDate(dateEnd)}`}
-              </div>
-
-              <IonDatetime
-                presentation="date"
-                locale="es-PE"
-                value={dateEnd ?? dateStart}
-                highlightedDates={dateMode === 'range' ? highlightedOperationDates : []}
-                max={localIsoDate(new Date())}
-                onIonChange={(event) => selectOperationDate(event.detail.value)}
-              />
-
-              <button className="ops-date-picker__apply" type="button" onClick={applyOrdersDateFilters}>
-                {t('ops.dateApply')}
-              </button>
-            </div>
-          </IonModal>
+          <OperationsFilters onScopeChange={setScopeContext} open={dateOpen} onClose={() => setDateOpen(false)} mode={opsMode} />
         </AppShell>
       </IonContent>
     </IonPage>

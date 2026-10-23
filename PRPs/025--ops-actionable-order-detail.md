@@ -91,7 +91,7 @@ Registrar respuesta y responsable antes de la tarea dependiente; avanzar las tar
 
 ## Registro de ejecución — 2026-10-23
 
-PRP 024 comiteado como `3f9eaa6`. PRP 025 implementado en la misma rama `feat/mobile-ops-data-reliability`; estos cambios quedan sin commit, push ni despliegue.
+PRP 024 comiteado como `3f9eaa6`. PRP 025 implementado en la misma rama `feat/mobile-ops-data-reliability`; comiteado posteriormente como `9d99027` por instrucción del usuario. Sin push ni despliegue.
 
 ### Implementación
 

@@ -492,8 +492,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.setItem(BRAND_KEY, next.id);
           sessionStorage.removeItem(PICK_BRAND_KEY);
 
+          // Filters belong to the selected brand; never reuse another brand's local IDs.
+          const initialFilters = defaultOrdersFilters(new Date(), next.timezone);
+          ordersFiltersRef.current = initialFilters;
+          setOrdersFiltersState(initialFilters);
           setLoading(true);
-          await loadOrdersForBrand(next, ordersFiltersRef.current);
+          await loadOrdersForBrand(next, initialFilters);
           // loadOrdersForBrand owns request sequencing; brand/session changes invalidate it.
           if (brandSelectionId.current !== selectionId) return false;
           setBrandLoading(false);

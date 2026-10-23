@@ -43,4 +43,23 @@ describe('buildOrdersQueryString', () => {
     expect(params.get('dateTo')).toBe('2026-08-10');
     expect(params.get('search')).toBe('diego');
   });
+  it('all dates clears hidden date limits, retaining real channel and authorized branch filters', () => {
+    const params = new URLSearchParams(buildOrdersQueryString({ ...brand, timezone: 'America/Lima' }, {
+      dateMode: 'all', dateFrom: '2020-01-01', dateTo: '2020-01-02', source: 2, branchId: 'authorized-local',
+    }));
+    expect(params.has('dateFrom')).toBe(false);
+    expect(params.has('dateTo')).toBe(false);
+    expect(params.has('last12Hours')).toBe(false);
+    expect(params.get('sources')).toBe('2');
+    expect(params.get('branchId')).toBe('authorized-local');
+    expect(params.get('timezone')).toBe('America/Lima');
+  });
+  it('a selected day ignores a stale range end and allows future orders', () => {
+    const params = new URLSearchParams(buildOrdersQueryString(brand, {
+      dateMode: 'day', dateFrom: '2030-12-01', dateTo: '2020-01-01',
+    }));
+    expect(params.get('dateFrom')).toBe('2030-12-01');
+    expect(params.get('dateTo')).toBe('2030-12-01');
+  });
+
 });

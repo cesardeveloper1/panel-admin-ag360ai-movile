@@ -1,6 +1,6 @@
 # PRP 26: Operaciones: encabezado compacto, filtros y alcance por local
 
-Estado: Draft · Fecha: 2026-10-23 · Versión: 1.0 · Patrón B (mejora integrada de producto).
+Estado: In progress · Fecha: 2026-10-23 · Versión: 1.0 · Patrón B (mejora integrada de producto).
 Repositorio: panel-admin-ag360ai-movile. Integración: develop.
 Dependencias: 024; integrar tarjetas de 025 sin duplicar controles.
 
@@ -88,3 +88,30 @@ La creación del documento no autoriza ejecutar este PRP, publicar, fusionar ni 
 Ingeniería: verificar filtros admitidos por endpoint antes de habilitarlos. Producto: herramientas fijadas iniciales se validan con prototipo; propuesta búsqueda/filtros y creación contextual, sin llenar el header.
 Registrar respuesta y responsable antes de la tarea dependiente; avanzar las tareas independientes sin bloquear todo el PRP.
 
+
+## Registro de ejecución · 2026-10-23
+
+Base anterior comiteada: PRP 025 en `9d99027`, misma rama `feat/mobile-ops-data-reliability`.
+
+Implementado en esta etapa:
+- Encabezado con marca, accesos rápidos fijables (filtros, chats, alertas) y una búsqueda. Sin duplicar el menú anterior de notificaciones.
+- Retirada la barra proporcional redundante.
+- Hoja de filtros con borrador, cerrar sin aplicar, limpiar y aplicar. Fecha: todas/hoy/12h/día/rango; sin máximo hoy. Canal de pedidos con Carta digital (`sources=2`), WhatsApp, Instagram y Messenger.
+- Consulta de `/operations/context` con invalidación por sesión/marca y rechazo de contexto de otra marca. Un local identificado, varios seleccionables, vacío/carga/error diferenciados. Aplicación bloqueada si no se verifica el alcance.
+- Números WhatsApp autorizados informativos, separados explícitamente del local de entrega. No se inventa un filtro de cuenta sobre el endpoint legacy `/orders`.
+- Interruptor global oculto para manager/worker/delivery, ya que el móvil aún no verifica capacidad y alcance de mutación por cuenta. No se convierte un control de marca en uno local.
+- Reinicio de filtros al seleccionar marca; fechas y canal aplicados visibles en pedidos.
+
+Contratos verificados en ssgg: `OperationsService.context`, `OperationsScopeService.resolve`, `OrderFoodService.buildMatchFromFilters`. `/orders` soporta sources/branchId/timezone/fechas, pero esta integración no proporciona filtro receptor por cuenta. El contexto no implica permisos de mutación IA.
+
+Integración adicional:
+- Mensajes rápidos integrado como acceso fijable: consulta con carga/error/reintento; envío conserva el compositor de chat existente. No agrega otra pestaña.
+
+Limitaciones de integración:
+- Controles IA omitidos en Operaciones al no contar con capacidades verificadas por cuenta en el contrato de sesión móvil. El filtrado de conversaciones por canal/cuenta requiere integrar la lectura v3 nueva; no se ofrece sobre `/contact/list` ni se simula filtrando sólo la página cargada.
+- Contexto local aplicado identificado también fuera de la hoja; ausencia de locales señalada sin selector vacío.
+- QA visual 360/390/768/1024, teclado/safe areas y lectores nativos. Dos intentos de conectar el navegador MCP agotaron el tiempo; no hay evidencia visual nueva y no se declara aprobado.
+
+No marcar Completed: esta entrega es parcial. No se hizo push ni despliegue.
+
+Validación de esta etapa: suite completa 27 archivos / 91 pruebas aprobadas; build de producción aprobado con advertencias previas de tamaño de bundle y apiMock compartido. TypeScript y lint focalizados sin errores. Nuevas pruebas: borrador sin aplicación anticipada, único local autorizado, fallo de contexto, marca ajena, todas las fechas sin límites ocultos, Carta digital y día futuro sin fin de rango residual. La suite completa volvió a pasar tras integrar accesos rápidos y contexto visible.

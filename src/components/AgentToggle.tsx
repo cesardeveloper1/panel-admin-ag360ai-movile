@@ -3,7 +3,9 @@ import { useApp } from '../hooks/useApp';
 
 export function AgentToggle() {
   const { t } = useTranslation();
-  const { agentEnabled, agentLocked, agentBusy, toggleAgent } = useApp();
+  const { session, agentEnabled, agentLocked, agentBusy, toggleAgent } = useApp();
+  // This endpoint controls the whole brand, never a manager's selected location.
+  if (!session || !['owner', 'superadmin'].includes(session.role)) return null;
   const disabled = agentBusy || agentLocked;
 
   return (

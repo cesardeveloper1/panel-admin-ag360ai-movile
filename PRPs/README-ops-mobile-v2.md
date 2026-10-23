@@ -1,6 +1,6 @@
 # Operaciones móvil — segunda etapa
 
-Estado: PRP 024 comiteado; 025 implementado con QA pendiente; 026–028 en planificación. Fecha: 2026-10-23.
+Estado: PRP 024 comiteado; 025 comiteado con QA pendiente; 026 en ejecución; 027–028 en planificación. Fecha: 2026-10-23.
 
 Objetivo: detectar qué requiere atención, actuar y volver a la cola con contexto. Se conserva la identidad del panel y se adapta el recorrido al teléfono.
 
@@ -10,7 +10,7 @@ Objetivo: detectar qué requiere atención, actuar y volver a la cola con contex
 |---|---|---|---|
 | 1 | [024 — Datos fiables](024--ops-data-reliability.md) | Implemented; QA pendiente | Datos reales, conversación vinculada, errores y paginación |
 | 2 | [025 — Tarjetas y detalle](025--ops-actionable-order-detail.md) | Implemented; QA pendiente | Próxima acción válida y resultado confirmado |
-| 3 | [026 — Encabezado y alcance](026--ops-header-filters-local-scope.md) | Draft | Filtros compactos, locales, canales y acciones sin duplicación |
+| 3 | [026 — Encabezado y alcance](026--ops-header-filters-local-scope.md) | In progress | Filtros compactos, locales, canales y acciones sin duplicación |
 | 4 | [027 — Navegación móvil](027--ops-mobile-navigation.md) | Draft | Operaciones, Chats y Menú con stack estable |
 | 5 | [028 — Cola de atención](028--ops-attention-priority.md) | Draft | Entrada priorizada mediante señales verificables |
 
