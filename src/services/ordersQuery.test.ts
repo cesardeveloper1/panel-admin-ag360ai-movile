@@ -52,7 +52,7 @@ describe('buildOrdersQueryString', () => {
     expect(params.has('last12Hours')).toBe(false);
     expect(params.get('sources')).toBe('2');
     expect(params.get('branchId')).toBe('authorized-local');
-    expect(params.get('timezone')).toBe('America/Lima');
+    expect(params.has('timezone')).toBe(false);
   });
   it('a selected day ignores a stale range end and allows future orders', () => {
     const params = new URLSearchParams(buildOrdersQueryString(brand, {

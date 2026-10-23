@@ -65,7 +65,6 @@ export function buildOrdersQueryString(
     params.set('dateTo', from <= to ? to : from);
   }
 
-  if (brand.timezone) params.set('timezone', brand.timezone);
   if (filters.source) params.set('sources', String(filters.source));
 
   const search = filters.search?.trim();
