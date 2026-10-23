@@ -1,6 +1,6 @@
 # PRP: Header de Reportes
 
-Fecha: 2026-10-23. Estado: borrador. Patrón B. Contrato: [índice](prp-header-acciones.md).
+Fecha: 2026-10-23. Estado: implementado en local. Patrón B. Contrato: [índice](prp-header-acciones.md).
 
 ## 1. Visión
 
