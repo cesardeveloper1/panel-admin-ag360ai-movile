@@ -4,9 +4,17 @@ import {
   chatCueForTransition,
   complaintCue,
   decideCue,
+  isLowEndDevice,
   orderCueSound,
   resolveChatSoundKey,
 } from './notificationCues';
+
+it('treats only a reported 2 GB or less as low-end', () => {
+  expect(isLowEndDevice(2)).toBe(true);
+  expect(isLowEndDevice(0.5)).toBe(true);
+  expect(isLowEndDevice(4)).toBe(false);
+  expect(isLowEndDevice(undefined)).toBe(false);
+});
 
 it('stays quiet inside the app unless the alerts button is on screen', () => {
   expect(decideCue({ inApp: true, alertsButtonOnScreen: false })).toBe('silent');

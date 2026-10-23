@@ -22,6 +22,11 @@ export function decideCue(input: { inApp: boolean; alertsButtonOnScreen: boolean
   return 'silent';
 }
 
+/** `deviceMemory` redondea hacia abajo. 2 GB o menos es gama baja; sin dato, no. */
+export function isLowEndDevice(deviceMemoryGb: number | undefined): boolean {
+  return typeof deviceMemoryGb === 'number' && deviceMemoryGb > 0 && deviceMemoryGb <= 2;
+}
+
 export function orderSoundForStatus(status: string | undefined): CueSound {
   return status && PRE_ORDER_STATUSES.has(status) ? 'preorden' : 'orden';
 }

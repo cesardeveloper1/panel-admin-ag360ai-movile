@@ -1,7 +1,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import type { CueDecision, CueSound } from './notificationCues';
-import { decideCue } from './notificationCues';
+import { decideCue, isLowEndDevice } from './notificationCues';
 
 const ALERTS_BUTTON = '.ag-header-bell, .agilito-top-bell';
 const RECENT_MS = 5000;
@@ -101,6 +101,8 @@ async function postSystemNotification(cue: { sound: CueSound; title: string; bod
     if (!ready) return;
     const { LocalNotifications } = await import('@capacitor/local-notifications');
     cueSerial = cueSerial >= 2_000_000_000 ? 1 : cueSerial + 1;
+    const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+    const lowEnd = isLowEndDevice(memory);
     await LocalNotifications.schedule({
       notifications: [{
         id: cueSerial,
@@ -108,6 +110,10 @@ async function postSystemNotification(cue: { sound: CueSound; title: string; bod
         body: cue.body,
         sound: `${cue.sound}.aac`,
         channelId: `ag-cue-${cue.sound}`,
+        isExactNotification: !lowEnd,
+        ...(lowEnd ? {} : {
+          schedule: { at: new Date(Date.now() + 1000), allowWhileIdle: true },
+        }),
       }],
     });
     return;
