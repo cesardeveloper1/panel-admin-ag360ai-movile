@@ -5,12 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { KitchenOrderCard } from '../components/KitchenOrderCard';
+import { nextOrderAction } from '../utils/orderActions';
 import { useApp } from '../hooks/useApp';
 
 const KitchenPage: React.FC = () => {
   const { t } = useTranslation();
   const history = useHistory();
-  const { brand, orders, advanceOrder } = useApp();
+  const { brand, orders, advanceOrder, canChangeOrders, orderMutations } = useApp();
 
   const kitchenOrders = useMemo(
     () => orders.filter((o) => ['accepted', 'in_kitchen', 'ready'].includes(o.status)),
@@ -58,7 +59,9 @@ const KitchenPage: React.FC = () => {
                   key={order.id}
                   order={order}
                   style={{ animationDelay: `${idx * 50}ms` }}
-                  onAction={() => void advanceOrder(order.id)}
+                  actionLabel={t(orderMutations[order.id]?.pending ? 'ops.actions.saving' : nextOrderAction(order, canChangeOrders)?.labelKey || 'ops.actions.readOnly')}
+                  disabled={!nextOrderAction(order, canChangeOrders) || orderMutations[order.id]?.pending}
+                  onAction={() => void advanceOrder(order.id, order.status)}
                 />
               ))}
             </div>

@@ -176,6 +176,21 @@
       "loadMore": "Cargar más resultados",
       "loadingMore": "Cargando resultados...",
       "syncedAt": "Actualizado {{time}}"
+    },
+    "actions": {
+      "saving": "Guardando...",
+      "details": "Detalle",
+      "created": "Creado {{time}}",
+      "branchUnknown": "Local sin información",
+      "changed": "El pedido cambió. Revisa su estado actual antes de continuar.",
+      "failed": "No se pudo confirmar el cambio. Reintenta para comprobar el estado antes de volver a enviarlo.",
+      "loadingDetail": "Cargando detalle...",
+      "detailFailed": "No se pudo cargar el detalle del pedido.",
+      "address": "Dirección",
+      "notes": "Notas",
+      "noItems": "El pedido no tiene productos detallados disponibles.",
+      "readOnly": "Solo lectura",
+      "dispatch": "Marcar en camino"
     }
   },
   "kitchen": {
@@ -279,11 +294,18 @@
     "channel": {
       "whatsapp": "WA",
       "web": "Web",
-      "phone": "Tel"
+      "phone": "Tel",
+      "instagram": "Instagram",
+      "messenger": "Messenger",
+      "manual": "Orden manual",
+      "unknown": "Canal no informado"
     },
     "motorized": "Motorizado en camino",
     "consumo": "Consumo",
-    "item": "Producto"
+    "item": "Producto",
+    "dine_in": "Salón",
+    "scheduled": "Programado",
+    "unknown": "Modalidad no informada"
   },
   "notifications": {
     "title": "Alertas",

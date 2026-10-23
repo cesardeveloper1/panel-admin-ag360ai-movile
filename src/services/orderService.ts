@@ -2,7 +2,7 @@ import { api } from './api';
 import { parseListPage, type ListPage } from './listPage';
 import type { Brand, Order, OrderStatus } from '../types';
 import { unwrapApiPayload } from '../utils/apiPayload';
-import { mapOrdersFromApi, type ApiOrderListItem } from './mappers/orderMapper';
+import { mapOrderDetail, mapOrdersFromApi, type ApiOrderDetail, type ApiOrderListItem } from './mappers/orderMapper';
 import { mapStatusToApi } from './mappers/orderStatusMapper';
 import {
   buildOrdersQueryString,
@@ -18,7 +18,7 @@ export function isMongoObjectId(id: string): boolean {
 
 /**
  * Igual que panel `ordersService.resolveCanonicalOrderId`:
- * si `id` no es ObjectId, resuelve vía detalle de orquestación por orderNumber.
+ * si `id` no es ObjectId, resuelve con el GET autorizado de detalle por orderNumber.
  */
 export async function resolveCanonicalOrderId(
   id: string,
@@ -32,7 +32,7 @@ export async function resolveCanonicalOrderId(
   }
 
   const raw = await api.get(
-    `/order-orchestration/${encodeURIComponent(orderNumber.trim())}/detail`,
+    `/orders/${encodeURIComponent(orderNumber.trim())}?orderNumber=${encodeURIComponent(orderNumber.trim())}`,
   );
   const payload = unwrapApiPayload<{ _id?: string; orderId?: string }>(raw);
   const canonicalId = String(payload?._id || payload?.orderId || '').trim();
@@ -65,6 +65,18 @@ export const orderService = {
     return { ...result, data };
   },
 
+  async getOrderDetail(brand: Brand, order: Pick<Order, 'id' | 'orderNumber'>): Promise<Order> {
+    const query = order.orderNumber ? `?orderNumber=${encodeURIComponent(order.orderNumber)}` : '';
+    const raw = await api.get(`/orders/${encodeURIComponent(order.id)}${query}`);
+    const payload = unwrapApiPayload<ApiOrderDetail>(raw);
+    if (!payload || (brand.subdomain && payload.brandSubdomain !== brand.subdomain) ||
+        (isMongoObjectId(order.id) && payload.orderId !== order.id) ||
+        ('branchId' in order && order.branchId && payload.branchId !== order.branchId)) throw new Error('Order scope mismatch');
+    const result = mapOrderDetail(payload, brand.id);
+    if (!result) throw new Error('Invalid order detail');
+    return result;
+  },
+
   /**
    * PUT /orders/:id/status — mismo path primario que el panel Operaciones.
    * Body: `{ newStatus, reason? }` (labels API vía mapStatusToApi).
@@ -88,7 +100,7 @@ export const orderService = {
       body.reason = reason.trim();
     }
 
-    await api.put(endpoint, body);
+    unwrapApiPayload(await api.put(endpoint, body));
     return null;
   },
 };

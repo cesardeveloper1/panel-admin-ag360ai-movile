@@ -138,6 +138,16 @@ export const apiFacade = {
     return orderService.getOrdersPage(brand, filters);
   },
 
+  async getOrderDetail(brand: Brand, order: Order): Promise<Order> {
+    if (config.useApiMock) {
+      const rows = await apiMock.getOrders(brand.id);
+      const current = rows.find(item => item.id === order.id);
+      if (!current) throw new Error('Order not found');
+      return { ...current, detailLoaded: true };
+    }
+    return orderService.getOrderDetail(brand, order);
+  },
+
   async updateOrderStatus(
     orderId: string,
     status: OrderStatus,

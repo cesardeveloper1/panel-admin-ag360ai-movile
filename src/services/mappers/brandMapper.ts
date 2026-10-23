@@ -9,6 +9,8 @@ export interface ApiBrand {
   branches?: unknown[];
   status?: boolean;
   language?: string;
+  currency?: { code?: string; symbol?: string };
+  timezone?: string;
 }
 
 function brandInitials(name: string): string {
@@ -36,6 +38,14 @@ export function mapBrandFromApi(raw: ApiBrand): Brand | null {
     displayName: name,
     logoUrl: typeof raw.logo === 'string' ? raw.logo : '',
     language: raw.language === 'en' ? 'en' : 'es',
+    branchNames: Object.fromEntries((raw.branches ?? []).flatMap(item => {
+      if (!item || typeof item !== 'object') return [];
+      const branch = item as { _id?: string; id?: string; name?: string };
+      const id = branch._id || branch.id;
+      return id && branch.name ? [[id, branch.name]] : [];
+    })),
+    currency: raw.currency,
+    timezone: raw.timezone,
     locations: branchCount || 1,
     ordersToday: 0,
   };

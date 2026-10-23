@@ -6,7 +6,7 @@ import { mapOrderFromApi } from '../services/mappers/orderMapper';
 
 describe('real order identity', () => {
   it('does not invent a phone for a known demo customer name', () => {
-    const order = mapOrderFromApi({ orderId: 'one', customerName: 'Test' }, 'brand')!;
+    const order = mapOrderFromApi({ orderId: 'one', status: 'Aceptado', customerName: 'Test', totalOrder: 24 }, 'brand')!;
     order.customerKey = 'customers.lucia';
     const { container } = render(<OrderCard order={order} />);
     expect(screen.getByText('Sin información')).toBeInTheDocument();

@@ -8,8 +8,8 @@ import type { Brand, Order } from '../types';
 import '../i18n';
 
 vi.mock('../services/apiFacade', () => ({ apiFacade: {
-  restoreSession: vi.fn(async () => ({ email: 'test@example.invalid', nameKey: 'test', initials: 'T', role: 'owner' })),
-  getOrdersPage: vi.fn(), getNotifications: vi.fn(async () => []),
+  restoreSession: vi.fn(async () => ({ email: 'test@example.invalid', nameKey: 'test', initials: 'T', role: 'owner', capabilities: { changeOrderStatus: true } })),
+  getOrdersPage: vi.fn(), getOrderDetail: vi.fn(), updateOrderStatus: vi.fn(), getNotifications: vi.fn(async () => []),
   getBotState: vi.fn(async () => ({ isOn: false, lockedBySuperadmin: false })),
   logout: vi.fn(),
 } }));
@@ -19,7 +19,7 @@ vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn(async () => ({ remo
 let context: AppContextValue;
 function Probe() { context = useApp(); return null; }
 const brand: Brand = { id: 'a', subdomain: 'a', initials: 'A', nameKey: 'a', locations: 1, ordersToday: 0 };
-const row = { id: 'one', brandId: 'a' } as Order;
+const row = { id: 'one', brandId: 'a', status: 'accepted', deliveryType: 'delivery', items: [], total: 24, customerKey: 'test', locationKey: 'test', channel: 'whatsapp' } as Order;
 const page = { data: [row], page: 1, hasMore: false };
 
 async function mount() {
@@ -98,5 +98,74 @@ describe('operation request ownership', () => {
     expect(apiFacade.getOrdersPage).toHaveBeenCalledTimes(2);
     expect(apiFacade.getOrdersPage).toHaveBeenLastCalledWith(brand, expect.objectContaining({ page: 2 }));
     expect(context.ordersLastSyncedAt).not.toBeNull();
+  });
+});
+
+
+describe('confirmed order mutations', () => {
+  it('deduplicates double taps and waits for the confirmed server read', async () => {
+    vi.mocked(apiFacade.getOrdersPage).mockResolvedValue(page);
+    await mount();
+    await act(async () => { await context.selectBrandAndLoad(brand); });
+    const confirmed = { ...row, status: 'in_kitchen' as const, updatedAt: '2026-10-23T15:00:00Z' };
+    vi.mocked(apiFacade.getOrderDetail).mockResolvedValueOnce(row).mockResolvedValueOnce(confirmed);
+    let finish!: (value: Order | null) => void;
+    vi.mocked(apiFacade.updateOrderStatus).mockImplementationOnce(() => new Promise<Order | null>(resolve => { finish = resolve; }));
+    let first!: ReturnType<AppContextValue['advanceOrder']>;
+    let second!: ReturnType<AppContextValue['advanceOrder']>;
+    act(() => { first = context.advanceOrder(row.id, 'accepted'); second = context.advanceOrder(row.id, 'accepted'); });
+    expect(first).toBe(second);
+    await waitFor(() => expect(apiFacade.updateOrderStatus).toHaveBeenCalledTimes(1));
+    expect(context.orderMutations[row.id].pending).toBe(true);
+    expect(context.orders[0].status).toBe('accepted');
+    await act(async () => { finish(null); await first; });
+    expect(context.orders[0].status).toBe('in_kitchen');
+    expect(context.orderMutations[row.id].pending).toBe(false);
+  });
+
+  it('preserves the order and exposes an explicit error when the API rejects the change', async () => {
+    vi.mocked(apiFacade.getOrdersPage).mockResolvedValue(page);
+    vi.mocked(apiFacade.getOrderDetail).mockResolvedValueOnce(row);
+    vi.mocked(apiFacade.updateOrderStatus).mockRejectedValueOnce(new Error('forbidden'));
+    await mount();
+    await act(async () => { await context.selectBrandAndLoad(brand); });
+    await act(async () => { expect(await context.advanceOrder(row.id)).toMatchObject({ ok: false, reason: 'failed' }); });
+    expect(context.orders[0].status).toBe('accepted');
+    expect(context.orderMutations[row.id]).toMatchObject({ pending: false, errorKey: 'ops.actions.failed' });
+  });
+
+  it('reconciles a preflight conflict without sending a mutation', async () => {
+    vi.mocked(apiFacade.getOrdersPage).mockResolvedValue(page);
+    vi.mocked(apiFacade.getOrderDetail).mockResolvedValueOnce({ ...row, status: 'ready' });
+    await mount();
+    await act(async () => { await context.selectBrandAndLoad(brand); });
+    await act(async () => { expect(await context.advanceOrder(row.id)).toMatchObject({ ok: false, reason: 'conflict' }); });
+    expect(apiFacade.updateOrderStatus).not.toHaveBeenCalled();
+    expect(context.orders[0].status).toBe('ready');
+  });
+
+  it('does not overwrite a mutation with a refresh that started before it completed', async () => {
+    vi.mocked(apiFacade.getOrdersPage).mockResolvedValueOnce(page);
+    await mount();
+    await act(async () => { await context.selectBrandAndLoad(brand); });
+    let finishRefresh!: (value: typeof page) => void;
+    vi.mocked(apiFacade.getOrdersPage).mockImplementationOnce(() => new Promise<typeof page>(resolve => { finishRefresh = resolve; }));
+    let refresh!: Promise<void>;
+    act(() => { refresh = context.refreshOrders(); });
+    vi.mocked(apiFacade.getOrderDetail).mockResolvedValueOnce(row).mockResolvedValueOnce({ ...row, status: 'in_kitchen' });
+    vi.mocked(apiFacade.updateOrderStatus).mockResolvedValueOnce(null);
+    await act(async () => { await context.advanceOrder(row.id); });
+    await act(async () => { finishRefresh(page); await refresh; });
+    expect(context.orders[0].status).toBe('in_kitchen');
+  });
+
+  it('denies a session without effective capability before contacting the order API', async () => {
+    vi.mocked(apiFacade.restoreSession).mockResolvedValueOnce({ email: 'test@example.invalid', nameKey: 'test', initials: 'T', role: 'worker', capabilities: { changeOrderStatus: false } });
+    vi.mocked(apiFacade.getOrdersPage).mockResolvedValue(page);
+    await mount();
+    await act(async () => { await context.selectBrandAndLoad(brand); });
+    await act(async () => { expect(await context.advanceOrder(row.id)).toEqual({ ok: false, reason: 'denied' }); });
+    expect(apiFacade.getOrderDetail).not.toHaveBeenCalled();
+    expect(apiFacade.updateOrderStatus).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 import type { Order, OrderItem } from '../../types';
-import { mapStatusFromApi } from './orderStatusMapper';
+import { API_ORDER_STATUS, mapStatusFromApi } from './orderStatusMapper';
 
 /** Item de listado GET /orders (OrderFoodListItem del panel). */
 export interface ApiOrderListItem {
@@ -15,6 +15,8 @@ export interface ApiOrderListItem {
   customerLastName?: string;
   customerPhone?: string;
   createdAt?: string;
+  updatedAt?: string;
+  scheduledAt?: string;
   branchId?: string;
   source?: number;
   deliveryMode?: number;
@@ -26,43 +28,44 @@ export interface ApiOrderListItem {
   content?: {
     items?: Array<{
       name?: string;
+      itemName?: string;
       quantity?: number;
       price?: number;
+      customization?: string;
+      modifiers?: Array<{ modName?: string; quantity?: number; price?: number }>;
     }>;
+    specialNotes?: string;
   };
 }
 
-function mapChannel(source: number | undefined): Order['channel'] {
-  // Alineado a usos típicos del panel: 0/1 WhatsApp, otros web
+function mapChannel(source: number | undefined, channel?: string | null): Order['channel'] {
+  if (channel === 'whatsapp' || channel === 'instagram' || channel === 'messenger') return channel;
+  if (source === 1) return 'whatsapp';
   if (source === 2) return 'web';
-  if (source === 3) return 'phone';
-  return 'whatsapp';
+  if (source === 4) return 'manual';
+  if (source === 5) return 'instagram';
+  if (source === 6) return 'messenger';
+  return 'unknown';
 }
 
-function mapDeliveryType(mode: number | undefined): Order['deliveryType'] {
-  // 0 delivery, 1/2 pickup (ver contratos panel)
-  if (mode === 1 || mode === 2) return 'pickup';
-  return 'delivery';
+export function mapDeliveryType(mode: number | undefined): Order['deliveryType'] {
+  if (mode === 1) return 'delivery';
+  if (mode === 2) return 'pickup';
+  if (mode === 3) return 'dine_in';
+  if (mode === 4) return 'scheduled';
+  return 'unknown';
 }
 
-function mapItems(raw: ApiOrderListItem, total: number): OrderItem[] {
-  const fromContent = raw.content?.items;
-  if (Array.isArray(fromContent) && fromContent.length > 0) {
-    return fromContent.map((item) => ({
-      qty: Number(item.quantity) || 1,
-      nameKey: 'orders.item',
-      name: String(item.name ?? 'Producto'),
-      price: Number(item.price) || 0,
-    }));
-  }
-  return [
-    {
-      qty: 1,
-      nameKey: 'orders.consumo',
-      name: 'Consumo',
-      price: total,
-    },
-  ];
+function mapItems(raw: ApiOrderListItem): OrderItem[] {
+  return (raw.content?.items ?? []).map(item => ({
+    qty: Number(item.quantity) || 1,
+    nameKey: 'orders.item',
+    name: item.itemName?.trim() || item.name?.trim() || undefined,
+    price: Number(item.price) || 0,
+    notes: item.customization?.trim() || undefined,
+    modifiers: item.modifiers?.map(modifier => ({ name: modifier.modName?.trim() || '',
+      qty: Number(modifier.quantity) || 1, price: Number(modifier.price) || 0 })),
+  }));
 }
 
 export function mapOrderFromApi(raw: ApiOrderListItem, brandId: string): Order | null {
@@ -83,19 +86,21 @@ export function mapOrderFromApi(raw: ApiOrderListItem, brandId: string): Order |
     customerKey: 'customers.generic',
     customerName,
     status: mapStatusFromApi(raw.status),
-    channel: mapChannel(raw.source),
+    statusVerified: Object.values(API_ORDER_STATUS).some(value => value === raw.status),
+    channel: mapChannel(raw.source, raw.channel),
     deliveryType: mapDeliveryType(raw.deliveryMode),
-    items: mapItems(raw, total),
+    items: mapItems(raw),
+    amountKnown: typeof raw.totalOrder === 'number' && Number.isFinite(raw.totalOrder),
+    branchId: raw.branchId,
+    notes: raw.content?.specialNotes,
+    scheduledAt: raw.scheduledAt,
     total,
-    minutesInKitchen:
-      typeof raw.timerOrderTime === 'number' && Number.isFinite(raw.timerOrderTime)
-        ? Math.max(0, Math.round(raw.timerOrderTime))
-        : undefined,
     needsHuman: Boolean(raw.humanInteraction?.withHumanInteraction),
     brandId,
     locationKey: 'ops.reliability.noInformation',
     phone: raw.customerPhone?.trim() || undefined,
     createdAt: raw.createdAt ? String(raw.createdAt) : undefined,
+    updatedAt: raw.updatedAt,
   };
 }
 
@@ -103,4 +108,23 @@ export function mapOrdersFromApi(list: ApiOrderListItem[], brandId: string): Ord
   return list
     .map((row) => mapOrderFromApi(row, brandId))
     .filter((o): o is Order => o !== null);
+}
+
+export interface ApiOrderDetail extends ApiOrderListItem {
+  brandId?: string;
+  customer?: { firstName?: string; lastName?: string; phone?: string };
+  deliveryInfo?: { mode?: number; address?: string; addressRef?: string };
+  paymentInformation?: { paymentType?: number };
+  totals?: { total?: number };
+}
+
+export function mapOrderDetail(raw: ApiOrderDetail, brandId: string): Order | null {
+  const order = mapOrderFromApi({ ...raw, customerName: raw.customer?.firstName,
+    customerLastName: raw.customer?.lastName, customerPhone: raw.customer?.phone,
+    deliveryMode: raw.deliveryInfo?.mode, totalOrder: raw.totals?.total }, brandId);
+  if (!order) return null;
+  const methods: Record<number, Order['paymentMethod']> = { 1: 'cash', 2: 'card', 3: 'yape', 4: 'plin' };
+  return { ...order, detailLoaded: true, address: raw.deliveryInfo?.address,
+    addressReference: raw.deliveryInfo?.addressRef,
+    paymentMethod: methods[raw.paymentInformation?.paymentType ?? -1] };
 }

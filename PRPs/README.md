@@ -2,7 +2,7 @@
 
 ## Operaciones móvil — segunda etapa (024–028)
 
-Plan de mejoras de fiabilidad, tarjetas, filtros por alcance, navegación y atención: [orden de ejecución y dependencias](./README-ops-mobile-v2.md). 024 implementado con QA pendiente; 025–028 en Draft. No reemplaza el historial de 005/006.
+Plan de mejoras de fiabilidad, tarjetas, filtros por alcance, navegación y atención: [orden de ejecución y dependencias](./README-ops-mobile-v2.md). 024 comiteado y 025 implementado, con QA pendiente; 026–028 en Draft. No reemplaza el historial de 005/006.
 
 ## Epic A: DRY navigation & layouts
 

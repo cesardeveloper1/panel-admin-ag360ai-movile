@@ -1,6 +1,6 @@
 # PRP 25: Operaciones: tarjetas accionables y detalle seguro
 
-Estado: Draft · Fecha: 2026-10-23 · Versión: 1.0 · Patrón B (mejora integrada de producto).
+Estado: Implemented; QA nativa pendiente · Fecha: 2026-10-23 · Versión: 1.0 · Patrón B (mejora integrada de producto).
 Repositorio: panel-admin-ag360ai-movile. Integración: develop.
 Dependencias: 024 terminado para datos fiables.
 
@@ -87,3 +87,37 @@ La creación del documento no autoriza ejecutar este PRP, publicar, fusionar ni 
 Ingeniería/producto: verificar transiciones válidas por modalidad antes de habilitar CTA; contrato real de takeover IA antes de mostrar su control. Si falta, entregar resto con control omitido.
 Registrar respuesta y responsable antes de la tarea dependiente; avanzar las tareas independientes sin bloquear todo el PRP.
 
+
+
+## Registro de ejecución — 2026-10-23
+
+PRP 024 comiteado como `3f9eaa6`. PRP 025 implementado en la misma rama `feat/mobile-ops-data-reliability`; estos cambios quedan sin commit, push ni despliegue.
+
+### Implementación
+
+- Tarjeta con estado e identificador, cliente/importe, modalidad, fecha de creación verificada y local en contexto multilocal cuando se conoce su nombre. Sin moneda supuesta: se usa currency de la marca; falta de moneda no se convierte en PEN.
+- Se corrige el enum real: delivery=1, recojo=2, salón=3, programación=4. Modalidad/estado desconocidos o programados no habilitan una transición inferida. `timerOrderTime` es umbral del local y deja de interpretarse como minutos transcurridos.
+- Política compartida `nextOrderAction`: aceptado a cocina; cocina a listo; listo delivery a camino; listo recojo/salón a entregado; camino delivery a entregado. Sin nuevas cancelaciones ni nuevas transiciones del backend. Cocina usa la misma política y bloqueo.
+- Perfil verificado mediante `/auth/me`, rol preservado sin convertir desconocidos en owner, proyección de capacidad efectiva según contrato del panel (operaciones.view/change_status, bypass owner/superadmin). Falta de permiso deniega; el servidor sigue autorizando cada recurso. El flujo general no sustituye las acciones propias de motorizados.
+- Bloqueo compartido por pedido, preflight de detalle, validación de estado/modalidad/alcance y relectura posterior. Rechazo o respuesta no confirmada mantiene el detalle y permite reintentar mediante nueva comprobación; nunca reenvía automáticamente. Resultados de otro alcance se descartan.
+- Reconciliación por updatedAt y secuencia para no sobrescribir confirmaciones con respuestas de refresh iniciadas antes; refresh en segundo plano no introduce un loader global durante una mutación local. Un fallo de carga sigue retirando datos como en 024.
+- Detalle mediante GET /orders/:id, con productos reales, modificadores, notas, dirección y pago soportado cuando existen. Se elimina el producto Consumo ficticio. El resolver de ID también utiliza el GET autorizado de órdenes, evitando el endpoint de orquestación que puede reparsar/persistir productos.
+- Se retira Yo/IA porque no estaba conectado a una operación real. El detalle carga y falla por separado; footer fuera del scroll, acción de 48px y safe-area. Cierra sólo tras confirmación y devuelve foco sin desplazar la cola.
+
+### Contratos y límites comprobados
+
+Fuentes: `ssgg/src/modules/orderfood/order-food.controller.ts` (GET detalle y PUT estado), `order-food.service.ts` (findDetail), `entity/order-food.entity.ts` (deliveryInfo/content), `payment/order-food-payment.catalog.ts`; y `panel-admin-ag360ai/src/lib/panelCapabilities.ts` para proyección de permisos. Se reusan endpoints existentes; no hay cambios de backend ni llamadas de prueba a producción.
+
+El PUT actual no acepta expectedStatus/version para comparar y escribir atómicamente. El preflight detecta conflictos observados y la relectura confirma resultados, pero otro operador aún puede escribir entre ambas llamadas. Cerrar esa ventana exige un contrato CAS del servidor: no se declara exclusión mutua entre dispositivos.
+
+Los nombres de sucursal sólo se muestran si vienen del contrato/metadata de marca; no se inventan desde el lugar de entrega. Los métodos de pago del modelo móvil actual (efectivo/tarjeta/Yape/Plin) se mapean por enum; otros catálogos regionales necesitan ampliación de etiquetas, sin fingir un método conocido.
+
+### Validación
+
+- `npx vitest run --threads=false`: 26 archivos, 86 pruebas correctas, incluyendo reglas por modalidad/capacidad, denegación, doble toque, rechazo, conflicto, refresh que llega tarde, detalle abierto ante fallo y cierre tras confirmar.
+- Build correcto y lint focalizado sin errores; permanecen avisos de tamaño de bundle y mezcla de importación estática/dinámica de apiMock.
+- Navegador con fixture sintética en origen separado, sólo loopback: 360x800 CSS px y tablet 768x1024. A 360px, CTA de 48px con borde inferior 788 dentro de viewport de 800; último producto y notas accesibles por encima del footer. Tablet: CTA termina en 1012 dentro de 1024. El zoom del navegador se compensó y se midieron innerWidth/innerHeight reales.
+- Rechazo simulado mantiene modal y error; reintento confirmado lo cierra y actualiza de 1 nuevo/1 en proceso a 0 nuevos/2 en proceso. Capturas sanitizadas guardadas fuera del repositorio. Fixtures temporales retiradas al terminar QA.
+- Pendiente QA de 390/1024 de ancho, orientación completa, teclado/safe-area en dispositivo y VoiceOver/TalkBack. La automatización dejó de responder durante la ampliación final; no se declara esa parte verificada. Retorno desde chat se conserva con la navegación existente y requiere el recorrido nativo de PRP 027.
+
+Se mantiene Implemented, no Completed, hasta resolver QA pendiente. La ampliación CAS requiere trabajo de contrato independiente si se necesita garantía de concurrencia atómica.

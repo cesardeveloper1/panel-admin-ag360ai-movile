@@ -48,7 +48,7 @@ const localIsoDate = (date: Date) =>
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
+  const { brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
@@ -69,6 +69,7 @@ const OperationsPage: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState(6);
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   const lastScrollTopRef = useRef(0);
+  const detailReturnFocus = useRef<HTMLElement | null>(null);
   const searchBootstrapped = useRef(false);
 
   const [contactResult, setContactResult] = useState<{ scope: string; data: ContactInfo[]; syncedAt?: number }>({ scope: '', data: [] });
@@ -660,7 +661,15 @@ const OperationsPage: React.FC = () => {
                         <OrderCard
                           key={order.id}
                           order={order}
-                          onClick={() => setSelectedOrder(order)}
+                          brand={brand}
+                          showBranch={!ordersFilters.branchId && (brand?.locations ?? 0) > 1}
+                          canChangeStatus={canChangeOrders}
+                          mutation={orderMutations[order.id]}
+                          onAdvance={() => advanceOrder(order.id, order.status)}
+                          onClick={() => {
+                            detailReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+                            setSelectedOrder(order);
+                          }}
                           onChat={() => openOrderChat(order)}
                         />
                       ))
@@ -687,9 +696,13 @@ const OperationsPage: React.FC = () => {
           </div>
 
           <OrderDetailSheet
-            order={ordersError ? null : selectedOrder}
+            order={ordersError ? null : orders.find(item => item.id === selectedOrder?.id) ?? selectedOrder}
             open={!ordersError && !!selectedOrder}
-            onClose={() => setSelectedOrder(null)}
+            onClose={() => {
+              setSelectedOrder(null);
+              const target = detailReturnFocus.current;
+              if (target?.isConnected) target.focus({ preventScroll: true });
+            }}
           />
 
           <IonModal isOpen={dateOpen} onDidDismiss={() => setDateOpen(false)} className="ops-date-modal">

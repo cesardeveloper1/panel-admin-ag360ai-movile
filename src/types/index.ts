@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'superadmin';
+export type UserRole = 'owner' | 'superadmin' | 'manager' | 'worker' | 'motorized' | 'unknown';
 
 export type OrderStatus =
   | 'pre_order'
@@ -29,6 +29,9 @@ export interface Brand {
   logoUrl?: string;
   /** Idioma predeterminado de la marca cuando el perfil no lo reemplaza. */
   language?: 'es' | 'en';
+  currency?: { code?: string; symbol?: string };
+  timezone?: string;
+  branchNames?: Record<string, string>;
   locations: number;
   ordersToday: number;
 }
@@ -39,6 +42,8 @@ export interface OrderItem {
   /** Texto literal del producto (API); si existe, la UI lo prioriza sobre nameKey i18n. */
   name?: string;
   price: number;
+  notes?: string;
+  modifiers?: Array<{ name: string; qty: number; price: number }>;
 }
 
 export interface Order {
@@ -52,8 +57,8 @@ export interface Order {
   customerName?: string;
   leadTag?: 'new' | 'recurring' | 'vip';
   status: OrderStatus;
-  channel: 'whatsapp' | 'web' | 'phone';
-  deliveryType: 'delivery' | 'pickup';
+  channel: 'whatsapp' | 'web' | 'phone' | 'instagram' | 'messenger' | 'manual' | 'unknown';
+  deliveryType: 'delivery' | 'pickup' | 'dine_in' | 'scheduled' | 'unknown';
   items: OrderItem[];
   total: number;
   minutesInKitchen?: number;
@@ -63,6 +68,16 @@ export interface Order {
   phone?: string;
   paymentMethod?: 'yape' | 'card' | 'cash' | 'plin';
   createdAt?: string;
+  updatedAt?: string;
+  statusVerified?: boolean;
+  branchId?: string;
+  branchName?: string;
+  address?: string;
+  addressReference?: string;
+  notes?: string;
+  scheduledAt?: string;
+  detailLoaded?: boolean;
+  amountKnown?: boolean;
 }
 
 export interface DashboardKpi {
@@ -82,6 +97,7 @@ export interface UserSession {
   displayName?: string;
   initials: string;
   role: UserRole;
+  capabilities?: { changeOrderStatus: boolean };
   brandId?: string;
 }
 

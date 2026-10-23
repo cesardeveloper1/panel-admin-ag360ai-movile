@@ -1,3 +1,4 @@
+import type { OrderActionResult, OrderMutation } from '../utils/orderActions';
 import { createContext } from 'react';
 import type { Brand, NotificationItem, Order, UserSession } from '../types';
 import type { OrdersListFilters } from '../services/ordersQuery';
@@ -31,7 +32,9 @@ export interface AppContextValue {
   selectBrandAndLoad: (brand: Brand) => Promise<boolean>;
   refreshOrders: () => Promise<void>;
   setOrdersFilters: (patch: Partial<OrdersListFilters>) => Promise<void>;
-  advanceOrder: (orderId: string) => void;
+  canChangeOrders: boolean;
+  orderMutations: Record<string, OrderMutation>;
+  advanceOrder: (orderId: string, expectedStatus?: Order['status']) => Promise<OrderActionResult>;
   setKitchenMode: (value: boolean) => void;
   setDarkMode: (value: boolean) => void;
   toggleAgent: () => Promise<void>;

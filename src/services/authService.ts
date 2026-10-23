@@ -1,4 +1,5 @@
-import type { UserRole, UserSession } from '../types';
+import type { UserSession } from '../types';
+import { authenticatedOrderCapability, normalizeUserRole } from '../utils/orderActions';
 import { persistAuthSession } from '../utils/authSession';
 import { clearNativeRefreshToken } from '../utils/nativeRefreshTokenStorage';
 import { api } from './api';
@@ -9,6 +10,7 @@ interface LoginUserPayload {
   email: string;
   fullName?: string;
   role: string;
+  permissions?: { modules?: Record<string, { enabled?: boolean; actions?: string[] } | null> };
 }
 
 interface LoginDataPayload {
@@ -28,13 +30,6 @@ function initialsFromName(name: string, email: string): string {
   }
   const local = email.split('@')[0] || 'U';
   return local.slice(0, 2).toUpperCase();
-}
-
-function normalizeRole(role: string): UserRole {
-  const normalized = role.trim().toLowerCase();
-  if (normalized === 'superadmin') return 'superadmin';
-  if (normalized === 'user') return 'owner';
-  return 'owner';
 }
 
 function unwrapLoginData(response: unknown): LoginDataPayload | null {
@@ -65,7 +60,7 @@ function unwrapLoginData(response: unknown): LoginDataPayload | null {
 
 function mapToUserSession(email: string, data: LoginDataPayload): UserSession {
   const fullName = data.user.fullName?.trim() || email;
-  const role = normalizeRole(String(data.user.role ?? 'owner'));
+  const role = normalizeUserRole(data.user.role);
   return {
     id: data.user.id || data.user._id,
     email: data.user.email || email,
@@ -73,6 +68,7 @@ function mapToUserSession(email: string, data: LoginDataPayload): UserSession {
     displayName: fullName,
     initials: initialsFromName(fullName, email),
     role,
+    capabilities: { changeOrderStatus: authenticatedOrderCapability(data.user) },
   };
 }
 
@@ -95,7 +91,8 @@ export const authService = {
       accessToken: data.accessToken,
     });
 
-    return mapToUserSession(email, data);
+    const verified = unwrapCurrentUser(await api.get('/auth/me'));
+    return verified ? mapToUserSession(email, { ...data, user: verified }) : null;
   },
 
   restoreSession: async (): Promise<UserSession | null> => {
