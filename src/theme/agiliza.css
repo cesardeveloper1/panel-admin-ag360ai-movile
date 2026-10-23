@@ -2386,7 +2386,10 @@ ion-page {
 
 ion-page[data-ag-route="/app/products"] .ag-header,
 ion-page[data-ag-route="/app/products"] .ag-header-actions,
-ion-page[data-ag-route="/app/products"] .ag-header-trailing {
+ion-page[data-ag-route="/app/products"] .ag-header-trailing,
+ion-page[data-ag-route="/app/clients"] .ag-header,
+ion-page[data-ag-route="/app/clients"] .ag-header-actions,
+ion-page[data-ag-route="/app/clients"] .ag-header-trailing {
   overflow: visible;
 }
 

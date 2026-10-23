@@ -1,6 +1,6 @@
 # PRP: Header de Clientes
 
-Fecha: 2026-10-23. Estado: borrador. Patrón B. Contrato: [índice](prp-header-acciones.md).
+Fecha: 2026-10-23. Estado: implementado en local. Patrón B. Contrato: [índice](prp-header-acciones.md).
 
 ## 1. Visión
 
@@ -40,7 +40,7 @@ Ninguno nuevo.
 
 ## 9. UI
 
-Atrás, título, ícono de buscar, campana. Debajo, los chips como están.
+Atrás, título, ícono de buscar. Debajo, los chips como están. La campana sigue oculta en este módulo.
 
 ## 10. Riesgos
 
