@@ -804,10 +804,8 @@
     "unreadCount": "{{count}} sin leer"
   },
   "chats": {
-    "title": "Chats WhatsApp",
+    "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
-    "connected": "WhatsApp conectado",
-    "connectedHint": "Bandeja de conversaciones del chatbot",
     "search": "Buscar contacto",
     "empty": "No hay conversaciones",
     "botOn": "Bot activo",

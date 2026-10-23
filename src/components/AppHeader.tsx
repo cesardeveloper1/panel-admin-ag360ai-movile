@@ -99,7 +99,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         )}
         <div className="ag-header-copy">
           <h1 className="ag-header-title">{title}</h1>
-          {!isSub && subtitle ? <p className="ag-header-sub">{subtitle}</p> : null}
+          {subtitle ? <p className="ag-header-sub">{subtitle}</p> : null}
         </div>
         <div className="ag-header-actions">
           {secondaryAction ? (

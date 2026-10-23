@@ -759,10 +759,8 @@
     "unreadCount": "{{count}} unread"
   },
   "chats": {
-    "title": "WhatsApp chats",
+    "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
-    "connected": "WhatsApp connected",
-    "connectedHint": "Chatbot conversation inbox",
     "search": "Search contact",
     "empty": "No conversations",
     "botOn": "Bot on",
