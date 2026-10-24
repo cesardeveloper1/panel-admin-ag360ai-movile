@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { IonIcon, IonSearchbar } from '@ionic/react';
 import { searchOutline, locationOutline, calendarOutline, chatbubblesOutline, chatboxEllipsesOutline, optionsOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
-import { OperationsQuickMessages } from './OperationsQuickMessages';
 import type { OperationsPanel } from './OperationsFilters';
 import { useApp } from '../hooks/useApp';
+import { useAppNavigation } from '../hooks/useAppNavigation';
+import { QUICK_MESSAGES_PATH } from '../navigation/appRouteRegistry';
 
 const storageKey = 'ag.operations.actions.v1';
 type Pin = 'date' | 'messages';
@@ -41,13 +42,13 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const { go } = useAppNavigation();
   const { brand, authEpoch } = useApp();
-  const [messagesOpen, setMessagesOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const [pins, setPins] = useState<Pin[]>(readPins);
-  useEffect(() => { setMessagesOpen(false); setSearchOpen(false); setMenuOpen(false); onPanel(null); }, [authEpoch, brand?.id, onPanel]);
+  useEffect(() => { setSearchOpen(false); setMenuOpen(false); onPanel(null); }, [authEpoch, brand?.id, onPanel]);
   useEffect(() => {
     if (!searchOpen && !menuOpen && !panel) return;
     const dismiss = (event: PointerEvent) => {
@@ -74,7 +75,7 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
   const localDisabled = branchCount === 0;
   const pinned = [
     { id: 'date' as const, icon: calendarOutline, label: t('ops.filters.filterDate'), show: mode === 'orders', run: () => openPanel('date') },
-    { id: 'messages' as const, icon: chatboxEllipsesOutline, label: t('ops.filters.quickMessages'), show: true, run: () => { setMenuOpen(false); onPanel(null); setMessagesOpen(true); } },
+    { id: 'messages' as const, icon: chatboxEllipsesOutline, label: t('ops.filters.quickMessages'), show: true, run: () => { setMenuOpen(false); setSearchOpen(false); onPanel(null); go(QUICK_MESSAGES_PATH); } },
   ];
   return <div ref={root} className="ops-tools">
     <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.searchAction')} aria-expanded={searchOpen} onClick={() => { onPanel(null); setMenuOpen(false); setSearchOpen(open => !open); }}><IonIcon icon={searchOutline} aria-hidden="true" /></button>
@@ -109,6 +110,5 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
       </ul>
     </div> : null}
     {children}
-    <OperationsQuickMessages open={messagesOpen} onClose={() => setMessagesOpen(false)} />
   </div>;
 }

@@ -17,6 +17,7 @@ export const OPERATIONS_PATH = '/app/operations';
 export const BUSINESS_HUB_PATH = '/app/business';
 export const PAYMENT_CAPTURE_PATH = '/app/payment-capture';
 export const PRINTING_PATH = '/app/printing';
+export const QUICK_MESSAGES_PATH = '/app/quick-messages';
 
 export type RouteKind = 'tab' | 'stack';
 
@@ -160,6 +161,12 @@ export const APP_ROUTES: AppRoute[] = [
     kind: 'stack',
     parent: PAYMENTS_PATH,
     titleKey: 'printing.title',
+  },
+  {
+    path: QUICK_MESSAGES_PATH,
+    kind: 'stack',
+    parent: OPERATIONS_PATH,
+    titleKey: 'ops.filters.quickMessages',
   },
   {
     path: '/app/onboarding',

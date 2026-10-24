@@ -5,6 +5,7 @@ const manager: UserSession = { role: 'manager', email: 'qa@example.invalid', ini
   permissions: { modules: { operaciones: { enabled: true, actions: ['view', 'view_chat_tab'] }, chats: { enabled: true, actions: ['view'] } } } };
 it('uses verified grants for managers and preserves canonical and legacy chat denials', () => {
   expect(canNavigate(manager, '/app/operations')).toBe(true);
+  expect(canNavigate(manager, '/app/quick-messages')).toBe(true);
   expect(canNavigate(manager, '/app/chats')).toBe(true);
   expect(canNavigate({ ...manager, permissions: { modules: { ...manager.permissions?.modules, chats: { enabled: false } } } }, '/app/chats')).toBe(false);
   expect(navigationAccess('worker', { modules: { operaciones: { enabled: true, actions: ['view'] }, chats: { enabled: true, actions: ['view'] } } }).chats).toBe(false);

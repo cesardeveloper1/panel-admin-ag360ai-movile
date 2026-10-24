@@ -1,5 +1,5 @@
 import type { UserSession } from '../types';
-import { normalizePath, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, AGILITO_PATH, PAYMENTS_PATH, PROFILE_PATH, NOTIFICATIONS_PATH } from './appRouteRegistry';
+import { normalizePath, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, AGILITO_PATH, PAYMENTS_PATH, PROFILE_PATH, NOTIFICATIONS_PATH, QUICK_MESSAGES_PATH } from './appRouteRegistry';
 
 export type NavigationPermissions = { modules?: Record<string, { enabled?: boolean; actions?: string[] } | null> };
 export function navigationAccess(role: UserSession['role'], permissions?: NavigationPermissions) {
@@ -23,7 +23,7 @@ export function canNavigate(session: UserSession | null, path: string): boolean 
   const route = normalizePath(path.split('?')[0]);
   if (route === PROFILE_PATH || route === NOTIFICATIONS_PATH) return true;
   const caps = navigationAccess(session.role, session.permissions);
-  if (route === OPERATIONS_PATH) return caps.operations;
+  if (route === OPERATIONS_PATH || route === QUICK_MESSAGES_PATH) return caps.operations;
   if (route === CHATS_PATH) return caps.chats;
   if (route === REPORTS_PATH) return caps.reports;
   if (route === AGILITO_PATH) return caps.agilito;

@@ -11,6 +11,7 @@ El header del móvil muestra las acciones de esa pantalla. Si la fila no alcanza
 - [Clientes](prp-header-acciones--clientes.md)
 - [Notificaciones](prp-header-acciones--notificaciones.md)
 - [Pantallas que se quedan en título](prp-header-acciones--resto.md)
+- [Mensajes rápidos](prp-mensajes-rapidos-pantalla.md)
 
 ## Contrato común
 
