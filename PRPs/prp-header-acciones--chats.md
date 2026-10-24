@@ -1,6 +1,6 @@
 # PRP: Header de Chats
 
-Fecha: 2026-10-23. Estado: borrador. Patrón B. Contrato: [índice](prp-header-acciones.md).
+Fecha: 2026-10-23. Estado: implementado en local. Patrón B. Contrato: [índice](prp-header-acciones.md).
 
 ## 1. Visión
 
@@ -16,7 +16,7 @@ La bandeja se abre desde el footer. Operaciones no ofrece un atajo a Chats.
 
 - En 360 px la bandeja muestra buscar y la campana.
 - El hilo muestra atrás, el nombre y el interruptor del bot de esa conversación.
-- El teléfono sigue visible en una línea bajo el header.
+- El teléfono sigue visible, en una línea bajo el nombre, dentro del header.
 - No aparece un filtro de canal nuevo.
 
 ## 4. Historias
@@ -27,9 +27,9 @@ Cuando abro la bandeja, quiero buscar desde el header. Cuando estoy en un chat, 
 
 P0. Bandeja. Acción fija: buscar. Abre el mismo campo que hoy está siempre visible y se cierra al elegir un chat o al tocar fuera.
 
-P0. Hilo. Acción fija: el interruptor que ya llama a `onToggleConversationBot`. No se muestra hasta que hay conversación. Sale del header el teléfono y salen las migas.
+P0. Hilo. Acción fija: el interruptor que ya llama a `onToggleConversationBot`. No se muestra hasta que hay conversación. El teléfono sale de la fila de acciones y salen las migas.
 
-P0. El teléfono pasa a una línea bajo el header, dentro del hilo, en `--ag-muted`.
+P0. El teléfono queda bajo el nombre, dentro del header, en `--ag-muted`. El título de la bandeja es «Chats».
 
 P0. Atrás y el nombre del contacto se quedan. El nombre trunca.
 
@@ -47,9 +47,9 @@ Ninguno nuevo. El teléfono y el estado del bot salen de la conversación ya car
 
 ## 9. UI
 
-Bandeja: título «Chats», ícono de buscar, campana. Sin la fila permanente del `IonSearchbar`.
+Bandeja: título «Chats», ícono de buscar, campana. Sin la fila permanente del `IonSearchbar` y sin la tarjeta de WhatsApp conectado.
 
-Hilo: atrás, nombre, interruptor. Debajo, el teléfono en una sola línea.
+Hilo: atrás, nombre y, debajo del nombre, el teléfono. A la derecha, el interruptor.
 
 ## 10. Riesgos
 
