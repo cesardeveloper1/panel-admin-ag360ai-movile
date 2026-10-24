@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
-import { logoWhatsapp } from 'ionicons/icons';
+import { searchOutline } from 'ionicons/icons';
 import { ChannelIcon } from '../components/ChannelIcon';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -75,6 +75,7 @@ const ChatsPage: React.FC = () => {
   const [nextHistoryCursor, setNextHistoryCursor] = useState<string | undefined>();
   const [botStateUpdating, setBotStateUpdating] = useState(false);
   const [query, setQuery] = useState('');
+  const [inboxSearchOpen, setInboxSearchOpen] = useState(false);
   const [selected, setSelected] = useState<ChatConversation | null>(null);
   const [openedFromExternal, setOpenedFromExternal] = useState(() => hasExternalChatOrigin());
   const [deepLinkSettled, setDeepLinkSettled] = useState(
@@ -85,6 +86,7 @@ const ChatsPage: React.FC = () => {
   );
   const threadEndRef = useRef<HTMLDivElement>(null);
   const threadMessagesRef = useRef<HTMLDivElement>(null);
+  const inboxSearchRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<ChatConversation | null>(null);
   const itemsRef = useRef<ChatConversation[]>([]);
   const queryRef = useRef('');
@@ -488,6 +490,7 @@ const ChatsPage: React.FC = () => {
   }, [items, query, t]);
 
   const onOpenChat = (chat: ChatConversation) => {
+    setInboxSearchOpen(false);
     setSelected(chat);
   };
 
@@ -561,7 +564,22 @@ const ChatsPage: React.FC = () => {
     ? conversationLabel(selected, t)
     : phoneFromUrl ||
       (customerKeyFromUrl ? t(customerKeyFromUrl) : t('chats.title'));
-  const threadBreadcrumbs = [{ label: t('nav.chats') }, { label: threadTitle }];
+
+  useEffect(() => {
+    if (showThread || !inboxSearchOpen) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!inboxSearchRef.current?.contains(event.target as Node)) setInboxSearchOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setInboxSearchOpen(false);
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [inboxSearchOpen, showThread]);
 
   return (
     <IonPage data-ag-route="/app/chats" data-chat-thread={showThread ? "true" : undefined}>
@@ -571,23 +589,30 @@ const ChatsPage: React.FC = () => {
             <>
               <AppHeader
                 title={threadTitle}
+                subtitle={selected?.phone || undefined}
                 onBack={onBackFromThread}
-                breadcrumbs={threadBreadcrumbs}
                 trailing={
                   selected ? (
-                    <div className="chat-header-meta">
-                      <span className="chat-header-meta__phone">{selected.phone}</span>
-                      <button
-                        type="button"
-                        className={`chat-header-bot-toggle${selected.botActive ? ' chat-header-bot-toggle--on' : ''}`}
-                        onClick={() => void onToggleConversationBot()}
-                        disabled={botStateUpdating}
-                        aria-pressed={selected.botActive}
-                        aria-label={selected.botActive ? t('chats.pauseBot') : t('chats.activateBot')}
-                      >
-                        {botStateUpdating ? <IonSpinner name="crescent" /> : selected.botActive ? t('chats.botOn') : t('chats.botOff')}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      className={`chat-header-bot-toggle${selected.botActive ? ' chat-header-bot-toggle--on' : ''}`}
+                      onClick={() => void onToggleConversationBot()}
+                      disabled={botStateUpdating}
+                      aria-pressed={selected.botActive}
+                      aria-label={selected.botActive ? t('chats.pauseBot') : t('chats.activateBot')}
+                    >
+                      {botStateUpdating ? <IonSpinner name="crescent" /> : (
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 3v3" />
+                          <rect x="4" y="6" width="16" height="13" rx="3" />
+                          <path d="M4 11H2M22 11h-2" />
+                          <circle cx="9" cy="11" r="1" />
+                          <circle cx="15" cy="11" r="1" />
+                          <path d="M9 15h6" />
+                          {!selected.botActive ? <path d="M3 3l18 18" /> : null}
+                        </svg>
+                      )}
+                    </button>
                   ) : null
                 }
               />
@@ -666,24 +691,35 @@ const ChatsPage: React.FC = () => {
             </>
           ) : (
             <>
-              <AppHeader centeredCompact title={t('chats.title')} showAlerts />
-              <div className="ag-body module-body chats-body ag-page-stack">
-                <div className="chats-status ag-enter">
-                  <IonIcon icon={logoWhatsapp} className="chats-status-icon chats-status-icon--brand" />
-                  <div>
-                    <strong>{t('chats.connected')}</strong>
-                    <p>{t('chats.connectedHint')}</p>
+              <AppHeader
+                title={t('chats.title')}
+                showAlerts
+                trailing={(
+                  <div className="ops-tools" ref={inboxSearchRef}>
+                    <button
+                      className="ops-tool-btn"
+                      type="button"
+                      aria-label={t('chats.search')}
+                      aria-expanded={inboxSearchOpen}
+                      onClick={() => setInboxSearchOpen((open) => !open)}
+                    >
+                      <IonIcon icon={searchOutline} aria-hidden="true" />
+                    </button>
+                    {inboxSearchOpen ? (
+                      <div className="ops-filter-popover" role="dialog" aria-label={t('chats.search')}>
+                        <IonSearchbar
+                          className="chats-search"
+                          value={query}
+                          onIonInput={(e) => setQuery(e.detail.value ?? '')}
+                          placeholder={t('chats.search')}
+                          debounce={200}
+                        />
+                      </div>
+                    ) : null}
                   </div>
-                </div>
-
-                <IonSearchbar
-                  className="chats-search ag-enter"
-                  value={query}
-                  onIonInput={(e) => setQuery(e.detail.value ?? '')}
-                  placeholder={t('chats.search')}
-                  debounce={200}
-                />
-
+                )}
+              />
+              <div className="ag-body module-body chats-body ag-page-stack">
                 {loading ? (
                   <div className="module-loading">
                     <IonSpinner name="crescent" />

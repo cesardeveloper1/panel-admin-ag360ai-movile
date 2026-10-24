@@ -1,10 +1,10 @@
 import {
   barChartOutline,
-  cardOutline,
   gridOutline,
   notificationsOutline,
   sparklesOutline,
   logoWhatsapp,
+  storefrontOutline,
 } from 'ionicons/icons';
 import {
   AGILITO_PATH,
@@ -60,7 +60,7 @@ export const ownerNavLeft: NavItem[] = [
   },
 ];
 
-/** Derecha: Agilito, Pagos (módulos de negocio bajo Pagos) */
+/** Derecha: Agilito y el hub de negocio. */
 export const ownerNavRight: NavItem[] = [
   {
     path: AGILITO_PATH,
@@ -70,7 +70,7 @@ export const ownerNavRight: NavItem[] = [
   },
   {
     path: PAYMENTS_PATH,
-    icon: cardOutline,
+    icon: storefrontOutline,
     labelKey: 'nav.payments',
     matchPaths: matchPathsFor(PAYMENTS_PATH, [PAYMENTS_PATH, ...BUSINESS_PATHS]),
   },
@@ -85,7 +85,7 @@ export const chatsNavItem: NavItem = {
   matchPaths: matchPathsFor(CHATS_PATH, [CHATS_PATH]),
 };
 
-/** Items de hamburguesa mobile: Agilito, Reportes, Ops, Chats, Pagos */
+/** Items de hamburguesa mobile: Agilito, Reportes, Ops, Chats, Negocio */
 export const mobileNavItems: NavItem[] = [
   ownerNavRight[0],
   ...ownerNavLeft,

@@ -17,10 +17,10 @@ vi.mock('@ionic/react', () => {
 });
 beforeEach(() => { state.tablet = false; state.keyboard = false; state.role = 'owner'; state.epoch = 0; vi.clearAllMocks(); });
 afterEach(cleanup);
-it('opens a single menu and exposes only three primary destinations', () => {
+it('opens a single menu and exposes the primary destinations', () => {
   render(<MemoryRouter initialEntries={['/app/operations']}><MobileNavigation /></MemoryRouter>);
   expect(screen.getAllByRole('navigation')).toHaveLength(1);
-  expect(screen.getAllByRole('button')).toHaveLength(3);
+  expect(screen.getAllByRole('button')).toHaveLength(4);
   expect(screen.getByRole('button', { name: 'Operaciones' })).toHaveAttribute('aria-current', 'page');
   fireEvent.click(screen.getByRole('button', { name: 'Menú' }));
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
@@ -46,7 +46,7 @@ it('hides the footer while a chat thread is open', () => {
   fireEvent(window, new Event('ag:chat-thread'));
   expect(screen.getByRole('navigation')).toBeTruthy();
 });
-it('keeps Agilito free of the bottom bar so its own menu can cover the screen', () => {
+it('hides the footer on Agilito so only its hamburger remains', () => {
   render(<MemoryRouter initialEntries={['/app/agilito']}><MobileNavigation /></MemoryRouter>);
   expect(screen.queryByRole('navigation')).toBeNull();
 });

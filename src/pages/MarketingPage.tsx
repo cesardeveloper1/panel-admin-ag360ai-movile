@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonIcon, IonSpinner } from '@ionic/react';
-import { chatbubbleOutline, peopleOutline } from 'ionicons/icons';
+import { chatbubbleOutline, peopleOutline, searchOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FilterChips } from '../components/FilterChips';
@@ -32,12 +32,30 @@ const MarketingPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [segment, setSegment] = useState<SegmentFilter>('all');
+  const [searchOpen, setSearchOpen] = useState(false);
   const requestIdRef = useRef(0);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedQuery(query), 300);
     return () => window.clearTimeout(timeout);
   }, [query]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!searchRef.current?.contains(event.target as Node)) setSearchOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSearchOpen(false);
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [searchOpen]);
 
   useEffect(() => {
     const requestId = ++requestIdRef.current;
@@ -85,11 +103,32 @@ const MarketingPage: React.FC = () => {
     <StackLayout
       title={t('marketing.title')}
       showAlerts
-      search={{
-        value: query,
-        placeholder: t('marketing.search'),
-        onChange: setQuery,
-      }}
+      trailing={(
+        <div className="ops-tools" ref={searchRef}>
+          <button
+            className="ops-tool-btn"
+            type="button"
+            aria-label={t('marketing.search')}
+            aria-expanded={searchOpen}
+            onClick={() => setSearchOpen((open) => !open)}
+          >
+            <IonIcon icon={searchOutline} aria-hidden="true" />
+          </button>
+          {searchOpen ? (
+            <div className="ops-filter-popover" role="dialog" aria-label={t('marketing.search')}>
+              <input
+                className="carta-search"
+                type="search"
+                value={query}
+                placeholder={t('marketing.search')}
+                aria-label={t('marketing.search')}
+                autoFocus
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+          ) : null}
+        </div>
+      )}
     >
       <FilterChips chips={chips} value={segment} onChange={(id) => setSegment(id as SegmentFilter)} />
 

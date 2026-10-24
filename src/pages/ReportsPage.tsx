@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonDatetime, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { cubeOutline } from 'ionicons/icons';
+import { calendarOutline, cubeOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { TabLayout } from '../components/layouts';
 import { useApp } from '../hooks/useApp';
@@ -362,7 +362,13 @@ const ReportsPage: React.FC = () => {
   return (
     <TabLayout
       title={t('reports.title')}
-      centeredCompact
+      centeredCompact={false}
+      action={{
+        label: t('reports.periodRange'),
+        onClick: openDatePicker,
+        icon: calendarOutline,
+        iconOnly: true,
+      }}
       bodyClassName="ag-body module-body reports-body"
       pageExtras={
       <IonModal
@@ -429,14 +435,7 @@ const ReportsPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <button
-                  type="button"
-                  className="reports-range-summary ag-enter"
-                  onClick={openDatePicker}
-                  aria-label={t('reports.periodRange')}
-                >
-                  {periodSummaryLabel}
-                </button>
+                <p className="reports-period-status">{periodSummaryLabel}</p>
 
                 {sales ? (
                   <section className="reports-hero ag-enter">

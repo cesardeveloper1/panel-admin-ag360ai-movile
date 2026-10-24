@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { checkmarkDoneOutline } from 'ionicons/icons';
 import { StackLayout } from '../components/layouts';
 import { NotificationCard } from '../components/NotificationCard';
 import { useApp } from '../hooks/useApp';
@@ -18,6 +19,8 @@ const NotificationsPage: React.FC = () => {
           ? {
               label: t('notifications.markAll'),
               onClick: () => void markAllNotificationsRead(),
+              icon: checkmarkDoneOutline,
+              iconOnly: true,
             }
           : undefined
       }

@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 import { config } from '../config/env';
 import { useAuthToken } from '../hooks/useAuthToken';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import { useApp } from '../hooks/useApp';
+import { acceptCue, deliverNotificationCue, startNotificationCues } from '../notifications/deliverNotificationCue';
+import { chatCueForNewMessage, chatCueForTransition, resolveChatSoundKey } from '../notifications/notificationCues';
 import {
   ChatSocketContext,
   type ChatNewMessagePayload,
@@ -30,11 +33,13 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { session, brand } = useApp();
+  const { t } = useTranslation();
   const token = useAuthToken();
   const socketRef = useRef<Socket | null>(null);
   const historyRoomRef = useRef<HistoryRoomOptions | null>(null);
   const messageListeners = useRef(new Set<MessageListener>());
   const contactListeners = useRef(new Set<ContactListener>());
+  const chatSoundKeys = useRef(new Map<string, string>());
 
   useEffect(() => {
     if (config.useApiMock) return;
@@ -42,6 +47,8 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (!token) return;
 
+    startNotificationCues();
+    chatSoundKeys.current.clear();
     const subDomain = brand.subdomain.trim();
     const base = resolveSocketBaseUrl();
     const socket = io(`${base}/chat`, {
@@ -75,12 +82,37 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const onNewMessage = (payload: ChatNewMessagePayload) => {
       if (payload.subDomain && payload.subDomain !== subDomain) return;
+      const sound = chatCueForNewMessage(payload);
+      const messageId = payload._id || payload.id || payload.createdAt || '';
+      if (sound && acceptCue(`chat:${messageId}`)) {
+        void deliverNotificationCue({
+          sound,
+          title: t('cues.chatTitle'),
+          body: payload.clientName ? t('cues.chatBody', { name: payload.clientName }) : t('cues.chatBodyPlain'),
+        });
+      }
       messageListeners.current.forEach((fn) => fn(payload));
     };
 
     const onContactUpdated = (payload: ContactInfoUpdatedPayload) => {
       const infoSub = payload.contactInfo?.subDomain || payload.subDomain;
       if (infoSub && infoSub !== subDomain) return;
+      const contact = payload.contactInfo;
+      if (contact) {
+        const identity = contact.clientPhone || contact.clientBsuid || contact._id;
+        const mapKey = `${subDomain}:${identity}`;
+        const previous = chatSoundKeys.current.get(mapKey);
+        const next = resolveChatSoundKey(contact);
+        chatSoundKeys.current.set(mapKey, next);
+        const sound = chatCueForTransition(previous, next);
+        if (sound && acceptCue(`chat-state:${mapKey}:${next}`)) {
+          void deliverNotificationCue({
+            sound,
+            title: t(sound === 'humano' ? 'cues.humanTitle' : 'cues.chatTitle'),
+            body: contact.clientName ? t('cues.chatBody', { name: contact.clientName }) : t('cues.chatBodyPlain'),
+          });
+        }
+      }
       contactListeners.current.forEach((fn) => fn(payload));
     };
 
@@ -104,7 +136,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       socketRef.current = null;
       historyRoomRef.current = null;
     };
-  }, [session, brand?.id, brand?.subdomain, token]);
+  }, [session, brand?.id, brand?.subdomain, token, t]);
 
   const subscribeNewMessage = useCallback((listener: MessageListener) => {
     messageListeners.current.add(listener);

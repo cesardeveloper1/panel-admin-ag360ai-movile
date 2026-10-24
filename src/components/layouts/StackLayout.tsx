@@ -32,6 +32,7 @@ export interface StackLayoutProps {
   search?: HeaderSearch;
   action?: HeaderAction;
   secondaryAction?: HeaderAction;
+  trailing?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
   bodyClassName?: string;
@@ -51,6 +52,7 @@ export function StackLayout({
   search,
   action,
   secondaryAction,
+  trailing,
   children,
   contentClassName = 'ag-screen',
   bodyClassName = 'ag-body module-body ag-page-stack',
@@ -82,6 +84,7 @@ export function StackLayout({
             search={search}
             action={action}
             secondaryAction={secondaryAction}
+            trailing={trailing}
           />
           <div className={bodyClassName}>{children}</div>
         </AppShell>

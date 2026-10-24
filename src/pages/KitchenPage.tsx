@@ -11,7 +11,7 @@ import { useApp } from '../hooks/useApp';
 const KitchenPage: React.FC = () => {
   const { t } = useTranslation();
   const history = useHistory();
-  const { brand, orders, advanceOrder, canChangeOrders, orderMutations } = useApp();
+  const { orders, advanceOrder, canChangeOrders, orderMutations } = useApp();
 
   const kitchenOrders = useMemo(
     () => orders.filter((o) => ['accepted', 'in_kitchen', 'ready'].includes(o.status)),
@@ -33,7 +33,6 @@ const KitchenPage: React.FC = () => {
         <AppShell>
           <AppHeader
             title={t('kitchen.title')}
-            subtitle={brand ? `${t(brand.nameKey)} · ${t('kitchen.subtitle')}` : t('kitchen.subtitle')}
             showAlerts
             backLabel={t('ops.modeOperator')}
             onBack={() => history.replace('/app/operations')}

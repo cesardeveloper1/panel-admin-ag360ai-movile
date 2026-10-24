@@ -9,7 +9,6 @@ import { useViewport } from '../hooks/useViewport';
 import { useKeyboardVisible } from '../hooks/useKeyboardVisible';
 import { getRoute, PROFILE_PATH, OPERATIONS_PATH, CHATS_PATH, AGILITO_PATH } from '../navigation/appRouteRegistry';
 import { mobileNavItems, alertsNavItem } from '../navigation/navConfig';
-import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { canNavigate } from '../navigation/navigationAccess';
 import { brandLabel } from '../utils/brandLabel';
 import { BottomNav } from './BottomNav';
@@ -25,9 +24,8 @@ export function MobileNavigation() {
   const [open, setOpen] = useState(false);
   const [threadOpen, setThreadOpen] = useState(false);
   const eligible = Boolean(session && brand && !authRestoring && !brandTransitioning && !isTablet &&
-    ['owner', 'superadmin', 'manager', 'worker'].includes(session.role) && getRoute(location.pathname)?.kind === 'tab'
-    && location.pathname !== AGILITO_PATH);
-  const showBar = eligible && !keyboard && !threadOpen;
+    ['owner', 'superadmin', 'manager', 'worker'].includes(session.role) && getRoute(location.pathname)?.kind === 'tab');
+  const showBar = eligible && !keyboard && !threadOpen && location.pathname !== AGILITO_PATH;
   useLayoutEffect(() => {
     const syncThread = () => {
       const openThread = document.body.classList.contains('ag-chat-thread-open');
@@ -44,8 +42,8 @@ export function MobileNavigation() {
     return () => document.body.classList.remove('ag-primary-nav-visible');
   }, [showBar]);
   const secondary = [
-    ...mobileNavItems.filter(item => item.path !== OPERATIONS_PATH && item.path !== CHATS_PATH),
-    ...BUSINESS_MODULES.map(item => ({ path: item.path, icon: item.icon, labelKey: item.i18n.agilitoLabel })), alertsNavItem,
+    ...mobileNavItems.filter(item => item.path !== OPERATIONS_PATH && item.path !== CHATS_PATH && item.path !== AGILITO_PATH),
+    alertsNavItem,
   ].filter(item => canNavigate(session, item.path));
   const navigate = (path: string) => { setOpen(false); if (path !== location.pathname) go(path); };
   return <>

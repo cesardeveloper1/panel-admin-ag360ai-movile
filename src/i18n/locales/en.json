@@ -93,7 +93,7 @@
     "orders": "Orders",
     "business": "Business",
     "chats": "Chats",
-    "payments": "Payments",
+    "payments": "Business",
     "agilito": "Agilito",
     "profileHint": "Open profile",
     "expandSidebar": "Expand sidebar",
@@ -401,6 +401,17 @@
     "reportsLoadError": "Could not load reports",
     "orderUpdateError": "Could not update order",
     "socketNewOrder": "New order received"
+  },
+  "cues": {
+    "orderTitle": "New order",
+    "orderStatusTitle": "Order updated",
+    "orderBody": "Order {{number}}",
+    "chatTitle": "New chat",
+    "humanTitle": "A person needs attention",
+    "chatBody": "Message from {{name}}",
+    "chatBodyPlain": "Message from a customer",
+    "complaintTitle": "Complaint",
+    "complaintBody": "A customer left a complaint"
   },
   "users": {
     "maria": "María González",
@@ -748,10 +759,8 @@
     "unreadCount": "{{count}} unread"
   },
   "chats": {
-    "title": "WhatsApp chats",
+    "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
-    "connected": "WhatsApp connected",
-    "connectedHint": "Chatbot conversation inbox",
     "search": "Search contact",
     "empty": "No conversations",
     "botOn": "Bot on",
@@ -822,7 +831,7 @@
     "msgAna2": "Yes, today we have anticucho combo for S/ 28."
   },
   "payments": {
-    "title": "Payments",
+    "title": "Business",
     "intro": "Menu, marketing, locations and brand from one hub.",
     "menuTitle": "Menu & products",
     "menuDesc": "Catalog, prices and availability",
@@ -848,7 +857,7 @@
     "replyDefault": "Got it. In the full app I will run real actions; for now I guide you step by step.",
     "replyOrders": "You have orders in New, In progress and Delivered. Open Orders for the vertical kanban.",
     "replyReports": "Reports shows KPIs, trends and rankings like the web panel.",
-    "replyPayments": "Payments hub covers menu, clients, locations and brand data.",
+    "replyPayments": "Business covers menu, clients, locations and brand data.",
     "modulesTitle": "Your business",
     "chatTitle": "Ask Agilito",
     "menuTitle": "Menu & products",

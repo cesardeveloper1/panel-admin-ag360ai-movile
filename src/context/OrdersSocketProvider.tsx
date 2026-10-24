@@ -1,8 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 import { config } from '../config/env';
 import { useApp } from '../hooks/useApp';
 import { useAuthToken } from '../hooks/useAuthToken';
+import { acceptCue, deliverNotificationCue, startNotificationCues } from '../notifications/deliverNotificationCue';
+import { complaintCue, orderCueSound } from '../notifications/notificationCues';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import {
   orderSocketEventMatchesBrand,
@@ -25,7 +28,8 @@ const ORDER_REFRESH_TYPES = new Set([
 export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { session, brand, refreshOrders, showToast } = useApp();
+  const { t } = useTranslation();
+  const { session, brand, refreshOrders } = useApp();
   const token = useAuthToken();
   const refreshTimer = useRef<number | null>(null);
   const ordersSocketRef = useRef<Socket | null>(null);
@@ -37,6 +41,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (!token) return;
 
+    startNotificationCues();
     const base = resolveSocketBaseUrl();
     const socketAuth = { token };
     const query = {
@@ -91,8 +96,23 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
       scheduleRefresh();
 
+      const sound = orderCueSound({
+        role: session.role,
+        type,
+        playSound: event.data?.playSound,
+        status: event.data?.status,
+      });
+      const orderId = event.data?._id || event.data?.orderId || event.data?.orderNumber;
+      if (sound && acceptCue(`${type}:${orderId ?? ''}`)) {
+        const number = event.data?.orderNumber || orderId || '';
+        void deliverNotificationCue({
+          sound,
+          title: t(type === 'order_created' ? 'cues.orderTitle' : 'cues.orderStatusTitle'),
+          body: number ? t('cues.orderBody', { number }) : t('cues.orderTitle'),
+        });
+      }
+
       if (type === 'order_created') {
-        showToast('toast.socketNewOrder');
         if (event.data?.thermalPrint) {
           void printThermalPayloadDirectly({
             activeBrandId: brand.id,
@@ -107,7 +127,19 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
+    const handleEventsEvent = (event: { type?: string; data?: { category?: unknown; _id?: string; id?: string; message?: string } }) => {
+      if (!complaintCue(event)) return;
+      const id = String(event.data?._id ?? event.data?.id ?? event.data?.message ?? '');
+      if (!acceptCue(`complaint:${id}`)) return;
+      void deliverNotificationCue({
+        sound: 'sos',
+        title: t('cues.complaintTitle'),
+        body: t('cues.complaintBody'),
+      });
+    };
+
     ordersSocket.on('event', handleOrdersEvent);
+    eventsSocket.on('event', handleEventsEvent);
     // A socket connection is not proof of fresh data: revalidate the list.
     ordersSocket.on('connect', scheduleRefresh);
 
@@ -129,12 +161,13 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshTimer.current = null;
       }
       ordersSocket.off('event', handleOrdersEvent);
+      eventsSocket.off('event', handleEventsEvent);
       ordersSocket.disconnect();
       eventsSocket.disconnect();
       ordersSocketRef.current = null;
       eventsSocketRef.current = null;
     };
-  }, [session, brand?.id, brand?.subdomain, refreshOrders, showToast, token]);
+  }, [session, brand?.id, brand?.subdomain, refreshOrders, t, token]);
 
   return <>{children}</>;
 };

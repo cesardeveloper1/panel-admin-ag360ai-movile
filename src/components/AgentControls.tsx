@@ -55,7 +55,16 @@ export function AgentControls() {
 
   if (!canSee) return null;
 
-  const brandLocked = agentLocked || agentBusy || failed || loading || scope?.globalCanToggle === false || pending === 'brand';
+  if (loading) {
+    return (
+      <div className="ag-agent-controls ag-agent-controls--loading" role="status">
+        <IonSpinner name="crescent" />
+        <span className="ag-agent-controls__sr">{t('agent.loadingScope')}</span>
+      </div>
+    );
+  }
+
+  const brandLocked = agentLocked || agentBusy || failed || scope?.globalCanToggle === false || pending === 'brand';
   const channelsLocked = brandLocked || !agentEnabled;
   const scopeName = scope?.mode === 'per_branch' ? t('agent.wholeBrand') : t('agent.shared');
   const scopeAccounts = scope?.mode === 'per_branch' ? scope.accounts : [];
@@ -146,7 +155,6 @@ export function AgentControls() {
           />
         )}
       </div>
-      {loading ? <p className="ag-agent-controls__status" role="status">{t('agent.loadingScope')}</p> : null}
       {failed ? <p className="ag-agent-controls__status" role="alert">{t('agent.scopeError')}</p> : null}
       {scope?.globalCanToggle === false ? <p className="ag-agent-controls__status">{t('agent.scopeReadOnly')}</p> : null}
       {policy ? channels.map((channel) => (

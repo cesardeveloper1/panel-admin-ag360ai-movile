@@ -93,7 +93,7 @@
     "orders": "Operaciones",
     "business": "Negocio",
     "chats": "Chats",
-    "payments": "Pagos",
+    "payments": "Negocio",
     "agilito": "Agilito",
     "profileHint": "Abrir perfil",
     "expandSidebar": "Expandir barra lateral",
@@ -435,6 +435,17 @@
     "reportsLoadError": "No se pudieron cargar los reportes",
     "orderUpdateError": "No se pudo actualizar el pedido",
     "socketNewOrder": "Nuevo pedido recibido"
+  },
+  "cues": {
+    "orderTitle": "Nuevo pedido",
+    "orderStatusTitle": "Pedido actualizado",
+    "orderBody": "Pedido {{number}}",
+    "chatTitle": "Nuevo chat",
+    "humanTitle": "Atención de una persona",
+    "chatBody": "Mensaje de {{name}}",
+    "chatBodyPlain": "Mensaje de un cliente",
+    "complaintTitle": "Reclamo",
+    "complaintBody": "Un cliente dejó un reclamo"
   },
   "users": {
     "maria": "María González",
@@ -793,10 +804,8 @@
     "unreadCount": "{{count}} sin leer"
   },
   "chats": {
-    "title": "Chats WhatsApp",
+    "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
-    "connected": "WhatsApp conectado",
-    "connectedHint": "Bandeja de conversaciones del chatbot",
     "search": "Buscar contacto",
     "empty": "No hay conversaciones",
     "botOn": "Bot activo",
@@ -867,7 +876,7 @@
     "msgAna2": "Sí, hoy tenemos combo anticuchero a S/ 28."
   },
   "payments": {
-    "title": "Pagos",
+    "title": "Negocio",
     "intro": "Menú, marketing, locales y marca desde un solo lugar.",
     "menuTitle": "Menú y productos",
     "menuDesc": "Carta, precios y disponibilidad",
@@ -893,7 +902,7 @@
     "replyDefault": "Entendido. En la app completa conectaré acciones reales; por ahora te guío paso a paso.",
     "replyOrders": "Tienes pedidos en Nuevo, En proceso y Entregado. Abre Pedidos para ver el kanban vertical.",
     "replyReports": "En Reportes verás KPIs, tendencias y rankings como en el panel web.",
-    "replyPayments": "En Pagos gestionas menú, clientes, locales y datos de marca.",
+    "replyPayments": "En Negocio gestionas menú, clientes, locales y datos de marca.",
     "modulesTitle": "Tu negocio",
     "chatTitle": "Pregúntale a Agilito",
     "menuTitle": "Menú y productos",

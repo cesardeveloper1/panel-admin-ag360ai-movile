@@ -44,7 +44,7 @@ const FOCUS_LABEL_KEY: Record<OpsFocus, string> = {
 
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { session, brand, authEpoch, orders, ordersFilters, ordersError, ordersLastSyncedAt, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
+  const { session, brand, authEpoch, orders, ordersFilters, ordersError, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
@@ -57,9 +57,6 @@ const OperationsPage: React.FC = () => {
   const [scopeContext, setScopeContext] = useState<OperationsScopeResult | null>(null);
   const verifiedScope = scopeContext?.scope === `${authEpoch}|${brand?.id}|${brand?.subdomain}` ? scopeContext : null;
   const scopedBranches = verifiedScope?.data?.branches ?? [];
-  const localContext = verifiedScope?.state === 'error' ? t('ops.filters.contextError') : verifiedScope?.state !== 'ready' ? t('ops.filters.loading') :
-    scopedBranches.length === 0 ? t('ops.filters.noLocals') : scopedBranches.length === 1 ? scopedBranches[0].name :
-      scopedBranches.find(branch => branch.id === ordersFilters.branchId)?.name ?? t('ops.filters.allLocals');
   const [opsMode, setOpsMode] = useState<OpsMode>(initialView?.mode ?? 'funnel');
   const [query, setQuery] = useState(initialView?.query ?? ordersFilters.search ?? '');
 
@@ -335,8 +332,6 @@ const OperationsPage: React.FC = () => {
   const hasMore = opsMode === 'funnel' ? contactsHasMore : ordersHasMore;
   const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : ordersLoadingMore;
   const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
-  const lastSyncedAt = opsMode === 'funnel' ? contactResult.syncedAt : ordersLastSyncedAt;
-  const syncedTime = lastSyncedAt ? new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(lastSyncedAt) : null;
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
   return (
@@ -351,7 +346,7 @@ const OperationsPage: React.FC = () => {
         onIonScroll={isTablet ? undefined : handleOperationsScroll}
       >
         <AppShell>
-          <AppHeader title={t('ops.title')} subtitle={brand?.displayName} trailing={
+          <AppHeader title={t('ops.title')} trailing={
             <OperationsQuickAccess mode={opsMode} query={query} onQueryChange={setQuery} panel={panel} onPanel={setPanel} branchCount={verifiedScope?.state === 'ready' ? scopedBranches.length : undefined}>
               <OperationsFilters panel={panel} onClose={() => setPanel(null)} mode={opsMode} onScopeChange={setScopeContext} funnelChannel={funnelChannel} onFunnelChannel={setFunnelChannel} />
             </OperationsQuickAccess>
@@ -378,10 +373,6 @@ const OperationsPage: React.FC = () => {
               </button>
             </div>
 
-            <p className="ops-applied-context"><span aria-hidden="true">{verifiedScope?.state === 'ready' && scopedBranches.length === 0 ? '⌖̸ ' : ''}</span>{localContext}</p>
-            {opsMode === 'orders' ? <p className="ops-applied-context">{t(`ops.filters.${ordersFilters.dateMode}`)}{ordersFilters.source ? ` · ${ordersFilters.source === 2 ? t('ops.filters.digitalMenu') : ({ 1: 'WhatsApp', 5: 'Instagram', 6: 'Messenger' } as Record<number, string>)[ordersFilters.source]}` : ''}</p> : funnelChannel !== 'all' ? <p className="ops-applied-context">{funnelChannel === 'whatsapp' ? 'WhatsApp' : funnelChannel === 'instagram' ? 'Instagram' : 'Messenger'}</p> : null}
-
-            {!listError && !listLoading ? <p className="ops-loaded-note">{t('ops.reliability.loadedCounts')}{syncedTime ? ` · ${t('ops.reliability.syncedAt', { time: syncedTime })}` : ''}</p> : null}
             {listError ? (
               <section className="ops-service-error" role="alert">
                 <h2>{t('ops.reliability.unavailable')}</h2>

@@ -3,8 +3,6 @@ import { createPortal } from 'react-dom';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
   barChartOutline,
-  cardOutline,
-  chatbubblesOutline,
   closeOutline,
   gridOutline,
   menuOutline,
@@ -18,6 +16,7 @@ import {
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
+import { PanelChatIcon } from '../components/PanelChatIcon';
 import { AgentToggle } from '../components/AgentToggle';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
@@ -42,6 +41,7 @@ const AgilitoPage: React.FC = () => {
   const { notifications, showToast, session, startBrandSwitch } = useApp();
   const { isTablet } = useViewport();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPresent, setMenuPresent] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
   const [input, setInput] = useState('');
@@ -102,7 +102,12 @@ const AgilitoPage: React.FC = () => {
   useEffect(() => () => stopMedia(), [stopMedia]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (menuOpen) setMenuPresent(true);
+    else if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setMenuPresent(false);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuPresent) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMenuOpen(false);
     };
@@ -111,15 +116,15 @@ const AgilitoPage: React.FC = () => {
     return () => {
       document.body.classList.remove('agilito-nav-open');
       document.removeEventListener('keydown', onKey);
-      menuButtonRef.current?.focus();
+      if (!menuOpen) menuButtonRef.current?.focus();
     };
-  }, [menuOpen]);
+  }, [menuOpen, menuPresent]);
 
   const destinations = [
     { path: OPERATIONS_PATH, icon: gridOutline, labelKey: 'ops.title' },
-    { path: CHATS_PATH, icon: chatbubblesOutline, labelKey: 'nav.chats' },
+    { path: CHATS_PATH, icon: '', labelKey: 'nav.chats' },
     { path: REPORTS_PATH, icon: barChartOutline, labelKey: 'nav.reports' },
-    { path: PAYMENTS_PATH, icon: cardOutline, labelKey: 'nav.payments' },
+    { path: PAYMENTS_PATH, icon: storefrontOutline, labelKey: 'nav.payments' },
     ...BUSINESS_MODULES.map((mod) => ({ path: mod.path, icon: mod.icon, labelKey: mod.i18n.agilitoLabel })),
     { path: NOTIFICATIONS_PATH, icon: notificationsOutline, labelKey: 'nav.alerts' },
     { path: PROFILE_PATH, icon: personOutline, labelKey: 'nav.profile' },
@@ -198,7 +203,7 @@ const AgilitoPage: React.FC = () => {
                     type="button"
                     className="agilito-menu-trigger"
                     aria-label={t('nav.sidebar')}
-                    aria-expanded={menuOpen}
+                    aria-expanded={menuPresent}
                     aria-controls="agilito-nav"
                     onClick={() => setMenuOpen(true)}
                   >
@@ -339,8 +344,14 @@ const AgilitoPage: React.FC = () => {
             </form>
           </div>
         </AppShell>
-        {menuOpen ? createPortal(
-          <div className="agilito-nav-layer">
+        {menuPresent ? createPortal(
+          <div
+            className={`agilito-nav-layer${menuOpen ? ' is-open' : ' is-closing'}`}
+            onAnimationEnd={(event) => {
+              if (event.target !== event.currentTarget || event.animationName !== 'agilito-nav-out') return;
+              setMenuPresent(false);
+            }}
+          >
             <aside id="agilito-nav" className="agilito-nav" role="dialog" aria-modal="true" aria-label={t('nav.sidebar')}>
               <div className="agilito-nav__head">
                 <strong>{t('nav.agilito')}</strong>
@@ -349,9 +360,15 @@ const AgilitoPage: React.FC = () => {
                 </button>
               </div>
               <nav className="agilito-nav__list">
-                {destinations.map((item) => (
-                  <button key={item.path} type="button" className="agilito-nav__item" onClick={() => openDestination(item.path)}>
-                    <IonIcon icon={item.icon} aria-hidden="true" />
+                {destinations.map((item, index) => (
+                  <button
+                    key={item.path}
+                    type="button"
+                    className="agilito-nav__item"
+                    style={{ animationDelay: `${48 + index * 32}ms` }}
+                    onClick={() => openDestination(item.path)}
+                  >
+                    {item.path === CHATS_PATH ? <PanelChatIcon /> : <IonIcon icon={item.icon} aria-hidden="true" />}
                     <span>{t(item.labelKey)}</span>
                   </button>
                 ))}
@@ -359,6 +376,7 @@ const AgilitoPage: React.FC = () => {
               <button
                 type="button"
                 className="agilito-nav__item agilito-nav__brand"
+                style={{ animationDelay: `${48 + destinations.length * 32}ms` }}
                 onClick={() => {
                   setMenuOpen(false);
                   startBrandSwitch();
