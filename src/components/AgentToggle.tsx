@@ -1,27 +1,37 @@
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../hooks/useApp';
 
-export function AgentToggle() {
+export function AgentToggle({ onPress, expanded, controlsId }: {
+  onPress?: () => void;
+  expanded?: boolean;
+  controlsId?: string;
+} = {}) {
   const { t } = useTranslation();
   const { session, agentEnabled, agentLocked, agentBusy, toggleAgent } = useApp();
   // This endpoint controls the whole brand, never a manager's selected location.
   if (!session || !['owner', 'superadmin'].includes(session.role)) return null;
-  const disabled = agentBusy || agentLocked;
+  const opensMenu = Boolean(onPress);
+  const disabled = !opensMenu && (agentBusy || agentLocked);
 
   return (
     <button
       type="button"
       className={`ag-agent-toggle${agentEnabled ? ' is-on' : ' is-off'}${agentLocked ? ' is-locked' : ''}`}
       aria-label={
-        agentLocked
-          ? t('agent.locked')
-          : t(agentEnabled ? 'agent.turnOff' : 'agent.turnOn')
+        opensMenu
+          ? t('agent.open')
+          : agentLocked
+            ? t('agent.locked')
+            : t(agentEnabled ? 'agent.turnOff' : 'agent.turnOn')
       }
-      aria-pressed={agentEnabled}
+      aria-pressed={opensMenu ? undefined : agentEnabled}
+      aria-haspopup={opensMenu ? 'menu' : undefined}
+      aria-expanded={opensMenu ? expanded : undefined}
+      aria-controls={opensMenu ? controlsId : undefined}
       aria-busy={agentBusy}
       disabled={disabled}
       title={agentLocked ? t('agent.locked') : undefined}
-      onClick={() => void toggleAgent()}
+      onClick={() => onPress ? onPress() : void toggleAgent()}
     >
       <svg className="ag-agent-bot-icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 3v3" />

@@ -14,6 +14,7 @@ import {
 } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
+import { PanelChatIcon } from './PanelChatIcon';
 import { canNavigate } from '../navigation/navigationAccess';
 import { brandLabel } from '../utils/brandLabel';
 
@@ -67,7 +68,7 @@ export function SideNav() {
         className={`ag-side-nav-item${active ? ' active' : ''}`}
         onClick={item.path === CHATS_PATH ? openChatsInbox : () => go(item.path)}
       >
-        <IonIcon icon={item.icon} aria-hidden="true" />
+        {item.path === CHATS_PATH ? <PanelChatIcon /> : <IonIcon icon={item.icon} aria-hidden="true" />}
         <span>{t(item.labelKey)}</span>
       </button>
     );

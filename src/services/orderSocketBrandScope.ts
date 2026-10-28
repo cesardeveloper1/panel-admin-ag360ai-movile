@@ -11,6 +11,7 @@ export type OrderSocketEventShape = {
     brandSubdomain?: string;
     orderNumber?: string;
     status?: string;
+    playSound?: boolean;
     _id?: string;
     orderId?: string;
     branchId?: string;

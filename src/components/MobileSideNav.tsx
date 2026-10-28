@@ -8,6 +8,7 @@ import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH, isNavActive, mobileNavItems, CHATS_PATH } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
+import { PanelChatIcon } from './PanelChatIcon';
 import { brandLabel } from '../utils/brandLabel';
 
 export function MobileSideNav() {
@@ -87,7 +88,7 @@ export function MobileSideNav() {
                   aria-current={active ? 'page' : undefined}
                   tabIndex={open ? 0 : -1}
                 >
-                  <IonIcon icon={item.icon} />
+                  {item.path === CHATS_PATH ? <PanelChatIcon /> : <IonIcon icon={item.icon} />}
                   <span>{t(item.labelKey)}</span>
                 </button>
               );
