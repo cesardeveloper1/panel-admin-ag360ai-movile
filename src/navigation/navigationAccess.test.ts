@@ -24,3 +24,23 @@ it('keeps authorized aliases and chooses an authorized landing page', () => {
   expect(navigationLandingPath({ ...manager, role: 'owner' })).toBe('/app/agilito');
   expect(navigationLandingPath({ ...manager, permissions: undefined })).toBe('/app/profile');
 });
+
+const menuGrant = { menu: { enabled: true, actions: ['view'] }, reportes: { enabled: true, actions: ['view_dashboard'] } };
+it('keeps manager and worker screens inside the granted modules and the location mode', () => {
+  const granted = { ...manager, permissions: { modules: { ...manager.permissions?.modules, ...menuGrant } } };
+  const worker = { ...granted, role: 'worker' as const };
+  const owner = { ...granted, role: 'owner' as const };
+  expect(canNavigate(worker, '/app/reports/cancelled', { locations: 1 })).toBe(false);
+  expect(canNavigate(worker, '/app/menu/integrations', { locations: 1 })).toBe(false);
+  expect(canNavigate(granted, '/app/reports/cancelled', { locations: 1 })).toBe(true);
+  expect(canNavigate(granted, '/app/menu/integrations', { locations: 1 })).toBe(true);
+  expect(canNavigate(granted, '/app/products', { locations: 2 })).toBe(false);
+  expect(canNavigate(granted, '/app/menu/categories', { locations: 2 })).toBe(false);
+  expect(canNavigate(granted, '/app/menu/local', { locations: 2 })).toBe(true);
+  expect(canNavigate(granted, '/app/products', { locations: 1 })).toBe(true);
+  expect(canNavigate(granted, '/app/menu/categories', { locations: 1 })).toBe(true);
+  expect(canNavigate(granted, '/app/menu/local', { locations: 1 })).toBe(false);
+  expect(canNavigate({ ...manager, permissions: undefined }, '/app/menu/categories', { locations: 1 })).toBe(false);
+  expect(canNavigate(owner, '/app/products', { locations: 2 })).toBe(true);
+  expect(canNavigate(granted, '/app/datos-marca')).toBe(false);
+});

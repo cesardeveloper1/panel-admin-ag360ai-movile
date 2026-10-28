@@ -4,6 +4,10 @@ import { calendarOutline, cubeOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { TabLayout } from '../components/layouts';
 import { useApp } from '../hooks/useApp';
+import { useAppNavigation } from '../hooks/useAppNavigation';
+import { canNavigate } from '../navigation/navigationAccess';
+import { REPORTS_PATH } from '../navigation/navConfig';
+import { STAFF_SCREENS } from '../navigation/staffScreens';
 import { apiFacade } from '../services/apiFacade';
 import type { ChartPoint, DashboardKpi, DashboardReport, RankItem } from '../types';
 
@@ -116,7 +120,9 @@ function RankingBlock({
 
 const ReportsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { brand, showToast } = useApp();
+  const { brand, session, showToast } = useApp();
+  const { go } = useAppNavigation();
+  const reportLinks = STAFF_SCREENS.filter((screen) => screen.parent === REPORTS_PATH && canNavigate(session, screen.path, { locations: brand?.locations }));
   const [period, setPeriod] = useState<ReportPeriod>('today');
   const [reports, setReports] = useState<Partial<Record<ReportPeriod, DashboardReport>>>({});
   const [loading, setLoading] = useState(true);
@@ -623,6 +629,18 @@ const ReportsPage: React.FC = () => {
                     })}
                   </div>
                 </section>
+                ) : null}
+
+                {reportLinks.length > 0 ? (
+                  <section className="reports-panel ag-enter">
+                    <div className="reports-res-grid">
+                      {reportLinks.map((screen) => (
+                        <button key={screen.path} type="button" className="ag-btn" onClick={() => go(screen.path)}>
+                          {t(screen.titleKey)}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
                 ) : null}
               </>
             )}

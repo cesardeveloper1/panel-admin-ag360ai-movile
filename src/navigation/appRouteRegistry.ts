@@ -6,6 +6,7 @@
 import {
   BUSINESS_MODULE_PATHS as CATALOG_MODULE_PATHS,
 } from './businessModules';
+import { STAFF_SCREENS } from './staffScreens';
 
 export const NOTIFICATIONS_PATH = '/app/notifications';
 export const PROFILE_PATH = '/app/profile';
@@ -168,6 +169,12 @@ export const APP_ROUTES: AppRoute[] = [
     parent: OPERATIONS_PATH,
     titleKey: 'ops.filters.quickMessages',
   },
+  ...STAFF_SCREENS.map((screen) => ({
+    path: screen.path,
+    kind: 'stack' as const,
+    parent: screen.parent,
+    titleKey: screen.titleKey,
+  })),
   {
     path: '/app/onboarding',
     kind: 'stack',

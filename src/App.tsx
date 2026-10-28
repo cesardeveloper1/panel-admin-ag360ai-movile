@@ -19,6 +19,8 @@ import NotificationsPage from './pages/NotificationsPage';
 import PaymentCapturePage from './pages/PaymentCapturePage';
 import PrinterSettingsPage from './pages/PrinterSettingsPage';
 import QuickMessagesPage from './pages/QuickMessagesPage';
+import StaffScreenPage from './pages/StaffScreenPage';
+import { STAFF_SCREENS } from './navigation/staffScreens';
 import { AppProvider } from './context/AppContext';
 import { useApp } from './hooks/useApp';
 import { ChatSocketProvider } from './context/ChatSocketProvider';
@@ -62,6 +64,7 @@ const BrandedNotificationsPage = branded(NotificationsPage);
 const BrandedPaymentCapturePage = branded(PaymentCapturePage);
 const BrandedPrinterSettingsPage = branded(PrinterSettingsPage);
 const BrandedQuickMessagesPage = branded(QuickMessagesPage);
+const BrandedStaffScreenPage = branded(StaffScreenPage);
 const BrandedOnboardingPage = branded(OnboardingWizardPage);
 
 const WelcomeRoute: React.FC = () => {
@@ -100,6 +103,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/app/payment-capture" component={BrandedPaymentCapturePage} />
         <Route exact path="/app/printing" component={BrandedPrinterSettingsPage} />
         <Route exact path="/app/quick-messages" component={BrandedQuickMessagesPage} />
+        <Route exact path={STAFF_SCREENS.map((screen) => screen.path)} component={BrandedStaffScreenPage} />
         <Route exact path="/app">
           <Redirect to={navigationLandingPath(session)} />
         </Route>

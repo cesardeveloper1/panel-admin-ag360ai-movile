@@ -10,6 +10,7 @@ import { useKeyboardVisible } from '../hooks/useKeyboardVisible';
 import { getRoute, PROFILE_PATH, OPERATIONS_PATH, CHATS_PATH, AGILITO_PATH } from '../navigation/appRouteRegistry';
 import { mobileNavItems, alertsNavItem } from '../navigation/navConfig';
 import { canNavigate } from '../navigation/navigationAccess';
+import { isStaffRole } from '../navigation/staffScreens';
 import { brandLabel } from '../utils/brandLabel';
 import { BottomNav } from './BottomNav';
 
@@ -44,7 +45,7 @@ export function MobileNavigation() {
   const secondary = [
     ...mobileNavItems.filter(item => item.path !== OPERATIONS_PATH && item.path !== CHATS_PATH && item.path !== AGILITO_PATH),
     alertsNavItem,
-  ].filter(item => canNavigate(session, item.path));
+  ].filter(item => canNavigate(session, item.path, { locations: brand?.locations }));
   const navigate = (path: string) => { setOpen(false); if (path !== location.pathname) go(path); };
   return <>
     {showBar ? <BottomNav onMenu={() => setOpen(true)} menuOpen={open} /> : null}
@@ -54,7 +55,7 @@ export function MobileNavigation() {
         <p>{brand ? brandLabel(brand, t) : ''}</p>
         {secondary.map(item => <button type="button" key={item.path} onClick={() => navigate(item.path)} aria-current={location.pathname === item.path ? 'page' : undefined}><IonIcon icon={item.icon} aria-hidden="true" /><span>{t(item.labelKey)}</span></button>)}
         <button type="button" onClick={() => navigate(PROFILE_PATH)}>{t('nav.profile')}</button>
-        <button type="button" onClick={() => { setOpen(false); startBrandSwitch(); goRoot('/welcome', 'replace', true); }}>{t('settings.changeBrand')}</button>
+        {isStaffRole(session?.role) ? null : <button type="button" onClick={() => { setOpen(false); startBrandSwitch(); goRoot('/welcome', 'replace', true); }}>{t('settings.changeBrand')}</button>}
       </div></IonContent>
     </IonModal>
   </>;
