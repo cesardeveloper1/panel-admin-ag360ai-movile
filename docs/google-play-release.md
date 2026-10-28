@@ -1,6 +1,6 @@
 # Publicación automática de Android
 
-El workflow `google-play-production.yml` valida los PR hacia develop/main y, una vez activado, publica cada push de main en el canal **production** de `com.agiliza360.mobile`. Google conserva la revisión y aprobación de cada versión. No publica el sitio web ni otros servicios.
+El workflow `google-play-production.yml` valida los PR hacia develop/main y publica automáticamente cada push de main en el canal **production** de `com.agiliza360.mobile`. No requiere una variable de activación. Google conserva la revisión y aprobación de cada versión. No publica el sitio web ni otros servicios.
 
 ## Desarrollo y producción
 
@@ -16,11 +16,11 @@ En cada publicación se genera un único AAB firmado, se verifica su firma y sus
 4. Crear el environment de GitHub `production`, limitado a main. Si se desea publicación sin intervención, no añadir una aprobación manual obligatoria a este environment.
 5. Guardar en ese environment los secretos `ANDROID_UPLOAD_KEYSTORE_BASE64`, `ANDROID_UPLOAD_STORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, usando la misma clave de carga ya registrada en Play. No imprimir valores ni subir `android/signing` al repositorio.
 6. Crear allí las variables `GOOGLE_PLAY_WORKLOAD_IDENTITY_PROVIDER` (nombre completo del proveedor) y `GOOGLE_PLAY_SERVICE_ACCOUNT` (correo de la cuenta de servicio).
-7. Al terminar el primer lanzamiento y comprobar los permisos, establecer la variable **de repositorio** `PLAY_AUTO_PUBLISH_ENABLED=true`. Hasta entonces solo se valida el código web; no se genera ni se envía ningún AAB. El siguiente push a main o la ejecución manual desde main inicia la publicación.
+7. Después del primer lanzamiento, cada push a main o ejecución manual desde main genera y envía el AAB. Los PR solo validan y nunca publican.
 
 Para comprobar la conexión antes de generar el AAB, ejecutar manualmente `Verify Google Play access` desde main. Obtiene credenciales temporales por OIDC, lee los detalles y canales de la app dentro de una edición temporal y la descarta sin publicar. No utiliza la clave de carga ni compila Android.
 
-Los pushes se serializan para no editar Play simultáneamente. GitHub puede sustituir ejecuciones pendientes por el push más reciente; ese commit contiene los cambios anteriores. Para detener publicaciones nuevas, quitar `PLAY_AUTO_PUBLISH_ENABLED` o ponerla en false. No cancela una versión ya enviada a Google.
+Los pushes se serializan para no editar Play simultáneamente. GitHub puede sustituir ejecuciones pendientes por el push más reciente; ese commit contiene los cambios anteriores. Para detener publicaciones nuevas por una emergencia, deshabilitar el workflow en GitHub Actions. No cancela una versión ya enviada a Google.
 
 ## Referencias
 
