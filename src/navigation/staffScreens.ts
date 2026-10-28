@@ -18,6 +18,8 @@ export interface StaffScreen {
   singleLocation?: boolean;
   /** Solo con varios locales asignados. */
   multiLocation?: boolean;
+  /** NPS de marca: solo superadmin en modo marca. */
+  superadminOnly?: boolean;
 }
 
 export const RESERVATION_CONFIG_PATH = '/app/reservations/config';
@@ -40,6 +42,7 @@ export const STAFF_SCREENS: readonly StaffScreen[] = [
   { path: '/app/marketing/campaigns', titleKey: 'staff.campaigns', parent: PAYMENTS_PATH, kind: 'list', module: 'marketing' },
   { path: '/app/marketing/complaints', titleKey: 'staff.complaints', parent: PAYMENTS_PATH, kind: 'list', module: 'clientes' },
   { path: '/app/marketing/branch-survey', titleKey: 'staff.branchSurvey', parent: PAYMENTS_PATH, kind: 'list', module: 'encuestas_local' },
+  { path: '/app/marketing/nps', titleKey: 'platform.nps', parent: PAYMENTS_PATH, kind: 'list', superadminOnly: true },
   { path: '/app/locations/zones', titleKey: 'staff.zones', parent: PAYMENTS_PATH, kind: 'list', module: 'locales' },
   { path: '/app/locations/gallery', titleKey: 'staff.gallery', parent: PAYMENTS_PATH, kind: 'list', module: 'galeria' },
   { path: '/app/locations/integrations', titleKey: 'staff.locationIntegrations', parent: PAYMENTS_PATH, kind: 'list', module: 'locales' },

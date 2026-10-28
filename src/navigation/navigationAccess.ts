@@ -2,6 +2,7 @@ import type { UserSession } from '../types';
 import { normalizePath, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, AGILITO_PATH, PAYMENTS_PATH, PROFILE_PATH, NOTIFICATIONS_PATH, QUICK_MESSAGES_PATH } from './appRouteRegistry';
 import { isStaffRole, STAFF_SCREENS } from './staffScreens';
 import { isMotorizedRole, MOTORIZED_PATHS } from './motorizedScreens';
+import { isPlatformPath } from './platformScreens';
 
 export type NavigationPermissions = { modules?: Record<string, { enabled?: boolean; actions?: string[] } | null> };
 export function navigationAccess(role: UserSession['role'], permissions?: NavigationPermissions) {
@@ -47,9 +48,11 @@ export function canNavigate(session: UserSession | null, path: string, context?:
   if (isMotorizedRole(session.role)) {
     return route === OPERATIONS_PATH || (MOTORIZED_PATHS as readonly string[]).includes(route);
   }
+  if (isPlatformPath(route)) return session.role === 'superadmin';
   const caps = navigationAccess(session.role, session.permissions);
   const staffScreen = STAFF_SCREENS.find((item) => item.path === route);
   if (staffScreen) {
+    if (staffScreen.superadminOnly && session.role !== 'superadmin') return false;
     if (staffScreen.managerOnly && session.role === 'worker') return false;
     if (staffScreen.singleLocation && manyLocations(session.role, context?.locations)) return false;
     if (staffScreen.multiLocation && !manyLocations(session.role, context?.locations)) return false;

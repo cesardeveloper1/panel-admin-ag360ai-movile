@@ -9,6 +9,21 @@ const RECENT_MS = 5000;
 let nativeActive = true;
 let watching = false;
 let prepared = false;
+let allowCueWithoutBrand = false;
+
+/** El motorizado recibe avisos sin marca. La consola de plataforma no pide permiso. */
+export function setAllowCueWithoutBrand(value: boolean): void {
+  allowCueWithoutBrand = value;
+}
+
+function brandNotificationsAllowed(): boolean {
+  if (allowCueWithoutBrand) return true;
+  try {
+    return Boolean(localStorage.getItem('ag360-brand-id'));
+  } catch {
+    return false;
+  }
+}
 const recent = new Set<string>();
 
 const CHANNEL_NAME: Record<CueSound, string> = {
@@ -75,6 +90,7 @@ function playInApp(sound: CueSound): void {
 }
 
 async function prepareNativeChannels(): Promise<boolean> {
+  if (!brandNotificationsAllowed()) return false;
   if (!Capacitor.isNativePlatform()) return false;
   const { LocalNotifications } = await import('@capacitor/local-notifications');
   if (!prepared) {

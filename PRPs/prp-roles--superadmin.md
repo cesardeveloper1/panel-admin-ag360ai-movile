@@ -1,6 +1,6 @@
 # PRP: Pantallas del superadmin
 
-Fecha: 2026-10-28. Estado: borrador. Patrón B. Contrato: [índice](prp-roles-pantallas.md).
+Fecha: 2026-10-28. Estado: implementado en local. Patrón B. Contrato: [índice](prp-roles-pantallas.md).
 
 ## 1. Visión
 

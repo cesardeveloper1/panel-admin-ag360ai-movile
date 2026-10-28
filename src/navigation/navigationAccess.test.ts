@@ -53,3 +53,14 @@ it('keeps manager and worker screens inside the granted modules and the location
   expect(canNavigate(owner, '/app/products', { locations: 2 })).toBe(true);
   expect(canNavigate(granted, '/app/datos-marca')).toBe(false);
 });
+it('keeps the platform console and brand NPS on superadmin', () => {
+  const superadmin = { ...manager, role: 'superadmin' as const, permissions: undefined };
+  const owner = { ...manager, role: 'owner' as const };
+  expect(canNavigate(superadmin, '/app/platform')).toBe(true);
+  expect(canNavigate(superadmin, '/app/platform/tower/connections')).toBe(true);
+  expect(canNavigate(superadmin, '/app/marketing/nps')).toBe(true);
+  expect(canNavigate(owner, '/app/platform')).toBe(false);
+  expect(canNavigate(owner, '/app/marketing/nps')).toBe(false);
+  expect(canNavigate(manager, '/app/platform/settings/brands')).toBe(false);
+  expect(navigationLandingPath(superadmin)).toBe('/app/agilito');
+});

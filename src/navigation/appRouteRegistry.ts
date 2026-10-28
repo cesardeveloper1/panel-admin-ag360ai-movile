@@ -8,6 +8,7 @@ import {
 } from './businessModules';
 import { STAFF_SCREENS } from './staffScreens';
 import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH } from './motorizedScreens';
+import { PLATFORM_GROUPS, PLATFORM_PATH, PLATFORM_SCREENS } from './platformScreens';
 
 export const NOTIFICATIONS_PATH = '/app/notifications';
 export const PROFILE_PATH = '/app/profile';
@@ -170,6 +171,21 @@ export const APP_ROUTES: AppRoute[] = [
     parent: OPERATIONS_PATH,
     titleKey: 'ops.filters.quickMessages',
   },
+  { path: PLATFORM_PATH, kind: 'stack', pageMarker: '.platform-screen', titleKey: 'platform.title' },
+  ...PLATFORM_GROUPS.map((group) => ({
+    path: group.path,
+    kind: 'stack' as const,
+    parent: PLATFORM_PATH,
+    pageMarker: '.platform-screen',
+    titleKey: group.titleKey,
+  })),
+  ...PLATFORM_SCREENS.map((screen) => ({
+    path: screen.path,
+    kind: 'stack' as const,
+    parent: PLATFORM_GROUPS.find((group) => group.id === screen.group)?.path ?? PLATFORM_PATH,
+    pageMarker: '.platform-screen',
+    titleKey: screen.titleKey,
+  })),
   { path: PARTNER_ZONES_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.zones' },
   { path: PARTNER_GROUPS_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.groups' },
   { path: PARTNER_ACCOUNT_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.account' },

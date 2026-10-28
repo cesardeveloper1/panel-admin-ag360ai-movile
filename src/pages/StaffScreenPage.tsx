@@ -56,6 +56,8 @@ function listUrl(screen: StaffScreen, brandId: string, subdomain: string): strin
       return subdomain ? `/complains?subdomain=${encodeURIComponent(subdomain)}` : null;
     case '/app/marketing/branch-survey':
       return `/nps-survey-config/brand/${encodeURIComponent(brandId)}`;
+    case '/app/marketing/nps':
+      return subdomain ? `/nps-survey?subdomain=${encodeURIComponent(subdomain)}` : '/nps-survey';
     case '/app/locations/zones':
       return `/coverage-zone/by-brand/${encodeURIComponent(brandId)}`;
     case '/app/locations/gallery':

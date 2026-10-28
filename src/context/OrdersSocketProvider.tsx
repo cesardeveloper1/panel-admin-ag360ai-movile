@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { config } from '../config/env';
 import { useApp } from '../hooks/useApp';
 import { useAuthToken } from '../hooks/useAuthToken';
-import { acceptCue, deliverNotificationCue, startNotificationCues } from '../notifications/deliverNotificationCue';
+import { acceptCue, deliverNotificationCue, setAllowCueWithoutBrand, startNotificationCues } from '../notifications/deliverNotificationCue';
 import { complaintCue, orderCueSound, reservationCueKind } from '../notifications/notificationCues';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import {
@@ -36,8 +36,14 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const eventsSocketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    if (config.useApiMock) return;
     const motorized = session?.role === 'motorized';
+    setAllowCueWithoutBrand(Boolean(motorized && session && token && !config.useApiMock));
+    return () => setAllowCueWithoutBrand(false);
+  }, [session, token]);
+
+  useEffect(() => {
+    const motorized = session?.role === 'motorized';
+    if (config.useApiMock) return;
     if (!session || !token) return;
     if (!motorized && !brand?.id) return;
 

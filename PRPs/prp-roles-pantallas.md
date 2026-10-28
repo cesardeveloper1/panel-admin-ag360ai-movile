@@ -6,7 +6,7 @@ El panel web cambia de menú según el rol. El móvil entra siempre a la cáscar
 
 - [Gerente y trabajador](prp-roles--gerente-trabajador.md) — implementado en local
 - [Motorizado](prp-roles--motorizado.md) — implementado en local
-- [Superadmin](prp-roles--superadmin.md)
+- [Superadmin](prp-roles--superadmin.md) — implementado en local
 
 ## Contrato común
 
