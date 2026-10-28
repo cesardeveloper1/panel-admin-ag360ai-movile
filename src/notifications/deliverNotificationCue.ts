@@ -1,7 +1,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import type { CueDecision, CueSound } from './notificationCues';
-import { decideCue, isLowEndDevice } from './notificationCues';
+import { decideCue, isLowEndDevice, notificationCardId } from './notificationCues';
 
 const ALERTS_BUTTON = '.ag-header-bell, .agilito-top-bell';
 const RECENT_MS = 5000;
@@ -9,7 +9,6 @@ const RECENT_MS = 5000;
 let nativeActive = true;
 let watching = false;
 let prepared = false;
-let cueSerial = 1;
 const recent = new Set<string>();
 
 const CHANNEL_NAME: Record<CueSound, string> = {
@@ -18,6 +17,7 @@ const CHANNEL_NAME: Record<CueSound, string> = {
   chat: 'Chats',
   humano: 'Atención humana',
   sos: 'Reclamos',
+  reserva: 'Reservas',
 };
 
 export function startNotificationCues(): void {
@@ -95,17 +95,16 @@ async function prepareNativeChannels(): Promise<boolean> {
   return true;
 }
 
-async function postSystemNotification(cue: { sound: CueSound; title: string; body: string }): Promise<void> {
+async function postSystemNotification(cue: { sound: CueSound; title: string; body: string; cardKey: string }): Promise<void> {
   if (Capacitor.isNativePlatform()) {
     const ready = await prepareNativeChannels().catch(() => false);
     if (!ready) return;
     const { LocalNotifications } = await import('@capacitor/local-notifications');
-    cueSerial = cueSerial >= 2_000_000_000 ? 1 : cueSerial + 1;
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
     const lowEnd = isLowEndDevice(memory);
     await LocalNotifications.schedule({
       notifications: [{
-        id: cueSerial,
+        id: notificationCardId(cue.cardKey),
         title: cue.title,
         body: cue.body,
         sound: `${cue.sound}.aac`,
@@ -119,10 +118,10 @@ async function postSystemNotification(cue: { sound: CueSound; title: string; bod
     return;
   }
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-  new Notification(cue.title, { body: cue.body });
+  new Notification(cue.title, { body: cue.body, tag: cue.cardKey });
 }
 
-export async function deliverNotificationCue(cue: { sound: CueSound; title: string; body: string }): Promise<void> {
+export async function deliverNotificationCue(cue: { sound: CueSound; title: string; body: string; cardKey: string }): Promise<void> {
   const decision = currentCueDecision();
   if (decision === 'silent') return;
   if (decision === 'sound') {

@@ -1,6 +1,6 @@
 /** Sonidos del panel (`public/sounds`) y cuándo les toca sonar. */
 
-export type CueSound = 'orden' | 'preorden' | 'chat' | 'humano' | 'sos';
+export type CueSound = 'orden' | 'preorden' | 'chat' | 'humano' | 'sos' | 'reserva';
 
 export type CueDecision = 'silent' | 'sound' | 'notification';
 
@@ -58,6 +58,27 @@ export function orderCueSound(input: {
 export function complaintCue(event: { type?: string; data?: { category?: unknown } }): boolean {
   if (event.type !== 'notification' && event.type !== 'alert') return false;
   return String(event.data?.category ?? '').toLowerCase() === 'complaint';
+}
+
+export type ReservationCueKind = 'created' | 'updated' | 'cancelled';
+
+/** Una reserva nueva, un cambio o una cancelación. El mismo id actualiza una sola tarjeta. */
+export function reservationCueKind(type: string | undefined): ReservationCueKind | null {
+  if (type === 'reservation_created') return 'created';
+  if (type === 'reservation_updated') return 'updated';
+  if (type === 'reservation_deleted') return 'cancelled';
+  return null;
+}
+
+/** Id estable de la notificación. El mismo asunto reemplaza la tarjeta anterior. */
+export function notificationCardId(cardKey: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < cardKey.length; index += 1) {
+    hash ^= cardKey.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  const id = (hash >>> 0) % 2_000_000_000;
+  return id === 0 ? 1 : id;
 }
 
 function chatSoundAllowed(stateKey: string): boolean {

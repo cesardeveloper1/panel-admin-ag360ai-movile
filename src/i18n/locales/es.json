@@ -445,7 +445,11 @@
     "chatBody": "Mensaje de {{name}}",
     "chatBodyPlain": "Mensaje de un cliente",
     "complaintTitle": "Reclamo",
-    "complaintBody": "Un cliente dejó un reclamo"
+    "complaintBody": "Un cliente dejó un reclamo",
+    "reservationTitle": "Nueva reserva",
+    "reservationUpdatedTitle": "Reserva actualizada",
+    "reservationCancelledTitle": "Reserva cancelada",
+    "reservationParty": "{{count}} personas"
   },
   "users": {
     "maria": "María González",

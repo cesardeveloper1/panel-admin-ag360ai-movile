@@ -5,7 +5,7 @@ import { config } from '../config/env';
 import { useApp } from '../hooks/useApp';
 import { useAuthToken } from '../hooks/useAuthToken';
 import { acceptCue, deliverNotificationCue, startNotificationCues } from '../notifications/deliverNotificationCue';
-import { complaintCue, orderCueSound } from '../notifications/notificationCues';
+import { complaintCue, orderCueSound, reservationCueKind } from '../notifications/notificationCues';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import {
   orderSocketEventMatchesBrand,
@@ -22,7 +22,7 @@ const ORDER_REFRESH_TYPES = new Set([
 ]);
 
 /**
- * Conecta /orders y /events cuando hay sesión + marca y mock off.
+ * Conecta /orders, /events y /reservations cuando hay sesión + marca y mock off.
  * Refresca pedidos ante eventos de la marca activa.
  */
 export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -80,6 +80,15 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnectionDelay: 1000,
     });
 
+    const reservationsSocket = io(`${base}/reservations`, {
+      auth: socketAuth,
+      query,
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
     ordersSocketRef.current = ordersSocket;
     eventsSocketRef.current = eventsSocket;
 
@@ -107,6 +116,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         const number = event.data?.orderNumber || orderId || '';
         void deliverNotificationCue({
           sound,
+          cardKey: `order:${orderId || number || 'latest'}`,
           title: t(type === 'order_created' ? 'cues.orderTitle' : 'cues.orderStatusTitle'),
           body: number ? t('cues.orderBody', { number }) : t('cues.orderTitle'),
         });
@@ -133,13 +143,56 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!acceptCue(`complaint:${id}`)) return;
       void deliverNotificationCue({
         sound: 'sos',
+        cardKey: `complaint:${id || 'latest'}`,
         title: t('cues.complaintTitle'),
         body: t('cues.complaintBody'),
       });
     };
 
+    const handleReservationsEvent = (event: {
+      type?: string;
+      brandId?: string;
+      brandKey?: string;
+      data?: {
+        _id?: string;
+        brandSubdomain?: string;
+        reservationNumber?: number;
+        client?: { name?: string };
+        partySize?: number;
+        reservationTime?: string;
+      };
+    }) => {
+      if (!orderSocketEventMatchesBrand(event, active)) return;
+      const kind = reservationCueKind(event.type);
+      if (!kind) return;
+      const reservationId = event.data?._id || '';
+      if (!acceptCue(`reservation:${reservationId}:${kind}`)) return;
+      const who = event.data?.client?.name?.trim() ?? '';
+      const when = (event.data?.reservationTime ?? '').slice(0, 5);
+      const party = event.data?.partySize;
+      const number = event.data?.reservationNumber;
+      const body = [
+        typeof number === 'number' ? `#${number}` : '',
+        who,
+        typeof party === 'number' && party > 0 ? t('cues.reservationParty', { count: party }) : '',
+        when,
+      ].filter(Boolean).join(' · ');
+      const titleKey = kind === 'created'
+        ? 'cues.reservationTitle'
+        : kind === 'cancelled'
+          ? 'cues.reservationCancelledTitle'
+          : 'cues.reservationUpdatedTitle';
+      void deliverNotificationCue({
+        sound: 'reserva',
+        cardKey: `reservation:${reservationId || number || 'latest'}`,
+        title: t(titleKey),
+        body: body || t('cues.reservationTitle'),
+      });
+    };
+
     ordersSocket.on('event', handleOrdersEvent);
     eventsSocket.on('event', handleEventsEvent);
+    reservationsSocket.on('event', handleReservationsEvent);
     // A socket connection is not proof of fresh data: revalidate the list.
     ordersSocket.on('connect', scheduleRefresh);
 
@@ -153,6 +206,9 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       eventsSocket.on('connect', () => {
         console.log('[mobile] /events socket conectado');
       });
+      reservationsSocket.on('connect', () => {
+        console.log('[mobile] /reservations socket conectado', { brandId: brand.id });
+      });
     }
 
     return () => {
@@ -162,8 +218,10 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       ordersSocket.off('event', handleOrdersEvent);
       eventsSocket.off('event', handleEventsEvent);
+      reservationsSocket.off('event', handleReservationsEvent);
       ordersSocket.disconnect();
       eventsSocket.disconnect();
+      reservationsSocket.disconnect();
       ordersSocketRef.current = null;
       eventsSocketRef.current = null;
     };

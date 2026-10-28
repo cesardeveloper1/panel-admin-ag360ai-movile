@@ -85,8 +85,10 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       const sound = chatCueForNewMessage(payload);
       const messageId = payload._id || payload.id || payload.createdAt || '';
       if (sound && acceptCue(`chat:${messageId}`)) {
+        const identity = payload.phoneNumber || payload.clientBsuid || payload.agentStateId || messageId;
         void deliverNotificationCue({
           sound,
+          cardKey: `chat:${subDomain}:${identity || 'latest'}`,
           title: t('cues.chatTitle'),
           body: payload.clientName ? t('cues.chatBody', { name: payload.clientName }) : t('cues.chatBodyPlain'),
         });
@@ -108,6 +110,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         if (sound && acceptCue(`chat-state:${mapKey}:${next}`)) {
           void deliverNotificationCue({
             sound,
+            cardKey: `chat:${subDomain}:${identity || 'latest'}`,
             title: t(sound === 'humano' ? 'cues.humanTitle' : 'cues.chatTitle'),
             body: contact.clientName ? t('cues.chatBody', { name: contact.clientName }) : t('cues.chatBodyPlain'),
           });

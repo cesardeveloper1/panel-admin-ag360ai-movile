@@ -15,7 +15,8 @@ El panel reproduce `orden.aac`, `preorden.aac`, `chat.aac`, `humano.aac` y `sos.
 - Con la app abierta y la campana visible, suena el audio del panel y no aparece toast ni notificación del sistema.
 - Con la app abierta y sin campana en pantalla, no suena y no se crea aviso.
 - Con la app en segundo plano, sale una notificación del sistema con el audio que corresponde. En gama baja, al momento y sin alarma exacta. En las demás, a la hora exacta.
-- Pedido, chat y reclamo usan el mismo archivo que el panel para ese caso.
+- Pedido, chat y reclamo usan el mismo archivo que el panel para ese caso. La reserva usa `reserva.aac`, el mismo timbre que una preorden, porque el panel no tiene un audio propio.
+- Cada pedido, chat, reclamo o reserva ocupa una sola tarjeta. Un cambio reemplaza esa tarjeta en vez de apilar otra.
 
 ## 4. Historias
 
@@ -47,6 +48,10 @@ P0. Chat: primer mensaje del cliente usa `chat.aac`. El paso a atención humana 
 
 P0. Reclamo (`category: complaint` en `/events`) usa `sos.aac`, con `orden.aac` si ese audio no arranca.
 
+P0. Reserva (`/reservations`): alta, cambio y cancelación usan `reserva.aac`. El texto lleva número, cliente, personas y hora. La cancelación actualiza la misma tarjeta.
+
+P0. La tarjeta del sistema usa un id estable por asunto (`order:`, `chat:`, `complaint:`, `reservation:`). En el navegador, el mismo `tag`.
+
 P0. El mismo aviso no se repite dentro de 5 segundos.
 
 ## 6. Requisitos no funcionales
@@ -61,7 +66,7 @@ No se cambia quién puede ver alertas ni el botón de marcar todas. No se añade
 
 ## 8. Datos
 
-Ningún dato nuevo. Eventos ya existentes: `/orders`, `/chat` (`newMessage`, `contactInfoUpdated`) y `/events`.
+Eventos ya existentes: `/orders`, `/chat` (`newMessage`, `contactInfoUpdated`), `/events` y `/reservations`.
 
 ## 9. UI
 

@@ -5,7 +5,9 @@ import {
   complaintCue,
   decideCue,
   isLowEndDevice,
+  notificationCardId,
   orderCueSound,
+  reservationCueKind,
   resolveChatSoundKey,
 } from './notificationCues';
 
@@ -41,4 +43,13 @@ it('plays chat and complaint sounds with the panel defaults', () => {
   expect(resolveChatSoundKey({ isActive: false, sessionData: {} })).toBe('Humano');
   expect(complaintCue({ type: 'notification', data: { category: 'complaint' } })).toBe(true);
   expect(complaintCue({ type: 'notification', data: { category: 'orders' } })).toBe(false);
+});
+
+it('treats a reservation as one card that changes state', () => {
+  expect(reservationCueKind('reservation_created')).toBe('created');
+  expect(reservationCueKind('reservation_updated')).toBe('updated');
+  expect(reservationCueKind('reservation_deleted')).toBe('cancelled');
+  expect(reservationCueKind('order_created')).toBeNull();
+  expect(notificationCardId('reservation:abc')).toBe(notificationCardId('reservation:abc'));
+  expect(notificationCardId('reservation:abc')).not.toBe(notificationCardId('order:abc'));
 });
