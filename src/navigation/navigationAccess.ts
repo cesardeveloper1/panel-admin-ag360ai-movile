@@ -1,6 +1,7 @@
 import type { UserSession } from '../types';
 import { normalizePath, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, AGILITO_PATH, PAYMENTS_PATH, PROFILE_PATH, NOTIFICATIONS_PATH, QUICK_MESSAGES_PATH } from './appRouteRegistry';
 import { isStaffRole, STAFF_SCREENS } from './staffScreens';
+import { isMotorizedRole, MOTORIZED_PATHS } from './motorizedScreens';
 
 export type NavigationPermissions = { modules?: Record<string, { enabled?: boolean; actions?: string[] } | null> };
 export function navigationAccess(role: UserSession['role'], permissions?: NavigationPermissions) {
@@ -41,7 +42,11 @@ function manyLocations(role: UserSession['role'], locations?: number): boolean {
 export function canNavigate(session: UserSession | null, path: string, context?: NavigateContext): boolean {
   if (!session) return false;
   const route = normalizePath(path.split('?')[0]);
-  if (route === PROFILE_PATH || route === NOTIFICATIONS_PATH) return true;
+  if (route === PROFILE_PATH) return true;
+  if (route === NOTIFICATIONS_PATH) return !isMotorizedRole(session.role);
+  if (isMotorizedRole(session.role)) {
+    return route === OPERATIONS_PATH || (MOTORIZED_PATHS as readonly string[]).includes(route);
+  }
   const caps = navigationAccess(session.role, session.permissions);
   const staffScreen = STAFF_SCREENS.find((item) => item.path === route);
   if (staffScreen) {
@@ -67,5 +72,6 @@ export function canNavigate(session: UserSession | null, path: string, context?:
 }
 
 export function navigationLandingPath(session: UserSession | null): string {
+  if (isMotorizedRole(session?.role)) return OPERATIONS_PATH;
   return [AGILITO_PATH, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, PAYMENTS_PATH].find(path => canNavigate(session, path)) ?? PROFILE_PATH;
 }

@@ -127,6 +127,14 @@ export const apiFacade = {
     return orderService.getOrders(brand, filters);
   },
 
+  async getMotorizedOrdersPage(filters: OrdersListFilters) {
+    if (config.useApiMock) {
+      const rows = await apiMock.getOrders('pacifico', filters);
+      return { data: rows.filter((order) => ['in_kitchen', 'on_the_way', 'delivered'].includes(order.status)), page: 1, hasMore: false, total: rows.length };
+    }
+    return orderService.getMotorizedOrdersPage(filters);
+  },
+
   async getOrdersPage(brand: Brand, filters: OrdersListFilters) {
     if (config.useApiMock) {
       const rows = await apiMock.getOrders(brand.id, filters);

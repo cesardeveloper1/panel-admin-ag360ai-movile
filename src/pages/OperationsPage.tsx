@@ -3,6 +3,7 @@ import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewDidEnter } from '@i
 import type { ScrollDetail } from '@ionic/react';
 import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
+import { MotorizedBoard } from './motorized/MotorizedBoard';
 import { OperationsQuickAccess } from '../components/OperationsQuickAccess';
 import { OperationsFilters, type FunnelChannel, type OperationsPanel, type OperationsScopeResult } from '../components/OperationsFilters';
 import { AppHeader } from '../components/AppHeader';
@@ -333,6 +334,8 @@ const OperationsPage: React.FC = () => {
   const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : ordersLoadingMore;
   const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
+
+  if (session?.role === 'motorized') return <MotorizedBoard />;
 
   return (
     <IonPage data-ag-route="/app/operations"

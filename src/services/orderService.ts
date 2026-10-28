@@ -2,7 +2,7 @@ import { api } from './api';
 import { parseListPage, type ListPage } from './listPage';
 import type { Brand, Order, OrderStatus } from '../types';
 import { unwrapApiPayload } from '../utils/apiPayload';
-import { mapOrderDetail, mapOrdersFromApi, type ApiOrderDetail, type ApiOrderListItem } from './mappers/orderMapper';
+import { mapOrderDetail, mapOrderFromApi, mapOrdersFromApi, type ApiOrderDetail, type ApiOrderListItem } from './mappers/orderMapper';
 import { mapStatusToApi } from './mappers/orderStatusMapper';
 import {
   buildOrdersQueryString,
@@ -53,6 +53,18 @@ export const orderService = {
     filters: OrdersListFilters = defaultOrdersFilters(),
   ): Promise<Order[]> {
     return (await orderService.getOrdersPage(brand, filters)).data;
+  },
+
+  async getMotorizedOrdersPage(filters: OrdersListFilters): Promise<ListPage<Order>> {
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 150;
+    const response = await api.get(`/orders?${buildOrdersQueryString({ id: 'motorized', initials: 'M', nameKey: 'motorized', locations: 0, ordersToday: 0 }, filters)}`);
+    const result = parseListPage<ApiOrderListItem>(response, page, limit);
+    const data = result.data
+      .map((row) => mapOrderFromApi(row, row.brandSubdomain || 'motorized'))
+      .filter((order): order is Order => order !== null);
+    if (data.length !== result.data.length) throw new Error('Invalid order identity');
+    return { ...result, data };
   },
 
   async getOrdersPage(brand: Brand, filters: OrdersListFilters): Promise<ListPage<Order>> {

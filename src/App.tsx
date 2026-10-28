@@ -20,7 +20,11 @@ import PaymentCapturePage from './pages/PaymentCapturePage';
 import PrinterSettingsPage from './pages/PrinterSettingsPage';
 import QuickMessagesPage from './pages/QuickMessagesPage';
 import StaffScreenPage from './pages/StaffScreenPage';
+import PartnerZonesPage from './pages/motorized/PartnerZonesPage';
+import PartnerGroupsPage from './pages/motorized/PartnerGroupsPage';
+import PartnerAccountPage from './pages/motorized/PartnerAccountPage';
 import { STAFF_SCREENS } from './navigation/staffScreens';
+import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH } from './navigation/motorizedScreens';
 import { AppProvider } from './context/AppContext';
 import { useApp } from './hooks/useApp';
 import { ChatSocketProvider } from './context/ChatSocketProvider';
@@ -65,6 +69,9 @@ const BrandedPaymentCapturePage = branded(PaymentCapturePage);
 const BrandedPrinterSettingsPage = branded(PrinterSettingsPage);
 const BrandedQuickMessagesPage = branded(QuickMessagesPage);
 const BrandedStaffScreenPage = branded(StaffScreenPage);
+const BrandedPartnerZonesPage = branded(PartnerZonesPage);
+const BrandedPartnerGroupsPage = branded(PartnerGroupsPage);
+const BrandedPartnerAccountPage = branded(PartnerAccountPage);
 const BrandedOnboardingPage = branded(OnboardingWizardPage);
 
 const WelcomeRoute: React.FC = () => {
@@ -104,6 +111,9 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/app/printing" component={BrandedPrinterSettingsPage} />
         <Route exact path="/app/quick-messages" component={BrandedQuickMessagesPage} />
         <Route exact path={STAFF_SCREENS.map((screen) => screen.path)} component={BrandedStaffScreenPage} />
+        <Route exact path={PARTNER_ZONES_PATH} component={BrandedPartnerZonesPage} />
+        <Route exact path={PARTNER_GROUPS_PATH} component={BrandedPartnerGroupsPage} />
+        <Route exact path={PARTNER_ACCOUNT_PATH} component={BrandedPartnerAccountPage} />
         <Route exact path="/app">
           <Redirect to={navigationLandingPath(session)} />
         </Route>

@@ -9236,6 +9236,16 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 .staff-form { display: grid; gap: 12px; margin-bottom: 16px; }
 .staff-form label { display: grid; gap: 4px; }
 .staff-form input[type="checkbox"] { width: auto; }
+.motorized-actions { display: flex; gap: 4px; }
+.motorized-actions .ag-header-action { min-width: 44px; min-height: 44px; }
+.motorized-segments, .motorized-columns { display: grid; gap: 8px; }
+.motorized-segments { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.motorized-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.motorized-segments button, .motorized-status button, .motorized-card > button { min-height: 44px; }
+.motorized-status { display: flex; flex-wrap: wrap; gap: 8px; }
+.motorized-status button[aria-pressed="true"] { color: var(--ag-pulse); }
+.partner-map { height: 240px; width: 100%; border-radius: 12px; overflow: hidden; }
+.motorized-detail { display: grid; gap: 8px; margin-top: 16px; }
 .quick-messages .ops-connection p { white-space: pre-wrap; margin: 0; }
 .ops-connection strong { font-size: 15px; font-weight: 700; color: var(--ag-ink); }
 .ops-connection span { font-size: 14px; color: #3d4654; }

@@ -16,6 +16,15 @@ it('does not turn delivery or an unknown role into a general operator', () => {
     expect(navigationAccess(role, manager.permissions).operations).toBe(false);
     expect(navigationAccess(role, manager.permissions).chats).toBe(false);
   }
+  const motorized = { ...manager, role: 'motorized' as const };
+  expect(canNavigate(motorized, '/app/operations')).toBe(true);
+  expect(canNavigate(motorized, '/app/partner/zones')).toBe(true);
+  expect(canNavigate(motorized, '/app/chats')).toBe(false);
+  expect(canNavigate(motorized, '/app/reports')).toBe(false);
+  expect(canNavigate(motorized, '/app/notifications')).toBe(false);
+  expect(canNavigate(motorized, '/app/agilito')).toBe(false);
+  expect(navigationLandingPath(motorized)).toBe('/app/operations');
+  expect(canNavigate(manager, '/app/partner/account')).toBe(false);
 });
 it('keeps authorized aliases and chooses an authorized landing page', () => {
   expect(canNavigate({ ...manager, role: 'owner' }, '/app/productos')).toBe(true);

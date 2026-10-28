@@ -12,6 +12,7 @@ import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
 import { navigationLandingPath } from '../navigation/navigationAccess';
 import { isStaffRole } from '../navigation/staffScreens';
+import { isMotorizedRole } from '../navigation/motorizedScreens';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';
@@ -30,6 +31,10 @@ const WelcomePage: React.FC = () => {
   const [creatingBrand, setCreatingBrand] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const staff = isStaffRole(session?.role);
+  const motorized = isMotorizedRole(session?.role);
+  useLayoutEffect(() => {
+    if (motorized) goRoot('/app/operations', 'replace', true);
+  }, [motorized, goRoot]);
   const [awaitingAutoPick, setAwaitingAutoPick] = useState(() => {
     if (isStaffRole(session?.role)) return true;
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(PICK_BRAND_KEY) === '1') {
@@ -187,6 +192,16 @@ const WelcomePage: React.FC = () => {
 
   const locationLabel = (count: number) =>
     t(count === 1 ? 'welcome.locationOne' : 'welcome.locationMany', { count });
+
+  if (motorized) {
+    return (
+      <IonPage>
+        <IonContent className="ag-screen">
+          <div className="welcome-loading"><IonSpinner name="crescent" /></div>
+        </IonContent>
+      </IonPage>
+    );
+  }
 
   return (
     <IonPage>

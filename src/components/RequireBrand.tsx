@@ -25,7 +25,7 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
       goRoot('/login');
       return;
     }
-    if (!brand && !brandLoading && !pendingBrand) {
+    if (session?.role !== 'motorized' && !brand && !brandLoading && !pendingBrand) {
       goRoot('/welcome');
     }
   }, [session, authRestoring, brand, brandLoading, pendingBrand, goRoot]);
@@ -60,6 +60,10 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
 
   if (!session) {
     return null;
+  }
+
+  if (session.role === 'motorized') {
+    return <>{children}</>;
   }
 
   if (brand) {

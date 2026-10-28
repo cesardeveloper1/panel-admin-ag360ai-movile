@@ -7,6 +7,7 @@ import {
   BUSINESS_MODULE_PATHS as CATALOG_MODULE_PATHS,
 } from './businessModules';
 import { STAFF_SCREENS } from './staffScreens';
+import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH } from './motorizedScreens';
 
 export const NOTIFICATIONS_PATH = '/app/notifications';
 export const PROFILE_PATH = '/app/profile';
@@ -169,6 +170,9 @@ export const APP_ROUTES: AppRoute[] = [
     parent: OPERATIONS_PATH,
     titleKey: 'ops.filters.quickMessages',
   },
+  { path: PARTNER_ZONES_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.zones' },
+  { path: PARTNER_GROUPS_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.groups' },
+  { path: PARTNER_ACCOUNT_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.account' },
   ...STAFF_SCREENS.map((screen) => ({
     path: screen.path,
     kind: 'stack' as const,
