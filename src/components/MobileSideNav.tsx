@@ -10,6 +10,9 @@ import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { PanelChatIcon } from './PanelChatIcon';
 import { brandLabel } from '../utils/brandLabel';
+import { canNavigate } from '../navigation/navigationAccess';
+import { isStaffRole } from '../navigation/staffScreens';
+import { isMotorizedRole } from '../navigation/motorizedScreens';
 
 export function MobileSideNav() {
   const { t } = useTranslation();
@@ -77,7 +80,7 @@ export function MobileSideNav() {
             </button>
           </div>
           <nav className="ag-mobile-side-nav__items">
-            {mobileNavItems.map((item) => {
+            {mobileNavItems.filter((item) => canNavigate(session, item.path, { locations: brand?.locations })).map((item) => {
               const active = isNavActive(location.pathname, item);
               return (
                 <button
@@ -95,6 +98,7 @@ export function MobileSideNav() {
             })}
           </nav>
           <div className="ag-mobile-side-nav__footer">
+            {isStaffRole(session?.role) || isMotorizedRole(session?.role) ? null : (
             <button
               type="button"
               className="ag-mobile-side-nav__item ag-mobile-side-nav__brand-switch"
@@ -104,6 +108,7 @@ export function MobileSideNav() {
               <IonIcon icon={storefrontOutline} />
               <span>{t('settings.changeBrand')}</span>
             </button>
+            )}
             {session ? (
               <button
                 type="button"

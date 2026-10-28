@@ -62,6 +62,8 @@ function resetAuthStorage() {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
   const [session, setSession] = useState<UserSession | null>(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
   const [authRestoring, setAuthRestoring] = useState(true);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -310,7 +312,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const loadMotorizedOrders = useCallback(async (preserve = false) => {
+    const requestId = ++ordersRequestId.current;
+    const resolved = ordersFiltersRef.current;
+    setOrdersError(false);
+    if (!preserve) {
+      setOrdersLastSyncedAt(null);
+      setOrders([]);
+      setOrdersHasMore(false);
+    }
+    try {
+      const result = await apiFacade.getMotorizedOrdersPage({ ...resolved, page: 1 });
+      if (requestId !== ordersRequestId.current) return;
+      ordersPage.current = 1;
+      setOrders(result.data);
+      setOrdersLastSyncedAt(Date.now());
+      setOrdersHasMore(result.hasMore);
+    } catch {
+      if (requestId === ordersRequestId.current) {
+        setOrders([]);
+        setOrdersError(true);
+        setOrdersHasMore(false);
+      }
+    } finally {
+      if (requestId === ordersRequestId.current) setLoading(false);
+    }
+  }, []);
+
   const refreshOrders = useCallback(async () => {
+    if (sessionRef.current?.role === 'motorized') {
+      if (!ordersRef.current.length) setLoading(true);
+      await loadMotorizedOrders(true);
+      return;
+    }
     if (!brand) return;
     if (!ordersRef.current.length) setLoading(true);
     try {
@@ -318,7 +352,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       showToast('toast.ordersLoadError');
     }
-  }, [brand, loadOrdersForBrand, showToast]);
+  }, [brand, loadMotorizedOrders, loadOrdersForBrand, showToast]);
+
+  useEffect(() => {
+    if (session?.role !== 'motorized') return;
+    setLoading(true);
+    void loadMotorizedOrders();
+  }, [session?.role, authEpoch, loadMotorizedOrders]);
 
   const setOrdersFilters = useCallback(
     async (patch: Partial<OrdersListFilters>) => {
@@ -334,6 +374,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ordersFiltersRef.current = next;
       setOrdersFiltersState(next);
 
+      if (sessionRef.current?.role === 'motorized') {
+        setLoading(true);
+        await loadMotorizedOrders();
+        return;
+      }
       if (!brand) return;
       setLoading(true);
       try {
@@ -342,7 +387,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showToast('toast.ordersLoadError');
       }
     },
-    [brand, loadOrdersForBrand, showToast],
+    [brand, loadMotorizedOrders, loadOrdersForBrand, showToast],
   );
 
   const loadMoreOrders = useCallback(async () => {
@@ -683,6 +728,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return task;
   }, [brand, showToast]);
 
+  const setMotorizedOrderStatus = useCallback(async (orderId: string, status: Order['status']): Promise<OrderActionResult> => {
+    const allowed = status === 'in_kitchen' || status === 'on_the_way' || status === 'delivered' || status === 'cancelled';
+    const order = ordersRef.current.find((item) => item.id === orderId);
+    if (sessionRef.current?.role !== 'motorized' || !allowed || !order) {
+      return { ok: false, reason: 'denied' };
+    }
+    try {
+      await apiFacade.updateOrderStatus(orderId, status, order.orderNumber);
+      await loadMotorizedOrders(true);
+      showToast('toast.orderUpdated');
+      return { ok: true, order: { ...order, status } };
+    } catch {
+      return { ok: false, reason: 'failed' };
+    }
+  }, [loadMotorizedOrders, showToast]);
+
   const value = useMemo(
     () => ({
       session,
@@ -714,6 +775,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshOrders,
       setOrdersFilters,
       advanceOrder,
+      setMotorizedOrderStatus,
       canChangeOrders,
       orderMutations,
       setKitchenMode,
@@ -756,6 +818,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshOrders,
       setOrdersFilters,
       advanceOrder,
+      setMotorizedOrderStatus,
       canChangeOrders,
       orderMutations,
       setDarkMode,

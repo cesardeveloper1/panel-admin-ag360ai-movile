@@ -8,6 +8,7 @@ export interface BusinessModuleGridProps {
   titleKey: (mod: BusinessModule) => string;
   descKey: (mod: BusinessModule) => string;
   onSelect: (mod: BusinessModule) => void;
+  include?: (mod: BusinessModule) => boolean;
   /** Extra class on the grid container */
   className?: string;
   children?: ReactNode;
@@ -18,14 +19,16 @@ export function BusinessModuleGrid({
   titleKey,
   descKey,
   onSelect,
+  include,
   className = 'hub-grid',
   children,
 }: BusinessModuleGridProps) {
   const { t } = useTranslation();
+  const modules = include ? BUSINESS_MODULES.filter(include) : BUSINESS_MODULES;
 
   return (
     <div className={className}>
-      {BUSINESS_MODULES.map((mod, idx) => (
+      {modules.map((mod, idx) => (
         <button
           key={mod.id}
           type="button"

@@ -11,6 +11,9 @@ import NewBrandSheet from '../components/NewBrandSheet';
 import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
 import { navigationLandingPath } from '../navigation/navigationAccess';
+import { isStaffRole } from '../navigation/staffScreens';
+import { isMotorizedRole } from '../navigation/motorizedScreens';
+import { PLATFORM_PATH } from '../navigation/platformScreens';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PROFILE_PATH } from '../navigation/appRouteRegistry';
 import { apiFacade } from '../services/apiFacade';
@@ -28,7 +31,22 @@ const WelcomePage: React.FC = () => {
   const [newBrandOpen, setNewBrandOpen] = useState(false);
   const [creatingBrand, setCreatingBrand] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const staff = isStaffRole(session?.role);
+  const motorized = isMotorizedRole(session?.role);
+  const resumeSavedBrand = session?.role === 'superadmin'
+    && typeof localStorage !== 'undefined'
+    && Boolean(localStorage.getItem(BRAND_KEY))
+    && (typeof sessionStorage === 'undefined' || sessionStorage.getItem(PICK_BRAND_KEY) !== '1');
+  useLayoutEffect(() => {
+    if (motorized) goRoot('/app/operations', 'replace', true);
+  }, [motorized, goRoot]);
+  useLayoutEffect(() => {
+    if (session?.role !== 'superadmin' || resumeSavedBrand) return;
+    sessionStorage.removeItem(PICK_BRAND_KEY);
+    goRoot(PLATFORM_PATH, 'replace', true);
+  }, [session?.role, resumeSavedBrand, goRoot]);
   const [awaitingAutoPick, setAwaitingAutoPick] = useState(() => {
+    if (isStaffRole(session?.role)) return true;
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(PICK_BRAND_KEY) === '1') {
       return false;
     }
@@ -116,7 +134,24 @@ const WelcomePage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (loading || brands.length === 0) return;
+    if (loading) return;
+    if (staff) {
+      if (brands.length === 0) {
+        setAwaitingAutoPick(false);
+        return;
+      }
+      if (autoStartedRef.current || brandLoading) return;
+      const savedId = localStorage.getItem(BRAND_KEY);
+      const savedBrand = savedId ? brands.find((item) => item.id === savedId) : undefined;
+      setAwaitingAutoPick(true);
+      autoStartedRef.current = true;
+      void handleSelect(savedBrand ?? brands[0]);
+      return;
+    }
+    if (brands.length === 0) {
+      if (session?.role === 'superadmin') goRoot(PLATFORM_PATH, 'replace', true);
+      return;
+    }
     if (sessionStorage.getItem(PICK_BRAND_KEY) === '1') {
       setAwaitingAutoPick(false);
       return;
@@ -129,13 +164,14 @@ const WelcomePage: React.FC = () => {
     const savedBrand = savedId ? brands.find((b) => b.id === savedId) : undefined;
     if (!savedBrand) {
       setAwaitingAutoPick(false);
+      if (session?.role === 'superadmin') goRoot(PLATFORM_PATH, 'replace', true);
       return;
     }
 
     setAwaitingAutoPick(true);
     autoStartedRef.current = true;
     void handleSelect(savedBrand);
-  }, [loading, brands, brandLoading, handleSelect]);
+  }, [loading, brands, brandLoading, handleSelect, staff, session?.role, goRoot]);
 
   const handleCreateBrand = async (values: { name: string; subdomain: string }) => {
     if (!apiFacade.useMock) {
@@ -170,6 +206,16 @@ const WelcomePage: React.FC = () => {
 
   const locationLabel = (count: number) =>
     t(count === 1 ? 'welcome.locationOne' : 'welcome.locationMany', { count });
+
+  if (motorized || (session?.role === 'superadmin' && !resumeSavedBrand)) {
+    return (
+      <IonPage>
+        <IonContent className="ag-screen">
+          <div className="welcome-loading"><IonSpinner name="crescent" /></div>
+        </IonContent>
+      </IonPage>
+    );
+  }
 
   return (
     <IonPage>
@@ -255,6 +301,9 @@ const WelcomePage: React.FC = () => {
                       );
                     })}
 
+                    {staff ? (
+                      brands.length === 0 ? <p>{t('staff.noBrand')}</p> : null
+                    ) : (
                     <button
                       type="button"
                       className="brand-card brand-card--create"
@@ -265,6 +314,7 @@ const WelcomePage: React.FC = () => {
                       <strong>{t('welcome.createBrand')}</strong>
                       <small>{t('welcome.createBrandHint')}</small>
                     </button>
+                    )}
                   </div>
                 )}
               </>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { config } from '../config/env';
 import { useApp } from '../hooks/useApp';
 import { useAuthToken } from '../hooks/useAuthToken';
-import { acceptCue, deliverNotificationCue, startNotificationCues } from '../notifications/deliverNotificationCue';
+import { acceptCue, deliverNotificationCue, setAllowCueWithoutBrand, startNotificationCues } from '../notifications/deliverNotificationCue';
 import { complaintCue, orderCueSound, reservationCueKind } from '../notifications/notificationCues';
 import { resolveSocketBaseUrl } from '../utils/resolveSocketBaseUrl';
 import {
@@ -36,18 +36,24 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const eventsSocketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    if (config.useApiMock) return;
-    if (!session || !brand?.id) return;
+    const motorized = session?.role === 'motorized';
+    setAllowCueWithoutBrand(Boolean(motorized && session && token && !config.useApiMock));
+    return () => setAllowCueWithoutBrand(false);
+  }, [session, token]);
 
-    if (!token) return;
+  useEffect(() => {
+    const motorized = session?.role === 'motorized';
+    if (config.useApiMock) return;
+    if (!session || !token) return;
+    if (!motorized && !brand?.id) return;
 
     startNotificationCues();
     const base = resolveSocketBaseUrl();
     const socketAuth = { token };
     const query = {
       role: (session.role || 'owner').toUpperCase(),
-      brandId: brand.id,
-      brandSubdomain: brand.subdomain || undefined,
+      brandId: brand?.id,
+      brandSubdomain: brand?.subdomain || undefined,
     };
 
     const scheduleRefresh = () => {
@@ -69,10 +75,10 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnectionDelay: 1000,
     });
 
-    const eventsSocket = io(`${base}/events`, {
+    const eventsSocket = motorized ? null : io(`${base}/events`, {
       auth: socketAuth,
       query: {
-        brandId: brand.id,
+        brandId: brand?.id,
       },
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -80,7 +86,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnectionDelay: 1000,
     });
 
-    const reservationsSocket = io(`${base}/reservations`, {
+    const reservationsSocket = motorized ? null : io(`${base}/reservations`, {
       auth: socketAuth,
       query,
       transports: ['websocket', 'polling'],
@@ -93,12 +99,12 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     eventsSocketRef.current = eventsSocket;
 
     const active = {
-      brandId: brand.id,
-      brandSubdomain: brand.subdomain ?? null,
+      brandId: brand?.id ?? '',
+      brandSubdomain: brand?.subdomain ?? null,
     };
 
     const handleOrdersEvent = (event: OrderSocketEventShape) => {
-      if (!orderSocketEventMatchesBrand(event, active)) return;
+      if (!motorized && !orderSocketEventMatchesBrand(event, active)) return;
 
       const type = event.type || '';
       if (!ORDER_REFRESH_TYPES.has(type)) return;
@@ -122,7 +128,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       }
 
-      if (type === 'order_created') {
+      if (type === 'order_created' && brand) {
         if (event.data?.thermalPrint) {
           void printThermalPayloadDirectly({
             activeBrandId: brand.id,
@@ -191,23 +197,23 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     ordersSocket.on('event', handleOrdersEvent);
-    eventsSocket.on('event', handleEventsEvent);
-    reservationsSocket.on('event', handleReservationsEvent);
+    eventsSocket?.on('event', handleEventsEvent);
+    reservationsSocket?.on('event', handleReservationsEvent);
     // A socket connection is not proof of fresh data: revalidate the list.
     ordersSocket.on('connect', scheduleRefresh);
 
     if (config.environment === 'development') {
       ordersSocket.on('connect', () => {
-        console.log('[mobile] /orders socket conectado', { brandId: brand.id });
+        console.log('[mobile] /orders socket conectado', { brandId: brand?.id ?? null });
       });
       ordersSocket.on('connect_error', (err) => {
         console.warn('[mobile] /orders connect_error', err.message);
       });
-      eventsSocket.on('connect', () => {
+      eventsSocket?.on('connect', () => {
         console.log('[mobile] /events socket conectado');
       });
-      reservationsSocket.on('connect', () => {
-        console.log('[mobile] /reservations socket conectado', { brandId: brand.id });
+      reservationsSocket?.on('connect', () => {
+        console.log('[mobile] /reservations socket conectado', { brandId: brand?.id ?? null });
       });
     }
 
@@ -217,11 +223,11 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshTimer.current = null;
       }
       ordersSocket.off('event', handleOrdersEvent);
-      eventsSocket.off('event', handleEventsEvent);
-      reservationsSocket.off('event', handleReservationsEvent);
+      eventsSocket?.off('event', handleEventsEvent);
+      reservationsSocket?.off('event', handleReservationsEvent);
       ordersSocket.disconnect();
-      eventsSocket.disconnect();
-      reservationsSocket.disconnect();
+      eventsSocket?.disconnect();
+      reservationsSocket?.disconnect();
       ordersSocketRef.current = null;
       eventsSocketRef.current = null;
     };

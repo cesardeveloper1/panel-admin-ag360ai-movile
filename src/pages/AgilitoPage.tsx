@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
   barChartOutline,
+  calendarOutline,
   closeOutline,
   gridOutline,
   menuOutline,
@@ -25,6 +26,7 @@ import { AGILITO_PATH, CHATS_PATH, NOTIFICATIONS_PATH, OPERATIONS_PATH, PAYMENTS
 import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 import { canNavigate } from '../navigation/navigationAccess';
+import { isStaffRole, STAFF_SCREENS } from '../navigation/staffScreens';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 
 interface AgilitoMessage {
@@ -38,7 +40,7 @@ interface AgilitoMessage {
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
   const { go, goRoot } = useAppNavigation();
-  const { notifications, showToast, session, startBrandSwitch } = useApp();
+  const { notifications, showToast, session, brand, startBrandSwitch } = useApp();
   const { isTablet } = useViewport();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPresent, setMenuPresent] = useState(false);
@@ -126,9 +128,12 @@ const AgilitoPage: React.FC = () => {
     { path: REPORTS_PATH, icon: barChartOutline, labelKey: 'nav.reports' },
     { path: PAYMENTS_PATH, icon: storefrontOutline, labelKey: 'nav.payments' },
     ...BUSINESS_MODULES.map((mod) => ({ path: mod.path, icon: mod.icon, labelKey: mod.i18n.agilitoLabel })),
+    ...STAFF_SCREENS.filter((screen) => screen.parent === OPERATIONS_PATH).map((screen) => ({
+      path: screen.path, icon: calendarOutline, labelKey: screen.titleKey,
+    })),
     { path: NOTIFICATIONS_PATH, icon: notificationsOutline, labelKey: 'nav.alerts' },
     { path: PROFILE_PATH, icon: personOutline, labelKey: 'nav.profile' },
-  ].filter((item) => canNavigate(session, item.path));
+  ].filter((item) => canNavigate(session, item.path, { locations: brand?.locations }));
 
   const openDestination = (path: string) => {
     setMenuOpen(false);
@@ -232,7 +237,7 @@ const AgilitoPage: React.FC = () => {
                     <h2 className="agilito-empty-title">{t('agilito.heroHint')}</h2>
                     <div className="agilito-modules-card" aria-label={t('agilito.modulesTitle')}>
                       <div className="agilito-modules-track">
-                        {BUSINESS_MODULES.map((mod) => (
+                        {BUSINESS_MODULES.filter((mod) => canNavigate(session, mod.path, { locations: brand?.locations })).map((mod) => (
                           <button
                             key={mod.id}
                             type="button"
@@ -373,6 +378,7 @@ const AgilitoPage: React.FC = () => {
                   </button>
                 ))}
               </nav>
+              {isStaffRole(session?.role) ? null : (
               <button
                 type="button"
                 className="agilito-nav__item agilito-nav__brand"
@@ -386,6 +392,7 @@ const AgilitoPage: React.FC = () => {
                 <IonIcon icon={storefrontOutline} aria-hidden="true" />
                 <span>{t('settings.changeBrand')}</span>
               </button>
+              )}
             </aside>
           </div>,
           document.body,

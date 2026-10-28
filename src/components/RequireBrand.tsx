@@ -1,7 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
+import { normalizePath } from '../navigation/appRouteRegistry';
+import { isPlatformPath, PLATFORM_PATH } from '../navigation/platformScreens';
 import { apiFacade } from '../services/apiFacade';
 import { BrandBootShell } from './BrandBootShell';
 
@@ -11,6 +14,8 @@ interface RequireBrandProps {
 
 export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
   const { goRoot } = useAppNavigation();
+  const { pathname } = useLocation();
+  const onPlatform = isPlatformPath(normalizePath(pathname));
   const { session, authRestoring, brand, brandLoading, selectBrandAndLoad, authEpoch } = useApp();
   const pendingBrand = typeof localStorage !== 'undefined' ? localStorage.getItem(BRAND_KEY) : null;
   const manualPick = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(PICK_BRAND_KEY) === '1';
@@ -25,10 +30,13 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
       goRoot('/login');
       return;
     }
-    if (!brand && !brandLoading && !pendingBrand) {
-      goRoot('/welcome');
+    if (session?.role === 'motorized' || brand || brandLoading || pendingBrand) return;
+    if (session?.role === 'superadmin') {
+      if (!onPlatform) goRoot(PLATFORM_PATH);
+      return;
     }
-  }, [session, authRestoring, brand, brandLoading, pendingBrand, goRoot]);
+    goRoot('/welcome');
+  }, [session, authRestoring, brand, brandLoading, pendingBrand, onPlatform, goRoot]);
 
   useLayoutEffect(() => {
     if (!session || brand || brandLoading || !pendingBrand || manualPick || hydratingRef.current) return;
@@ -60,6 +68,10 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
 
   if (!session) {
     return null;
+  }
+
+  if (session.role === 'motorized' || (session.role === 'superadmin' && onPlatform)) {
+    return <>{children}</>;
   }
 
   if (brand) {

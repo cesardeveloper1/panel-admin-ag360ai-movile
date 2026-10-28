@@ -35,6 +35,7 @@ export interface AppContextValue {
   canChangeOrders: boolean;
   orderMutations: Record<string, OrderMutation>;
   advanceOrder: (orderId: string, expectedStatus?: Order['status']) => Promise<OrderActionResult>;
+  setMotorizedOrderStatus: (orderId: string, status: Order['status']) => Promise<OrderActionResult>;
   setKitchenMode: (value: boolean) => void;
   setDarkMode: (value: boolean) => void;
   toggleAgent: () => Promise<void>;

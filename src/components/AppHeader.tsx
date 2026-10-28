@@ -1,6 +1,7 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
-import { chevronBackOutline } from 'ionicons/icons';
+import { chevronBackOutline, gridOutline } from 'ionicons/icons';
+import { PLATFORM_PATH } from '../navigation/platformScreens';
 import { useTranslation } from 'react-i18next';
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs';
 import { useApp } from '../hooks/useApp';
@@ -52,9 +53,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   trailing,
 }) => {
   const { t } = useTranslation();
-  const { go } = useAppNavigation();
-  const { session } = useApp();
+  const { go, goRoot } = useAppNavigation();
+  const { session, brand, clearBrand } = useApp();
   const isSub = Boolean(onBack);
+  const showPlatformReturn = session?.role === 'superadmin' && Boolean(brand);
+  const hideTitle = showPlatformReturn && Boolean(action || secondaryAction || trailing || showAlerts);
 
   const openProfile = () => {
     if (profileFromAvatar && session) go(PROFILE_PATH);
@@ -77,7 +80,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <header
-      className={`ag-header${isSub ? ' ag-header--sub' : ''}${centeredCompact ? ' ag-header--centered-compact' : ''}`}
+      className={`ag-header${isSub ? ' ag-header--sub' : ''}${centeredCompact ? ' ag-header--centered-compact' : ''}${hideTitle ? ' ag-header--hide-title' : ''}`}
     >
       {!isSub && breadcrumbs.length > 0 ? (
         <div className="ag-header-nav">
@@ -102,6 +105,20 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {subtitle ? <p className="ag-header-sub">{subtitle}</p> : null}
         </div>
         <div className="ag-header-actions">
+          {showPlatformReturn ? (
+            <button
+              type="button"
+              className="ag-header-action ag-platform-return"
+              onClick={() => {
+                clearBrand();
+                goRoot(PLATFORM_PATH);
+              }}
+              aria-label={t('platform.back')}
+            >
+              <IonIcon icon={gridOutline} />
+              <span className="ag-platform-return__label">{t('platform.back')}</span>
+            </button>
+          ) : null}
           {secondaryAction ? (
             <button
               type="button"

@@ -24,6 +24,8 @@ import { StackLayout } from '../components/layouts';
 import { useApp } from '../hooks/useApp';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { PAYMENT_CAPTURE_PATH } from '../navigation/appRouteRegistry';
+import { isStaffRole } from '../navigation/staffScreens';
+import { isMotorizedRole } from '../navigation/motorizedScreens';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
 import { userSettingsService, type SupportedAppLanguage } from '../services/userSettingsService';
@@ -218,6 +220,7 @@ const SettingsPage: React.FC = () => {
 
       <p className="settings-section-label">{t('settings.account')}</p>
       <IonList className="settings-list" lines="full">
+        {isMotorizedRole(session?.role) ? null : (
         <IonItem button className="settings-item" onClick={() => go(PAYMENT_CAPTURE_PATH)}>
           <IonIcon icon={phonePortraitOutline} slot="start" className="settings-icon" />
           <IonLabel>
@@ -225,6 +228,8 @@ const SettingsPage: React.FC = () => {
             <p>{t('paymentCapture.settingsHint')}</p>
           </IonLabel>
         </IonItem>
+        )}
+        {isMotorizedRole(session?.role) ? null : (
         <IonItem button className="settings-item" onClick={() => go(NOTIFICATIONS_PATH)}>
           <IonIcon icon={notificationsOutline} slot="start" className="settings-icon" />
           <IonLabel>
@@ -232,6 +237,8 @@ const SettingsPage: React.FC = () => {
             <p>{unread > 0 ? t('profile.unreadCount', { count: unread }) : t('notifications.empty')}</p>
           </IonLabel>
         </IonItem>
+        )}
+        {isStaffRole(session?.role) || isMotorizedRole(session?.role) ? null : (
         <IonItem button className="settings-item" onClick={onChangeBrand}>
           <IonIcon icon={swapHorizontalOutline} slot="start" className="settings-icon" />
           <IonLabel>
@@ -239,6 +246,7 @@ const SettingsPage: React.FC = () => {
             <p>{t('settings.changeBrandHint')}</p>
           </IonLabel>
         </IonItem>
+        )}
         {canRequestAccountDeletion ? (
           <IonItem button className="settings-item settings-item--danger" onClick={() => setDeleteOpen(true)}>
             <IonIcon icon={trashOutline} slot="start" className="settings-icon settings-icon--danger" />

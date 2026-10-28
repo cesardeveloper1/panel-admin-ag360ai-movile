@@ -3,14 +3,22 @@ import { IonIcon } from '@ionic/react';
 import { phonePortraitOutline, printOutline } from 'ionicons/icons';
 import { BusinessModuleGrid } from '../components/BusinessModuleGrid';
 import { TabLayout } from '../components/layouts';
+import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PAYMENTS_PATH } from '../navigation/navConfig';
 import { PAYMENT_CAPTURE_PATH, PRINTING_PATH } from '../navigation/appRouteRegistry';
+import { canNavigate, navigationAccess } from '../navigation/navigationAccess';
+import { STAFF_SCREENS } from '../navigation/staffScreens';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 
 const PaymentsHubPage: React.FC = () => {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
+  const { session, brand } = useApp();
+  const locations = brand?.locations;
+  const staffCards = STAFF_SCREENS.filter((screen) => screen.parent === PAYMENTS_PATH && canNavigate(session, screen.path, { locations }));
+  const caps = session ? navigationAccess(session.role, session.permissions) : null;
+  const showOwnerTools = Boolean(caps && (caps.products || caps.clients || caps.locations || caps.brand));
 
   return (
     <TabLayout title={t('payments.title')} centeredCompact>
@@ -18,11 +26,26 @@ const PaymentsHubPage: React.FC = () => {
       <BusinessModuleGrid
         titleKey={(mod) => mod.i18n.paymentsTitle}
         descKey={(mod) => mod.i18n.paymentsDesc}
+        include={(mod) => canNavigate(session, mod.path, { locations })}
         onSelect={(mod) => {
           setModuleNavFrom(PAYMENTS_PATH);
           go(mod.path);
         }}
       >
+        {staffCards.map((screen, index) => (
+          <button
+            key={screen.path}
+            type="button"
+            className="hub-card hub-card--ink ag-enter"
+            style={{ animationDelay: `${(index + 4) * 60}ms` }}
+            onClick={() => go(screen.path)}
+          >
+            <span className="hub-card-copy">
+              <strong>{t(screen.titleKey)}</strong>
+            </span>
+          </button>
+        ))}
+        {showOwnerTools ? <>
         <button
           type="button"
           className="hub-card hub-card--pulse ag-enter"
@@ -51,6 +74,7 @@ const PaymentsHubPage: React.FC = () => {
             <span>{t('printing.hubDesc')}</span>
           </span>
         </button>
+        </> : null}
       </BusinessModuleGrid>
     </TabLayout>
   );

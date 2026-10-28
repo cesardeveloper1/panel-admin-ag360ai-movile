@@ -16,6 +16,8 @@ import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { PanelChatIcon } from './PanelChatIcon';
 import { canNavigate } from '../navigation/navigationAccess';
+import { isStaffRole } from '../navigation/staffScreens';
+import { isMotorizedRole } from '../navigation/motorizedScreens';
 import { brandLabel } from '../utils/brandLabel';
 
 const SIDEBAR_COLLAPSED_KEY = 'agiliza360.sidebar.collapsed';
@@ -95,10 +97,11 @@ export function SideNav() {
       </div>
 
       <nav className="ag-side-nav-items">
-        {mobileNavItems.filter(item => session?.role === 'motorized' || canNavigate(session, item.path)).map(renderItem)}
+        {mobileNavItems.filter(item => canNavigate(session, item.path, { locations: brand?.locations })).map(renderItem)}
       </nav>
 
       <div className="ag-side-nav-footer">
+        {isStaffRole(session?.role) || isMotorizedRole(session?.role) ? null : (
         <button
           type="button"
           className="ag-side-nav-item ag-side-nav-item--brand-switch"
@@ -107,6 +110,7 @@ export function SideNav() {
           <IonIcon icon={storefrontOutline} aria-hidden="true" />
           <span>{t('settings.changeBrand')}</span>
         </button>
+        )}
         {session ? (
           <button
             type="button"
