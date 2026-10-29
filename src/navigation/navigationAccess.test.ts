@@ -24,6 +24,13 @@ it('does not turn delivery or an unknown role into a general operator', () => {
   expect(canNavigate(motorized, '/app/notifications')).toBe(false);
   expect(canNavigate(motorized, '/app/agilito')).toBe(false);
   expect(navigationLandingPath(motorized)).toBe('/app/operations');
+  const rider = { ...manager, role: 'rider' as const };
+  expect(canNavigate(rider, '/app/trip')).toBe(true);
+  expect(canNavigate(rider, '/app/operations')).toBe(false);
+  expect(canNavigate(rider, '/app/chats')).toBe(false);
+  expect(canNavigate(rider, '/app/notifications')).toBe(false);
+  expect(canNavigate(rider, '/app/agilito')).toBe(false);
+  expect(navigationLandingPath(rider)).toBe('/app/trip');
   expect(canNavigate(manager, '/app/partner/account')).toBe(false);
 });
 it('keeps authorized aliases and chooses an authorized landing page', () => {

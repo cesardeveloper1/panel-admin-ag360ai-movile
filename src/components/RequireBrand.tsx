@@ -4,6 +4,7 @@ import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { normalizePath } from '../navigation/appRouteRegistry';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
 import { isPlatformPath, PLATFORM_PATH } from '../navigation/platformScreens';
 import { apiFacade } from '../services/apiFacade';
 import { BrandBootShell } from './BrandBootShell';
@@ -30,7 +31,7 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
       goRoot('/login');
       return;
     }
-    if (session?.role === 'motorized' || brand || brandLoading || pendingBrand) return;
+    if (isFleetPhoneRole(session?.role) || brand || brandLoading || pendingBrand) return;
     if (session?.role === 'superadmin') {
       if (!onPlatform) goRoot(PLATFORM_PATH);
       return;
@@ -70,7 +71,7 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
     return null;
   }
 
-  if (session.role === 'motorized' || (session.role === 'superadmin' && onPlatform)) {
+  if (isFleetPhoneRole(session.role) || (session.role === 'superadmin' && onPlatform)) {
     return <>{children}</>;
   }
 

@@ -92,4 +92,14 @@ export const deliveryPartnerClient = {
     const rows = Array.isArray(data) ? data : [];
     return rows.map((row) => ({ id: String(row._id ?? ''), name: row.name || String(row._id ?? '') })).filter((row) => row.id);
   },
+
+  async listRiders(): Promise<Array<{ id: string; fullName: string; isActive?: boolean }>> {
+    const data = unwrap<Array<{ id?: string; _id?: string; fullName?: string; isActive?: boolean }>>(
+      await api.get('/delivery-partners/delivery/me/riders'),
+    );
+    const rows = Array.isArray(data) ? data : [];
+    return rows
+      .map((row) => ({ id: String(row.id ?? row._id ?? ''), fullName: row.fullName || '', isActive: row.isActive }))
+      .filter((row) => row.id);
+  },
 };

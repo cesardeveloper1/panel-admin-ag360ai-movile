@@ -115,4 +115,21 @@ export const orderService = {
     unwrapApiPayload(await api.put(endpoint, body));
     return null;
   },
+
+  async getFleetOrderDetail(order: Pick<Order, 'id' | 'orderNumber'>): Promise<Order> {
+    const query = order.orderNumber ? `?orderNumber=${encodeURIComponent(order.orderNumber)}` : '';
+    const raw = await api.get(`/orders/${encodeURIComponent(order.id)}${query}`);
+    const payload = unwrapApiPayload<ApiOrderDetail>(raw);
+    const result = mapOrderDetail(payload, payload?.brandSubdomain || 'fleet');
+    if (!result) throw new Error('Invalid order detail');
+    return result;
+  },
+
+  async postFleetLocation(orderId: string, latitude: number, longitude: number): Promise<void> {
+    await api.post(`/orders/${encodeURIComponent(orderId)}/location`, { latitude, longitude });
+  },
+
+  async assignOrderRider(orderId: string, riderId: string): Promise<void> {
+    await api.patch(`/orders/${encodeURIComponent(orderId)}/rider`, { riderId });
+  },
 };

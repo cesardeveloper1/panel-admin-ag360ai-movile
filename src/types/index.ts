@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'superadmin' | 'manager' | 'worker' | 'motorized' | 'unknown';
+export type UserRole = 'owner' | 'superadmin' | 'manager' | 'worker' | 'motorized' | 'rider' | 'unknown';
 
 export type OrderStatus =
   | 'pre_order'
@@ -74,6 +74,12 @@ export interface Order {
   branchName?: string;
   address?: string;
   addressReference?: string;
+  branchName?: string;
+  riderId?: string;
+  riderStep?: 'assigned' | 'picked_up' | 'delivered';
+  latitude?: number;
+  longitude?: number;
+  sharingLink?: string;
   notes?: string;
   scheduledAt?: string;
   detailLoaded?: boolean;
