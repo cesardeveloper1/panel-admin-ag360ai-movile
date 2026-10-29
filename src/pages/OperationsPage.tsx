@@ -3,7 +3,7 @@ import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewDidEnter } from '@i
 import type { ScrollDetail } from '@ionic/react';
 import { peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
-import { MotorizedBoard } from './motorized/MotorizedBoard';
+import { DispatchQueue } from './motorized/DispatchQueue';
 import { OperationsQuickAccess } from '../components/OperationsQuickAccess';
 import { OperationsFilters, type FunnelChannel, type OperationsPanel, type OperationsScopeResult } from '../components/OperationsFilters';
 import { AppHeader } from '../components/AppHeader';
@@ -13,6 +13,7 @@ import { OrderCard } from '../components/OrderCard';
 import { OrderDetailSheet } from '../components/OrderDetailSheet';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
+import { TRIP_PATH } from '../navigation/motorizedScreens';
 import { useViewport } from '../hooks/useViewport';
 import { CHATS_PATH, OPERATIONS_PATH } from '../navigation/navConfig';
 import { setChatNavFrom } from '../navigation/chatNavFrom';
@@ -46,7 +47,7 @@ const FOCUS_LABEL_KEY: Record<OpsFocus, string> = {
 const OperationsPage: React.FC = () => {
   const { t } = useTranslation();
   const { session, brand, authEpoch, orders, ordersFilters, ordersError, canChangeOrders, orderMutations, advanceOrder, ordersHasMore, ordersLoadingMore, loadMoreOrders, refreshOrders, loading, setOrdersFilters, showToast } = useApp();
-  const { go } = useAppNavigation();
+  const { go, replace } = useAppNavigation();
   const { isTablet } = useViewport();
   const pageRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLIonContentElement>(null);
@@ -313,8 +314,8 @@ const OperationsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (ordersError) setSelectedOrder(null);
-  }, [ordersError]);
+    if (session?.role === 'rider') replace(TRIP_PATH);
+  }, [session?.role, replace]);
 
   const openContactChat = (contact: ContactInfo) => {
     const params = new URLSearchParams();
@@ -335,7 +336,8 @@ const OperationsPage: React.FC = () => {
   const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
-  if (session?.role === 'motorized') return <MotorizedBoard />;
+  if (session?.role === 'rider') return null;
+  if (session?.role === 'motorized') return <DispatchQueue />;
 
   return (
     <IonPage data-ag-route="/app/operations"

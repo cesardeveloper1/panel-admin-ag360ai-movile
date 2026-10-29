@@ -18,6 +18,12 @@ export interface ApiOrderListItem {
   updatedAt?: string;
   scheduledAt?: string;
   branchId?: string;
+  branchName?: string | null;
+  riderId?: string | null;
+  riderStep?: 'assigned' | 'picked_up' | 'delivered' | null;
+  deliveryAddress?: string | null;
+  deliveryAddressRef?: string | null;
+  deliveryTracking?: { sharingLink?: string | null } | null;
   source?: number;
   deliveryMode?: number;
   humanInteraction?: {
@@ -99,6 +105,12 @@ export function mapOrderFromApi(raw: ApiOrderListItem, brandId: string): Order |
     brandId,
     locationKey: 'ops.reliability.noInformation',
     phone: raw.customerPhone?.trim() || undefined,
+    address: raw.deliveryAddress?.trim() || undefined,
+    addressReference: raw.deliveryAddressRef?.trim() || undefined,
+    branchName: raw.branchName?.trim() || undefined,
+    riderId: raw.riderId?.trim() || undefined,
+    riderStep: raw.riderStep ?? undefined,
+    sharingLink: raw.deliveryTracking?.sharingLink?.trim() || undefined,
     createdAt: raw.createdAt ? String(raw.createdAt) : undefined,
     updatedAt: raw.updatedAt,
   };
@@ -113,7 +125,15 @@ export function mapOrdersFromApi(list: ApiOrderListItem[], brandId: string): Ord
 export interface ApiOrderDetail extends ApiOrderListItem {
   brandId?: string;
   customer?: { firstName?: string; lastName?: string; phone?: string };
-  deliveryInfo?: { mode?: number; address?: string; addressRef?: string };
+  deliveryInfo?: {
+    mode?: number;
+    address?: string;
+    addressRef?: string;
+    latitude?: string | number;
+    longitude?: string | number;
+    riderId?: string;
+    riderStep?: 'assigned' | 'picked_up' | 'delivered';
+  };
   paymentInformation?: { paymentType?: number };
   totals?: { total?: number };
 }
@@ -124,7 +144,16 @@ export function mapOrderDetail(raw: ApiOrderDetail, brandId: string): Order | nu
     deliveryMode: raw.deliveryInfo?.mode, totalOrder: raw.totals?.total }, brandId);
   if (!order) return null;
   const methods: Record<number, Order['paymentMethod']> = { 1: 'cash', 2: 'card', 3: 'yape', 4: 'plin' };
-  return { ...order, detailLoaded: true, address: raw.deliveryInfo?.address,
-    addressReference: raw.deliveryInfo?.addressRef,
+  const latitude = Number(raw.deliveryInfo?.latitude);
+  const longitude = Number(raw.deliveryInfo?.longitude);
+  return { ...order, detailLoaded: true,
+    address: raw.deliveryInfo?.address || order.address,
+    addressReference: raw.deliveryInfo?.addressRef || order.addressReference,
+    branchName: raw.branchName?.trim() || order.branchName,
+    riderId: raw.deliveryInfo?.riderId || order.riderId,
+    riderStep: raw.deliveryInfo?.riderStep || order.riderStep,
+    latitude: Number.isFinite(latitude) ? latitude : undefined,
+    longitude: Number.isFinite(longitude) ? longitude : undefined,
+    sharingLink: raw.deliveryTracking?.sharingLink?.trim() || order.sharingLink,
     paymentMethod: methods[raw.paymentInformation?.paymentType ?? -1] };
 }

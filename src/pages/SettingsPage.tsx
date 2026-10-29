@@ -25,7 +25,7 @@ import { useApp } from '../hooks/useApp';
 import { NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { PAYMENT_CAPTURE_PATH } from '../navigation/appRouteRegistry';
 import { isStaffRole } from '../navigation/staffScreens';
-import { isMotorizedRole } from '../navigation/motorizedScreens';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
 import { userSettingsService, type SupportedAppLanguage } from '../services/userSettingsService';
@@ -220,7 +220,7 @@ const SettingsPage: React.FC = () => {
 
       <p className="settings-section-label">{t('settings.account')}</p>
       <IonList className="settings-list" lines="full">
-        {isMotorizedRole(session?.role) ? null : (
+        {isFleetPhoneRole(session?.role) ? null : (
         <IonItem button className="settings-item" onClick={() => go(PAYMENT_CAPTURE_PATH)}>
           <IonIcon icon={phonePortraitOutline} slot="start" className="settings-icon" />
           <IonLabel>
@@ -229,7 +229,7 @@ const SettingsPage: React.FC = () => {
           </IonLabel>
         </IonItem>
         )}
-        {isMotorizedRole(session?.role) ? null : (
+        {isFleetPhoneRole(session?.role) ? null : (
         <IonItem button className="settings-item" onClick={() => go(NOTIFICATIONS_PATH)}>
           <IonIcon icon={notificationsOutline} slot="start" className="settings-icon" />
           <IonLabel>
@@ -238,7 +238,7 @@ const SettingsPage: React.FC = () => {
           </IonLabel>
         </IonItem>
         )}
-        {isStaffRole(session?.role) || isMotorizedRole(session?.role) ? null : (
+        {isStaffRole(session?.role) || isFleetPhoneRole(session?.role) ? null : (
         <IonItem button className="settings-item" onClick={onChangeBrand}>
           <IonIcon icon={swapHorizontalOutline} slot="start" className="settings-icon" />
           <IonLabel>

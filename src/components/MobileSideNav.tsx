@@ -12,7 +12,7 @@ import { PanelChatIcon } from './PanelChatIcon';
 import { brandLabel } from '../utils/brandLabel';
 import { canNavigate } from '../navigation/navigationAccess';
 import { isStaffRole } from '../navigation/staffScreens';
-import { isMotorizedRole } from '../navigation/motorizedScreens';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
 
 export function MobileSideNav() {
   const { t } = useTranslation();
@@ -98,7 +98,7 @@ export function MobileSideNav() {
             })}
           </nav>
           <div className="ag-mobile-side-nav__footer">
-            {isStaffRole(session?.role) || isMotorizedRole(session?.role) ? null : (
+            {isStaffRole(session?.role) || isFleetPhoneRole(session?.role) ? null : (
             <button
               type="button"
               className="ag-mobile-side-nav__item ag-mobile-side-nav__brand-switch"

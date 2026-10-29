@@ -31,6 +31,9 @@ it('uses the panel order sounds and the socket playSound flag', () => {
   expect(orderCueSound({ type: 'order_updated', playSound: true })).toBeNull();
   expect(orderCueSound({ role: 'motorized', type: 'order_status_changed', status: 'para_recoger' })).toBe('orden');
   expect(orderCueSound({ role: 'motorized', type: 'order_created', status: 'Aceptado' })).toBeNull();
+  expect(orderCueSound({ role: 'rider', type: 'order_assigned', status: 'En cocina' })).toBe('orden');
+  expect(orderCueSound({ role: 'rider', type: 'order_status_changed', status: 'para_recoger' })).toBeNull();
+  expect(orderCueSound({ role: 'rider', type: 'order_updated' })).toBeNull();
 });
 
 it('plays chat and complaint sounds with the panel defaults', () => {

@@ -47,6 +47,9 @@ export function orderCueSound(input: {
   playSound?: boolean;
   status?: string;
 }): CueSound | null {
+  if (input.role === 'rider') {
+    return input.type === 'order_assigned' ? 'orden' : null;
+  }
   if (input.type !== 'order_created' && input.type !== 'order_status_changed') return null;
   if (input.role === 'motorized') {
     return isReadyForPickup(input.status) ? orderSoundForStatus(input.status) : null;

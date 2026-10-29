@@ -1005,7 +1005,26 @@
     "country": "País",
     "cities": "Ciudades",
     "addCoverage": "Agregar cobertura",
-    "noPartner": "No hay una cuenta de partner asignada."
+    "noPartner": "No hay una cuenta de partner asignada.",
+    "unassigned": "Por asignar",
+    "emptyQueue": "No hay pedidos por asignar.",
+    "chooseRider": "Elegir repartidor",
+    "noRiders": "Todavía no hay repartidores",
+    "ridersError": "No se pudo cargar la lista de repartidores",
+    "assignFailed": "No se pudo asignar el repartidor"
+  },
+  "rider": {
+    "title": "Viaje",
+    "empty": "No tienes pedidos en cocina.",
+    "localUnknown": "Local",
+    "addressUnknown": "Sin dirección",
+    "collect": "Cobrar {{amount}}",
+    "navigate": "Abrir navegación",
+    "copyLink": "Copiar enlace de seguimiento",
+    "copied": "Enlace copiado",
+    "pickedUp": "Recogí",
+    "delivered": "Entregué",
+    "statusFailed": "No se pudo actualizar el viaje."
   },
   "platform": {
     "title": "Plataforma",

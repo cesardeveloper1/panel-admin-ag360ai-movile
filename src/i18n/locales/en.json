@@ -960,7 +960,26 @@
     "country": "Country",
     "cities": "Cities",
     "addCoverage": "Add coverage",
-    "noPartner": "No partner account is assigned."
+    "noPartner": "No partner account is assigned.",
+    "unassigned": "Unassigned",
+    "emptyQueue": "No orders are waiting for a rider.",
+    "chooseRider": "Choose rider",
+    "noRiders": "There are no riders yet",
+    "ridersError": "The rider list could not be loaded",
+    "assignFailed": "The rider could not be assigned"
+  },
+  "rider": {
+    "title": "Trip",
+    "empty": "You have no orders in the kitchen.",
+    "localUnknown": "Store",
+    "addressUnknown": "No address",
+    "collect": "Collect {{amount}}",
+    "navigate": "Open navigation",
+    "copyLink": "Copy tracking link",
+    "copied": "Link copied",
+    "pickedUp": "Picked up",
+    "delivered": "Delivered",
+    "statusFailed": "The trip could not be updated."
   },
   "platform": {
     "title": "Platform",
