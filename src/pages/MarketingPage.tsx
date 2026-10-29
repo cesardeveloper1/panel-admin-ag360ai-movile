@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonIcon, IonSpinner } from '@ionic/react';
+import { IonIcon, IonSearchbar, IonSpinner } from '@ionic/react';
 import { chatbubbleOutline, peopleOutline, searchOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -115,15 +115,13 @@ const MarketingPage: React.FC = () => {
             <IonIcon icon={searchOutline} aria-hidden="true" />
           </button>
           {searchOpen ? (
-            <div className="ops-filter-popover" role="dialog" aria-label={t('marketing.search')}>
-              <input
-                className="carta-search"
-                type="search"
+            <div className="ops-filter-popover ops-filter-popover--search" role="dialog" aria-label={t('marketing.search')}>
+              <IonSearchbar
+                className="chats-search"
                 value={query}
+                onIonInput={(event) => setQuery(event.detail.value ?? '')}
                 placeholder={t('marketing.search')}
-                aria-label={t('marketing.search')}
-                autoFocus
-                onChange={(event) => setQuery(event.target.value)}
+                debounce={200}
               />
             </div>
           ) : null}

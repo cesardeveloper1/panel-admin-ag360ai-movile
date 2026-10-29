@@ -36,10 +36,15 @@ const PaymentsHubPage: React.FC = () => {
           <button
             key={screen.path}
             type="button"
-            className="hub-card hub-card--ink ag-enter"
+            className={`hub-card hub-card--${screen.hubTone ?? 'ink'} ag-enter`}
             style={{ animationDelay: `${(index + 4) * 60}ms` }}
             onClick={() => go(screen.path)}
           >
+            {screen.icon ? (
+              <span className="hub-card-icon">
+                <IonIcon icon={screen.icon} />
+              </span>
+            ) : null}
             <span className="hub-card-copy">
               <strong>{t(screen.titleKey)}</strong>
             </span>

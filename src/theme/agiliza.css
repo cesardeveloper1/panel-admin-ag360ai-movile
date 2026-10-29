@@ -7000,6 +7000,56 @@ body.agilito-nav-open { overflow: hidden; }
   min-height: var(--ag-header-chrome-size);
 }
 
+.agilito-agent {
+  position: relative;
+}
+
+.agilito-agent-trigger {
+  width: var(--ag-header-chrome-size);
+  height: var(--ag-header-chrome-size);
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ag-pulse);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.agilito-agent-trigger .ag-agent-bot-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.agilito-agent-trigger.is-off {
+  color: var(--ag-muted);
+}
+
+.agilito-agent-trigger[aria-expanded='true'] {
+  background: rgba(135, 70, 255, 0.12);
+}
+
+.agilito-agent-trigger:focus-visible {
+  outline: 2px solid var(--ag-pulse);
+  outline-offset: 2px;
+}
+
+.agilito-agent-panel {
+  width: min(20.5rem, calc(100vw - 1.5rem));
+}
+
+@media (max-width: 767px) {
+  .agilito-agent-panel {
+    position: fixed;
+    top: calc(var(--ag-header-chrome-top) + var(--ag-header-chrome-size) + 8px);
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+  }
+}
+
 .agilito-modules-card {
   width: min(100%, 22rem);
 }
@@ -9329,6 +9379,48 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   width: min(22rem, calc(100vw - 1.5rem)); max-height: min(70vh, 520px); overflow: auto;
   padding: 12px 14px; background: var(--ag-paper); color: var(--ag-ink);
   border: 1px solid #e4e7ee; border-radius: 14px; box-shadow: 0 16px 40px rgba(20, 26, 50, 0.16);
+}
+@media (max-width: 767px) {
+  .ops-filter-popover--search {
+    position: fixed;
+    z-index: 40;
+    top: calc(var(--ag-header-chrome-top) + var(--ag-header-chrome-size) + 28px);
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    box-shadow: none;
+  }
+  .ops-filter-popover--search .ops-filter-popover__bar { display: none; }
+  .ops-filter-popover--search ion-searchbar,
+  .ops-filter-popover--search .carta-search,
+  .ops-filter-popover--search .ops-search {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .ops-filter-popover--search ion-searchbar .searchbar-input {
+    padding-inline-start: 40px;
+    padding-inline-end: 40px;
+  }
+  body.ag-module-header-hidden .ops-filter-popover--search {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ag-app-shell-main:has(.ops-filter-popover--search) > .ag-body {
+    padding-top: calc(28px + 44px + 12px);
+  }
 }
 .ops-filter-popover__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .ops-filter-popover__bar h3 { margin: 0; min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; line-height: 1.3; }

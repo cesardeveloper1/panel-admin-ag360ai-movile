@@ -706,7 +706,7 @@ const ChatsPage: React.FC = () => {
                       <IonIcon icon={searchOutline} aria-hidden="true" />
                     </button>
                     {inboxSearchOpen ? (
-                      <div className="ops-filter-popover" role="dialog" aria-label={t('chats.search')}>
+                      <div className="ops-filter-popover ops-filter-popover--search" role="dialog" aria-label={t('chats.search')}>
                         <IonSearchbar
                           className="chats-search"
                           value={query}

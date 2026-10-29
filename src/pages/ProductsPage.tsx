@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonIcon, IonSpinner, IonToggle } from '@ionic/react';
+import { IonIcon, IonSearchbar, IonSpinner, IonToggle } from '@ionic/react';
 import { addOutline, searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { FilterChips } from '../components/FilterChips';
@@ -145,15 +145,13 @@ const ProductsPage: React.FC = () => {
             <IonIcon icon={addOutline} aria-hidden="true" />
           </button>
           {searchOpen ? (
-            <div className="ops-filter-popover" role="dialog" aria-label={t('menu.search')}>
-              <input
-                className="carta-search"
-                type="search"
+            <div className="ops-filter-popover ops-filter-popover--search" role="dialog" aria-label={t('menu.search')}>
+              <IonSearchbar
+                className="chats-search"
                 value={query}
+                onIonInput={(event) => setQuery(event.detail.value ?? '')}
                 placeholder={t('menu.search')}
-                aria-label={t('menu.search')}
-                autoFocus
-                onChange={(event) => setQuery(event.target.value)}
+                debounce={200}
               />
             </div>
           ) : null}

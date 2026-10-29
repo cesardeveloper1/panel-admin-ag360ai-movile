@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
@@ -18,6 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
 import { PanelChatIcon } from '../components/PanelChatIcon';
+import { AgentControls } from '../components/AgentControls';
 import { AgentToggle } from '../components/AgentToggle';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
@@ -44,7 +45,10 @@ const AgilitoPage: React.FC = () => {
   const { isTablet } = useViewport();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPresent, setMenuPresent] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const agentRef = useRef<HTMLDivElement>(null);
+  const agentMenuId = useId();
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
@@ -102,6 +106,22 @@ const AgilitoPage: React.FC = () => {
   }, []);
 
   useEffect(() => () => stopMedia(), [stopMedia]);
+
+  useEffect(() => {
+    if (!agentOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!agentRef.current?.contains(event.target as Node)) setAgentOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAgentOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [agentOpen]);
 
   useEffect(() => {
     if (menuOpen) setMenuPresent(true);
@@ -198,7 +218,7 @@ const AgilitoPage: React.FC = () => {
   return (
     <IonPage data-ag-route="/app/agilito">
       <IonContent className="ag-screen agilito-screen welcome-screen">
-        <AppShell agilitoChrome>
+        <AppShell agilitoChrome hideMobileMenu>
           <div className="agilito-layout">
             <header className="agilito-top">
               <div className={`agilito-top-row${isTablet ? '' : ' agilito-top-row--menu'}`}>
@@ -216,7 +236,19 @@ const AgilitoPage: React.FC = () => {
                   </button>
                 )}
                 <div className="agilito-top-trailing">
-                  <AgentToggle />
+                  <div className="agilito-agent" ref={agentRef}>
+                    <AgentToggle
+                      appearance="icon"
+                      onPress={() => setAgentOpen((open) => !open)}
+                      expanded={agentOpen}
+                      controlsId={agentMenuId}
+                    />
+                    {agentOpen ? (
+                      <div id={agentMenuId} className="ag-header-status__panel agilito-agent-panel" role="menu">
+                        <AgentControls />
+                      </div>
+                    ) : null}
+                  </div>
                   <button
                     type="button"
                     className="agilito-top-bell"
