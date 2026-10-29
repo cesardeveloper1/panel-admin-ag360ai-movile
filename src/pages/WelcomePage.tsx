@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import NewBrandSheet from '../components/NewBrandSheet';
 import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
+import { isTabRootPath } from '../navigation/appRouteRegistry';
 import { navigationLandingPath } from '../navigation/navigationAccess';
 import { isStaffRole } from '../navigation/staffScreens';
 import { isFleetPhoneRole } from '../navigation/motorizedScreens';
@@ -23,7 +24,7 @@ import { sessionDisplayName } from '../utils/sessionDisplayName';
 
 const WelcomePage: React.FC = () => {
   const { t } = useTranslation();
-  const { goRoot, go } = useAppNavigation();
+  const { goRoot, go, replace } = useAppNavigation();
   const { session, authRestoring, brand, clearBrand, selectBrandAndLoad, brandLoading, showToast, authEpoch, logout } = useApp();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +39,11 @@ const WelcomePage: React.FC = () => {
     && Boolean(localStorage.getItem(BRAND_KEY))
     && (typeof sessionStorage === 'undefined' || sessionStorage.getItem(PICK_BRAND_KEY) !== '1');
   useLayoutEffect(() => {
-    if (fleetPhone) goRoot(navigationLandingPath(session), 'replace', true);
-  }, [fleetPhone, session, goRoot]);
+    if (!fleetPhone) return;
+    const landing = navigationLandingPath(session);
+    if (isTabRootPath(landing)) goRoot(landing, 'replace', true);
+    else replace(landing);
+  }, [fleetPhone, session, goRoot, replace]);
   useLayoutEffect(() => {
     if (session?.role !== 'superadmin' || resumeSavedBrand) return;
     sessionStorage.removeItem(PICK_BRAND_KEY);
