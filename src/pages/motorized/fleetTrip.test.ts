@@ -15,13 +15,14 @@ const order = (patch: Partial<Order>): Order => ({
   ...patch,
 });
 
-it('deja en la cola solo lo que todavía no tiene repartidor', () => {
+it('deja en la cola solo lo que está en cocina y no tiene repartidor', () => {
   const rows = unassignedDispatchOrders([
     order({ id: 'a' }),
     order({ id: 'b', riderId: 'rider' }),
     order({ id: 'c', status: 'delivered' }),
     order({ id: 'd', status: 'on_the_way' }),
     order({ id: 'e', status: 'cancelled' }),
+    order({ id: 'f', status: 'accepted' }),
   ]);
   expect(rows.map((item) => item.id)).toEqual(['a']);
 });

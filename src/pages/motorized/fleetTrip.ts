@@ -1,12 +1,7 @@
 import type { Order } from '../../types';
 
 export function unassignedDispatchOrders(orders: Order[]): Order[] {
-  return orders.filter((order) =>
-    !order.riderId &&
-    order.status !== 'delivered' &&
-    order.status !== 'cancelled' &&
-    order.status !== 'on_the_way',
-  );
+  return orders.filter((order) => order.status === 'in_kitchen' && !order.riderId);
 }
 
 export function riderScreen(orders: Order[], selectedId: string | null):

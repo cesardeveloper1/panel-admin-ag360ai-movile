@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { Brand, NotificationItem, Order, UserSession } from '../types';
 import { apiFacade } from '../services/apiFacade';
+import { orderService } from '../services/orderService';
 import {
   defaultOrdersFilters,
   type OrdersListFilters,
@@ -517,26 +518,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const logout = useCallback(() => {
-    void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
-    brandSelectionId.current += 1;
-    ordersRequestId.current += 1;
-    notificationsRequestId.current += 1;
-    brandSelectPromise.current = null;
-    flushSync(() => {
-      setSession(null);
-      setBrand(null);
-      setOrders([]);
-      setOrdersError(false);
-      setOrdersLastSyncedAt(null);
-      setOrdersHasMore(false);
-      setOrdersLoadingMore(false);
-      setNotifications([]);
-      setKitchenMode(false);
-      setBrandLoading(false);
-      setLoading(false);
-      setAuthEpoch((n) => n + 1);
-    });
-    resetAuthStorage();
+    const role = sessionRef.current?.role;
+    const finish = () => {
+      void paymentNotificationCapture.unlinkDevice().catch(() => undefined);
+      brandSelectionId.current += 1;
+      ordersRequestId.current += 1;
+      notificationsRequestId.current += 1;
+      brandSelectPromise.current = null;
+      flushSync(() => {
+        setSession(null);
+        setBrand(null);
+        setOrders([]);
+        setOrdersError(false);
+        setOrdersLastSyncedAt(null);
+        setOrdersHasMore(false);
+        setOrdersLoadingMore(false);
+        setNotifications([]);
+        setKitchenMode(false);
+        setBrandLoading(false);
+        setLoading(false);
+        setAuthEpoch((n) => n + 1);
+      });
+      resetAuthStorage();
+    };
+    if (role === 'rider') {
+      void orderService.setFleetPresence('logged_out').catch(() => undefined).finally(finish);
+      return;
+    }
+    finish();
   }, []);
 
   const selectBrandAndLoad = useCallback(

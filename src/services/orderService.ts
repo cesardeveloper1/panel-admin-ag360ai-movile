@@ -129,6 +129,19 @@ export const orderService = {
     await api.post(`/orders/${encodeURIComponent(orderId)}/location`, { latitude, longitude });
   },
 
+  async getFleetSchedule(): Promise<{ startTime: string | null; endTime: string | null }> {
+    const raw = await api.get('/delivery-partners/delivery/rider/schedule');
+    const data = (raw && typeof raw === 'object' && 'data' in raw ? (raw as { data?: { startTime?: string | null; endTime?: string | null } }).data : null) ?? {};
+    return {
+      startTime: data.startTime ?? null,
+      endTime: data.endTime ?? null,
+    };
+  },
+
+  async setFleetPresence(state: 'tracking' | 'online' | 'off_hours' | 'logged_out'): Promise<void> {
+    await api.post('/delivery-partners/delivery/rider/presence', { state });
+  },
+
   async assignOrderRider(orderId: string, riderId: string): Promise<void> {
     await api.patch(`/orders/${encodeURIComponent(orderId)}/rider`, { riderId });
   },

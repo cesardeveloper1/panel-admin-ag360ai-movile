@@ -9,13 +9,14 @@ import { PROFILE_PATH } from '../../navigation/appRouteRegistry';
 import { orderService } from '../../services/orderService';
 import type { Order } from '../../types';
 import { navigationHref, riderScreen } from './fleetTrip';
+import { useFleetSchedule } from './useFleetSchedule';
 
 const ACTIVE_KEY = 'fleet-active-trip';
 
 export function RiderTripPage() {
   const { t } = useTranslation();
   const { go } = useAppNavigation();
-  const { orders, ordersError, loading, refreshOrders, setRiderOrderStatus } = useApp();
+  const { orders, ordersError, loading, refreshOrders, setRiderOrderStatus, session } = useApp();
   const [selectedId, setSelectedId] = useState<string | null>(() => sessionStorage.getItem(ACTIVE_KEY));
   const [detail, setDetail] = useState<Order | null>(null);
   const [pending, setPending] = useState(false);
@@ -23,6 +24,7 @@ export function RiderTripPage() {
   const [copied, setCopied] = useState(false);
   const screen = riderScreen(orders, selectedId);
   const trip = screen.kind === 'trip' ? { ...screen.order, ...detail, id: screen.order.id, status: screen.order.status } : null;
+  const { withinHours } = useFleetSchedule(session?.role === 'rider');
 
   useEffect(() => {
     if (screen.kind === 'trip') sessionStorage.setItem(ACTIVE_KEY, screen.order.id);
@@ -42,7 +44,13 @@ export function RiderTripPage() {
   }, [screen.kind === 'trip' ? screen.order.id : '', screen.kind === 'trip' ? screen.order.status : '']);
 
   useEffect(() => {
-    if (!trip || trip.status !== 'on_the_way' || !navigator.geolocation) return;
+    if (session?.role !== 'rider') return;
+    const state = !withinHours ? 'off_hours' : trip?.status === 'on_the_way' ? 'tracking' : 'online';
+    void orderService.setFleetPresence(state).catch(() => undefined);
+  }, [session?.role, withinHours, trip?.id, trip?.status]);
+
+  useEffect(() => {
+    if (!trip || trip.status !== 'on_the_way' || !withinHours || !navigator.geolocation) return;
     let lastSent = 0;
     const watch = navigator.geolocation.watchPosition((position) => {
       const now = Date.now();
@@ -51,7 +59,7 @@ export function RiderTripPage() {
       void orderService.postFleetLocation(trip.id, position.coords.latitude, position.coords.longitude).catch(() => undefined);
     }, () => undefined, { enableHighAccuracy: true, maximumAge: 15_000 });
     return () => navigator.geolocation.clearWatch(watch);
-  }, [trip?.id, trip?.status]);
+  }, [trip?.id, trip?.status, withinHours]);
 
   const move = async (status: 'on_the_way' | 'delivered') => {
     if (!trip) return;
@@ -122,7 +130,7 @@ export function RiderTripPage() {
                     disabled={pending}
                     onClick={() => void move(trip.status === 'on_the_way' ? 'delivered' : 'on_the_way')}
                   >
-                    {t(trip.status === 'on_the_way' ? 'rider.delivered' : 'rider.pickedUp')}
+                    {t(trip.status === 'on_the_way' ? 'rider.delivered' : 'rider.arrived')}
                   </button>
                 </article>
               ) : null}
