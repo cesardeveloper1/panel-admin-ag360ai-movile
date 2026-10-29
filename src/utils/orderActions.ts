@@ -2,7 +2,7 @@ import type { Order, OrderStatus, UserRole } from '../types';
 
 export function normalizeUserRole(role: string): UserRole {
   const value = String(role ?? '').trim().toLowerCase();
-  return ['owner', 'superadmin', 'manager', 'worker', 'motorized'].includes(value) ? value as UserRole : 'unknown';
+  return ['owner', 'superadmin', 'manager', 'worker', 'motorized', 'rider'].includes(value) ? value as UserRole : 'unknown';
 }
 
 /** Projection of the existing panel permission contract; resource authorization remains server-side. */

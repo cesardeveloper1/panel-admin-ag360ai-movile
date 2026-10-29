@@ -13,6 +13,7 @@ import { clearChatInboxCache } from '../services/chatInboxState';
 import { nextNavigationIntent } from '../navigation/navigationIntent';
 import { clearOperationsViews } from '../navigation/operationsViewState';
 import { clearChatNavFrom } from '../navigation/chatNavFrom';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
 import { AppContext } from './appContextInstance';
 import { onSessionExpired } from '../utils/authSession';
 import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
@@ -340,7 +341,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const refreshOrders = useCallback(async () => {
-    if (sessionRef.current?.role === 'motorized') {
+    if (isFleetPhoneRole(sessionRef.current?.role)) {
       if (!ordersRef.current.length) setLoading(true);
       await loadMotorizedOrders(true);
       return;
@@ -355,7 +356,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [brand, loadMotorizedOrders, loadOrdersForBrand, showToast]);
 
   useEffect(() => {
-    if (session?.role !== 'motorized') return;
+    if (!isFleetPhoneRole(session?.role)) return;
     setLoading(true);
     void loadMotorizedOrders();
   }, [session?.role, authEpoch, loadMotorizedOrders]);
@@ -374,7 +375,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ordersFiltersRef.current = next;
       setOrdersFiltersState(next);
 
-      if (sessionRef.current?.role === 'motorized') {
+      if (isFleetPhoneRole(sessionRef.current?.role)) {
         setLoading(true);
         await loadMotorizedOrders();
         return;
@@ -744,6 +745,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [loadMotorizedOrders, showToast]);
 
+  const setRiderOrderStatus = useCallback(async (orderId: string, status: Order['status']): Promise<OrderActionResult> => {
+    const order = ordersRef.current.find((item) => item.id === orderId);
+    const allowed = status === 'on_the_way' || (status === 'delivered' && order?.status === 'on_the_way');
+    if (sessionRef.current?.role !== 'rider' || !allowed || !order) {
+      return { ok: false, reason: 'denied' };
+    }
+    try {
+      await apiFacade.updateOrderStatus(orderId, status, order.orderNumber);
+      await loadMotorizedOrders(true);
+      showToast('toast.orderUpdated');
+      return { ok: true, order: { ...order, status } };
+    } catch {
+      return { ok: false, reason: 'failed' };
+    }
+  }, [loadMotorizedOrders, showToast]);
+
   const value = useMemo(
     () => ({
       session,
@@ -776,6 +793,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setOrdersFilters,
       advanceOrder,
       setMotorizedOrderStatus,
+      setRiderOrderStatus,
       canChangeOrders,
       orderMutations,
       setKitchenMode,
@@ -819,6 +837,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setOrdersFilters,
       advanceOrder,
       setMotorizedOrderStatus,
+      setRiderOrderStatus,
       canChangeOrders,
       orderMutations,
       setDarkMode,

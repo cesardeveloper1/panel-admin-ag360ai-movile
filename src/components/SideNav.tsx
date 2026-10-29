@@ -17,7 +17,7 @@ import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { PanelChatIcon } from './PanelChatIcon';
 import { canNavigate } from '../navigation/navigationAccess';
 import { isStaffRole } from '../navigation/staffScreens';
-import { isMotorizedRole } from '../navigation/motorizedScreens';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
 import { brandLabel } from '../utils/brandLabel';
 
 const SIDEBAR_COLLAPSED_KEY = 'agiliza360.sidebar.collapsed';
@@ -101,7 +101,7 @@ export function SideNav() {
       </nav>
 
       <div className="ag-side-nav-footer">
-        {isStaffRole(session?.role) || isMotorizedRole(session?.role) ? null : (
+        {isStaffRole(session?.role) || isFleetPhoneRole(session?.role) ? null : (
         <button
           type="button"
           className="ag-side-nav-item ag-side-nav-item--brand-switch"

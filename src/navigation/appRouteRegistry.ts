@@ -7,7 +7,7 @@ import {
   BUSINESS_MODULE_PATHS as CATALOG_MODULE_PATHS,
 } from './businessModules';
 import { STAFF_SCREENS } from './staffScreens';
-import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH } from './motorizedScreens';
+import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH, TRIP_PATH } from './motorizedScreens';
 import { PLATFORM_GROUPS, PLATFORM_PATH, PLATFORM_SCREENS } from './platformScreens';
 
 export const NOTIFICATIONS_PATH = '/app/notifications';
@@ -186,6 +186,7 @@ export const APP_ROUTES: AppRoute[] = [
     pageMarker: '.platform-screen',
     titleKey: screen.titleKey,
   })),
+  { path: TRIP_PATH, kind: 'stack', pageMarker: '.trip-screen', titleKey: 'rider.title' },
   { path: PARTNER_ZONES_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.zones' },
   { path: PARTNER_GROUPS_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.groups' },
   { path: PARTNER_ACCOUNT_PATH, kind: 'stack', parent: OPERATIONS_PATH, titleKey: 'motorized.account' },

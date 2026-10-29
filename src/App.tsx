@@ -24,8 +24,9 @@ import PlatformPage from './pages/PlatformPage';
 import PartnerZonesPage from './pages/motorized/PartnerZonesPage';
 import PartnerGroupsPage from './pages/motorized/PartnerGroupsPage';
 import PartnerAccountPage from './pages/motorized/PartnerAccountPage';
+import { RiderTripPage } from './pages/motorized/RiderTripPage';
 import { STAFF_SCREENS } from './navigation/staffScreens';
-import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH } from './navigation/motorizedScreens';
+import { PARTNER_ACCOUNT_PATH, PARTNER_GROUPS_PATH, PARTNER_ZONES_PATH, TRIP_PATH } from './navigation/motorizedScreens';
 import { PLATFORM_ROUTE_PATHS } from './navigation/platformScreens';
 import { AppProvider } from './context/AppContext';
 import { useApp } from './hooks/useApp';
@@ -74,6 +75,7 @@ const BrandedStaffScreenPage = branded(StaffScreenPage);
 const BrandedPartnerZonesPage = branded(PartnerZonesPage);
 const BrandedPartnerGroupsPage = branded(PartnerGroupsPage);
 const BrandedPartnerAccountPage = branded(PartnerAccountPage);
+const BrandedRiderTripPage = branded(RiderTripPage);
 const BrandedPlatformPage = branded(PlatformPage);
 const BrandedOnboardingPage = branded(OnboardingWizardPage);
 
@@ -117,6 +119,7 @@ const AppRoutes: React.FC = () => {
         <Route exact path={PARTNER_ZONES_PATH} component={BrandedPartnerZonesPage} />
         <Route exact path={PARTNER_GROUPS_PATH} component={BrandedPartnerGroupsPage} />
         <Route exact path={PARTNER_ACCOUNT_PATH} component={BrandedPartnerAccountPage} />
+        <Route exact path={TRIP_PATH} component={BrandedRiderTripPage} />
         <Route exact path={PLATFORM_ROUTE_PATHS} component={BrandedPlatformPage} />
         <Route exact path="/app">
           <Redirect to={navigationLandingPath(session)} />

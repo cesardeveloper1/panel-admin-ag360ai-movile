@@ -9246,6 +9246,21 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 .motorized-status button[aria-pressed="true"] { color: var(--ag-pulse); }
 .partner-map { height: 240px; width: 100%; border-radius: 12px; overflow: hidden; }
 .motorized-detail { display: grid; gap: 8px; margin-top: 16px; }
+.fleet-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.fleet-choice, .fleet-rider-field select, .fleet-trip .ag-btn, .fleet-trip .ag-btn--primary { min-height: 44px; }
+.fleet-rider-field select { width: 100%; border: 1px solid var(--ag-line); border-radius: 9px; background: var(--ag-paper); color: var(--ag-ink); padding: 0 12px; }
+.fleet-trip { display: flex; flex-direction: column; gap: 12px; }
+.fleet-trip .ag-btn--primary { background: var(--ag-pulse); color: #fff; }
+.fleet-choice { text-align: left; }
+@media (max-width: 360px) {
+  .fleet-screen .ag-header-row:has(.ag-header-actions .ag-header-action) .ag-header-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
 .platform-screen { overflow-x: hidden; }
 .platform-grid { display: grid; gap: 8px; }
 .platform-grid .hub-card { min-height: 44px; text-align: left; }

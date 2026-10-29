@@ -1,7 +1,7 @@
 import type { UserSession } from '../types';
 import { normalizePath, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, AGILITO_PATH, PAYMENTS_PATH, PROFILE_PATH, NOTIFICATIONS_PATH, QUICK_MESSAGES_PATH } from './appRouteRegistry';
 import { isStaffRole, STAFF_SCREENS } from './staffScreens';
-import { isMotorizedRole, MOTORIZED_PATHS } from './motorizedScreens';
+import { isMotorizedRole, isRiderRole, MOTORIZED_PATHS, TRIP_PATH } from './motorizedScreens';
 import { isPlatformPath } from './platformScreens';
 
 export type NavigationPermissions = { modules?: Record<string, { enabled?: boolean; actions?: string[] } | null> };
@@ -44,7 +44,8 @@ export function canNavigate(session: UserSession | null, path: string, context?:
   if (!session) return false;
   const route = normalizePath(path.split('?')[0]);
   if (route === PROFILE_PATH) return true;
-  if (route === NOTIFICATIONS_PATH) return !isMotorizedRole(session.role);
+  if (route === NOTIFICATIONS_PATH) return !isMotorizedRole(session.role) && !isRiderRole(session.role);
+  if (isRiderRole(session.role)) return route === TRIP_PATH;
   if (isMotorizedRole(session.role)) {
     return route === OPERATIONS_PATH || (MOTORIZED_PATHS as readonly string[]).includes(route);
   }
@@ -75,6 +76,7 @@ export function canNavigate(session: UserSession | null, path: string, context?:
 }
 
 export function navigationLandingPath(session: UserSession | null): string {
+  if (isRiderRole(session?.role)) return TRIP_PATH;
   if (isMotorizedRole(session?.role)) return OPERATIONS_PATH;
   return [AGILITO_PATH, OPERATIONS_PATH, CHATS_PATH, REPORTS_PATH, PAYMENTS_PATH].find(path => canNavigate(session, path)) ?? PROFILE_PATH;
 }

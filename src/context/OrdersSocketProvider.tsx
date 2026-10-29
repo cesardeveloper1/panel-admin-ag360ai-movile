@@ -11,6 +11,7 @@ import {
   orderSocketEventMatchesBrand,
   type OrderSocketEventShape,
 } from '../services/orderSocketBrandScope';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
 import { printThermalPayloadDirectly } from '../services/directMobilePrint';
 
 const ORDER_REFRESH_TYPES = new Set([
@@ -36,16 +37,16 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const eventsSocketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const motorized = session?.role === 'motorized';
-    setAllowCueWithoutBrand(Boolean(motorized && session && token && !config.useApiMock));
+    const fleetPhone = isFleetPhoneRole(session?.role);
+    setAllowCueWithoutBrand(Boolean(fleetPhone && session && token && !config.useApiMock));
     return () => setAllowCueWithoutBrand(false);
   }, [session, token]);
 
   useEffect(() => {
-    const motorized = session?.role === 'motorized';
+    const fleetPhone = isFleetPhoneRole(session?.role);
     if (config.useApiMock) return;
     if (!session || !token) return;
-    if (!motorized && !brand?.id) return;
+    if (!fleetPhone && !brand?.id) return;
 
     startNotificationCues();
     const base = resolveSocketBaseUrl();
@@ -75,7 +76,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnectionDelay: 1000,
     });
 
-    const eventsSocket = motorized ? null : io(`${base}/events`, {
+    const eventsSocket = fleetPhone ? null : io(`${base}/events`, {
       auth: socketAuth,
       query: {
         brandId: brand?.id,
@@ -86,7 +87,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       reconnectionDelay: 1000,
     });
 
-    const reservationsSocket = motorized ? null : io(`${base}/reservations`, {
+    const reservationsSocket = fleetPhone ? null : io(`${base}/reservations`, {
       auth: socketAuth,
       query,
       transports: ['websocket', 'polling'],
@@ -104,7 +105,7 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     const handleOrdersEvent = (event: OrderSocketEventShape) => {
-      if (!motorized && !orderSocketEventMatchesBrand(event, active)) return;
+      if (!fleetPhone && !orderSocketEventMatchesBrand(event, active)) return;
 
       const type = event.type || '';
       if (!ORDER_REFRESH_TYPES.has(type)) return;
