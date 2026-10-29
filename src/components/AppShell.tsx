@@ -1,5 +1,4 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { useApp } from '../hooks/useApp';
 import { SideNav } from './SideNav';
 import { MobileSideNav } from './MobileSideNav';
 import { useViewport } from '../hooks/useViewport';
@@ -26,8 +25,7 @@ export function AppShell({
 }: AppShellProps) {
   const { isTablet } = useViewport();
   const shellRef = useRef<HTMLDivElement>(null);
-  const { session } = useApp();
-  const noHamburger = hideMobileMenu || session?.role !== 'motorized';
+  const noHamburger = hideMobileMenu;
   const showMobileSideNav = !hideNav && !isTablet && !noHamburger;
   useEffect(() => {
     const content = shellRef.current?.closest('ion-content') as HTMLIonContentElement | null;

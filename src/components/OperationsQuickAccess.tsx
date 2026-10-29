@@ -84,7 +84,7 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
     {pinned.filter(action => action.show && pins.includes(action.id)).map(action =>
       <button className="ops-tool-btn" type="button" key={action.id} aria-label={action.label} aria-expanded={action.id === 'date' ? panel === 'date' : undefined} onClick={action.run}><IonIcon icon={action.icon} aria-hidden="true" /></button>)}
     <button className="ops-actions-toggle" type="button" aria-label={t('ops.filters.actions')} aria-expanded={menuOpen} onClick={() => { setSearchOpen(false); onPanel(null); setMenuOpen(open => !open); }}><IonIcon icon={optionsOutline} aria-hidden="true" /><span className="ops-actions-toggle__label">{t('ops.filters.actions')}</span></button>
-    {searchOpen ? <div className="ops-filter-popover" role="dialog" aria-label={t('ops.filters.searchAction')}>
+    {searchOpen ? <div className="ops-filter-popover ops-filter-popover--search" role="dialog" aria-label={t('ops.filters.searchAction')}>
       <div className="ops-filter-popover__bar"><h3>{t('ops.filters.searchAction')}</h3></div>
       <IonSearchbar className="ops-search" value={query} onIonInput={event => onQueryChange(event.detail.value ?? '')} placeholder={mode === 'funnel' ? t('ops.funnel.search') : t('ops.search')} debounce={200} />
     </div> : null}

@@ -1,4 +1,22 @@
+import {
+  albumsOutline,
+  bookOutline,
+  chatbubblesOutline,
+  documentsOutline,
+  extensionPuzzleOutline,
+  imagesOutline,
+  layersOutline,
+  linkOutline,
+  mapOutline,
+  optionsOutline,
+  paperPlaneOutline,
+  schoolOutline,
+  settingsOutline,
+  starOutline,
+  swapHorizontalOutline,
+} from 'ionicons/icons';
 import type { UserRole } from '../types';
+import type { HubCardTone } from './businessModules';
 
 const OPERATIONS_PATH = '/app/operations';
 const PAYMENTS_PATH = '/app/payments';
@@ -12,6 +30,8 @@ export interface StaffScreen {
   parent: string;
   kind: StaffScreenKind;
   module?: string;
+  icon?: string;
+  hubTone?: HubCardTone;
   /** El trabajador no entra. */
   managerOnly?: boolean;
   /** Solo con un local asignado. */
@@ -32,22 +52,22 @@ export const STAFF_SCREENS: readonly StaffScreen[] = [
   { path: '/app/reports/order-map', titleKey: 'staff.reportMap', parent: REPORTS_PATH, kind: 'report', module: 'reportes' },
   { path: '/app/reports/cash-close', titleKey: 'staff.reportCash', parent: REPORTS_PATH, kind: 'report', module: 'reportes' },
   { path: '/app/reports/cancelled', titleKey: 'staff.reportCancelled', parent: REPORTS_PATH, kind: 'report', module: 'reportes', managerOnly: true },
-  { path: '/app/menu/categories', titleKey: 'staff.categories', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true },
-  { path: '/app/menu/modifiers', titleKey: 'staff.modifiers', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true },
-  { path: '/app/menu/groups', titleKey: 'staff.groups', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true },
-  { path: '/app/menu/integrations', titleKey: 'staff.menuIntegrations', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true, managerOnly: true },
-  { path: '/app/menu/digital', titleKey: 'staff.digitalMenu', parent: PAYMENTS_PATH, kind: 'external', module: 'carta_digital', singleLocation: true },
-  { path: LOCAL_MENU_CONFIG_PATH, titleKey: 'staff.localConfig', parent: PAYMENTS_PATH, kind: 'local', module: 'menu', multiLocation: true },
-  { path: '/app/marketing/templates', titleKey: 'staff.templates', parent: PAYMENTS_PATH, kind: 'list', module: 'marketing' },
-  { path: '/app/marketing/campaigns', titleKey: 'staff.campaigns', parent: PAYMENTS_PATH, kind: 'list', module: 'marketing' },
-  { path: '/app/marketing/complaints', titleKey: 'staff.complaints', parent: PAYMENTS_PATH, kind: 'list', module: 'clientes' },
-  { path: '/app/marketing/branch-survey', titleKey: 'staff.branchSurvey', parent: PAYMENTS_PATH, kind: 'list', module: 'encuestas_local' },
-  { path: '/app/marketing/nps', titleKey: 'platform.nps', parent: PAYMENTS_PATH, kind: 'list', superadminOnly: true },
-  { path: '/app/locations/zones', titleKey: 'staff.zones', parent: PAYMENTS_PATH, kind: 'list', module: 'locales' },
-  { path: '/app/locations/gallery', titleKey: 'staff.gallery', parent: PAYMENTS_PATH, kind: 'list', module: 'galeria' },
-  { path: '/app/locations/integrations', titleKey: 'staff.locationIntegrations', parent: PAYMENTS_PATH, kind: 'list', module: 'locales' },
-  { path: '/app/agilink', titleKey: 'staff.agilink', parent: PAYMENTS_PATH, kind: 'agilink', module: 'agilink' },
-  { path: '/app/help', titleKey: 'staff.help', parent: PAYMENTS_PATH, kind: 'list' },
+  { path: '/app/menu/categories', titleKey: 'staff.categories', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true, icon: albumsOutline, hubTone: 'pulse' },
+  { path: '/app/menu/modifiers', titleKey: 'staff.modifiers', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true, icon: optionsOutline, hubTone: 'hot' },
+  { path: '/app/menu/groups', titleKey: 'staff.groups', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true, icon: layersOutline, hubTone: 'done' },
+  { path: '/app/menu/integrations', titleKey: 'staff.menuIntegrations', parent: PAYMENTS_PATH, kind: 'list', module: 'menu', singleLocation: true, managerOnly: true, icon: swapHorizontalOutline, hubTone: 'ink' },
+  { path: '/app/menu/digital', titleKey: 'staff.digitalMenu', parent: PAYMENTS_PATH, kind: 'external', module: 'carta_digital', singleLocation: true, icon: bookOutline, hubTone: 'pulse' },
+  { path: LOCAL_MENU_CONFIG_PATH, titleKey: 'staff.localConfig', parent: PAYMENTS_PATH, kind: 'local', module: 'menu', multiLocation: true, icon: settingsOutline, hubTone: 'ink' },
+  { path: '/app/marketing/templates', titleKey: 'staff.templates', parent: PAYMENTS_PATH, kind: 'list', module: 'marketing', icon: documentsOutline, hubTone: 'hot' },
+  { path: '/app/marketing/campaigns', titleKey: 'staff.campaigns', parent: PAYMENTS_PATH, kind: 'list', module: 'marketing', icon: paperPlaneOutline, hubTone: 'done' },
+  { path: '/app/marketing/complaints', titleKey: 'staff.complaints', parent: PAYMENTS_PATH, kind: 'list', module: 'clientes', icon: chatbubblesOutline, hubTone: 'ink' },
+  { path: '/app/marketing/branch-survey', titleKey: 'staff.branchSurvey', parent: PAYMENTS_PATH, kind: 'list', module: 'encuestas_local', icon: starOutline, hubTone: 'pulse' },
+  { path: '/app/marketing/nps', titleKey: 'platform.nps', parent: PAYMENTS_PATH, kind: 'list', superadminOnly: true, icon: starOutline, hubTone: 'hot' },
+  { path: '/app/locations/zones', titleKey: 'staff.zones', parent: PAYMENTS_PATH, kind: 'list', module: 'locales', icon: mapOutline, hubTone: 'hot' },
+  { path: '/app/locations/gallery', titleKey: 'staff.gallery', parent: PAYMENTS_PATH, kind: 'list', module: 'galeria', icon: imagesOutline, hubTone: 'done' },
+  { path: '/app/locations/integrations', titleKey: 'staff.locationIntegrations', parent: PAYMENTS_PATH, kind: 'list', module: 'locales', icon: extensionPuzzleOutline, hubTone: 'ink' },
+  { path: '/app/agilink', titleKey: 'staff.agilink', parent: PAYMENTS_PATH, kind: 'agilink', module: 'agilink', icon: linkOutline, hubTone: 'pulse' },
+  { path: '/app/help', titleKey: 'staff.help', parent: PAYMENTS_PATH, kind: 'list', icon: schoolOutline, hubTone: 'hot' },
 ];
 
 export function isStaffRole(role: UserRole | undefined): boolean {
