@@ -7,13 +7,23 @@ import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { QUICK_MESSAGES_PATH } from '../navigation/appRouteRegistry';
 
-const storageKey = 'ag.operations.actions.v1';
-type Pin = 'date' | 'reservationDate' | 'messages' | 'status';
+const storageKey = 'ag.operations.actions.v2';
+type Pin = 'date' | 'messages' | 'status' | 'reservationDate';
+function isPin(key: unknown): key is Pin {
+  return key === 'date' || key === 'messages' || key === 'status' || key === 'reservationDate';
+}
 function readPins(): Pin[] {
   try {
-    const stored: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null');
-    return Array.isArray(stored) ? stored.filter((key): key is Pin => key === 'date' || key === 'reservationDate' || key === 'messages' || key === 'status') : ['date'];
-  } catch { return ['date']; }
+    const current = localStorage.getItem(storageKey);
+    if (current) {
+      const stored: unknown = JSON.parse(current);
+      return Array.isArray(stored) ? stored.filter(isPin) : ['date', 'reservationDate'];
+    }
+    const legacy: unknown = JSON.parse(localStorage.getItem('ag.operations.actions.v1') ?? 'null');
+    const pins = Array.isArray(legacy) ? legacy.filter(isPin) : ['date'];
+    if (!pins.includes('reservationDate')) pins.push('reservationDate');
+    return pins;
+  } catch { return ['date', 'reservationDate']; }
 }
 
 function ActionPin({ checked, disabled = false, label, ariaLabel, onChange }: {
@@ -84,7 +94,7 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
     <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.channel')} aria-expanded={panel === 'channel'} onClick={() => openPanel('channel')}><IonIcon icon={chatbubblesOutline} aria-hidden="true" /></button>
     {showLocal ? <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.filterLocal')} aria-expanded={panel === 'local'} disabled={localDisabled} title={localDisabled ? t('ops.filters.noLocals') : t('ops.filters.filterLocal')} onClick={() => openPanel('local')}><IonIcon icon={locationOutline} aria-hidden="true" /></button> : null}
     {pinned.filter(action => action.show && pins.includes(action.id)).map(action =>
-      <button className="ops-tool-btn" type="button" key={action.id} aria-label={action.label} aria-expanded={action.id === 'date' || action.id === 'reservationDate' ? panel === 'date' : action.id === 'status' ? panel === 'status' : undefined} onClick={action.run}><IonIcon icon={action.icon} aria-hidden="true" /></button>)}
+      <button className="ops-tool-btn" type="button" key={action.id} aria-label={action.label} aria-expanded={action.id === 'messages' ? undefined : panel === (action.id === 'reservationDate' ? 'date' : action.id)} onClick={action.run}><IonIcon icon={action.icon} aria-hidden="true" /></button>)}
     <button className="ops-actions-toggle" type="button" aria-label={t('ops.filters.actions')} aria-expanded={menuOpen} onClick={() => { setSearchOpen(false); onPanel(null); setMenuOpen(open => !open); }}><IonIcon icon={optionsOutline} aria-hidden="true" /><span className="ops-actions-toggle__label">{t('ops.filters.actions')}</span></button>
     {searchOpen ? <div className="ops-filter-popover ops-filter-popover--search" role="dialog" aria-label={t('ops.filters.searchAction')}>
       <div className="ops-filter-popover__bar"><h3>{t('ops.filters.searchAction')}</h3></div>
