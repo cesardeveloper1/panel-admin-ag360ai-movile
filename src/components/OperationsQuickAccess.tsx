@@ -8,11 +8,11 @@ import { useAppNavigation } from '../hooks/useAppNavigation';
 import { QUICK_MESSAGES_PATH } from '../navigation/appRouteRegistry';
 
 const storageKey = 'ag.operations.actions.v1';
-type Pin = 'date' | 'messages' | 'status';
+type Pin = 'date' | 'reservationDate' | 'messages' | 'status';
 function readPins(): Pin[] {
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null');
-    return Array.isArray(stored) ? stored.filter((key): key is Pin => key === 'date' || key === 'messages' || key === 'status') : ['date'];
+    return Array.isArray(stored) ? stored.filter((key): key is Pin => key === 'date' || key === 'reservationDate' || key === 'messages' || key === 'status') : ['date'];
   } catch { return ['date']; }
 }
 
@@ -74,7 +74,8 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
   const showLocal = branchCount !== 1;
   const localDisabled = branchCount === 0;
   const pinned = [
-    { id: 'date' as const, icon: calendarOutline, label: t(mode === 'reservations' ? 'ops.reservations.filterDate' : 'ops.filters.filterDate'), show: mode === 'orders' || mode === 'reservations', run: () => openPanel('date') },
+    { id: 'date' as const, icon: calendarOutline, label: t('ops.filters.filterDate'), show: mode === 'orders', run: () => openPanel('date') },
+    { id: 'reservationDate' as const, icon: calendarOutline, label: t('ops.reservations.filterDate'), show: mode === 'reservations', run: () => openPanel('date') },
     { id: 'status' as const, icon: checkmarkCircleOutline, label: t('ops.reservations.filterStatus'), show: mode === 'reservations', run: () => openPanel('status') },
     { id: 'messages' as const, icon: chatboxEllipsesOutline, label: t('ops.filters.quickMessages'), show: true, run: () => { setMenuOpen(false); setSearchOpen(false); onPanel(null); go(QUICK_MESSAGES_PATH); } },
   ];
@@ -83,7 +84,7 @@ export function OperationsQuickAccess({ mode, query, onQueryChange, panel, onPan
     <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.channel')} aria-expanded={panel === 'channel'} onClick={() => openPanel('channel')}><IonIcon icon={chatbubblesOutline} aria-hidden="true" /></button>
     {showLocal ? <button className="ops-tool-btn" type="button" aria-label={t('ops.filters.filterLocal')} aria-expanded={panel === 'local'} disabled={localDisabled} title={localDisabled ? t('ops.filters.noLocals') : t('ops.filters.filterLocal')} onClick={() => openPanel('local')}><IonIcon icon={locationOutline} aria-hidden="true" /></button> : null}
     {pinned.filter(action => action.show && pins.includes(action.id)).map(action =>
-      <button className="ops-tool-btn" type="button" key={action.id} aria-label={action.label} aria-expanded={action.id === 'messages' ? undefined : panel === action.id} onClick={action.run}><IonIcon icon={action.icon} aria-hidden="true" /></button>)}
+      <button className="ops-tool-btn" type="button" key={action.id} aria-label={action.label} aria-expanded={action.id === 'date' || action.id === 'reservationDate' ? panel === 'date' : action.id === 'status' ? panel === 'status' : undefined} onClick={action.run}><IonIcon icon={action.icon} aria-hidden="true" /></button>)}
     <button className="ops-actions-toggle" type="button" aria-label={t('ops.filters.actions')} aria-expanded={menuOpen} onClick={() => { setSearchOpen(false); onPanel(null); setMenuOpen(open => !open); }}><IonIcon icon={optionsOutline} aria-hidden="true" /><span className="ops-actions-toggle__label">{t('ops.filters.actions')}</span></button>
     {searchOpen ? <div className="ops-filter-popover ops-filter-popover--search" role="dialog" aria-label={t('ops.filters.searchAction')}>
       <div className="ops-filter-popover__bar"><h3>{t('ops.filters.searchAction')}</h3></div>
