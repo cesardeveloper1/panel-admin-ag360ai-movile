@@ -1,4 +1,8 @@
 {
+  "quickMessages": {
+    "search": "Buscar atajo o mensaje…",
+    "noMatches": "No hay mensajes que coincidan con tu búsqueda"
+  },
   "app": {
     "name": "Agiliza360",
     "loading": "Cargando..."
@@ -26,6 +30,11 @@
     "deleteAccount": "Eliminar cuenta y datos"
   },
   "welcome": {
+    "staffSubtitle": "Tu espacio de trabajo según los accesos de tu cuenta.",
+    "loadError": "No pudimos cargar tus marcas",
+    "loadErrorHint": "Comprueba tu conexión y vuelve a intentarlo.",
+    "retry": "Volver a intentar",
+    "noBrands": "Aún no tienes marcas disponibles en esta cuenta.",
     "title": "Elige tu marca",
     "question": "¿Qué vas a operar hoy?",
     "description": "Selecciona la marca para ver pedidos, reportes y menú en tiempo real.",
@@ -136,7 +145,32 @@
     "modeAria": "Vista de operaciones",
     "mode": {
       "funnel": "Embudo",
-      "orders": "Pedidos"
+      "orders": "Pedidos",
+      "reservations": "Reservas"
+    },
+    "reservations": {
+      "search": "Buscar reserva o cliente",
+      "focusAria": "Estado de la reserva",
+      "queueAria": "Reservas hechas",
+      "week": "Semana del {{from}} al {{to}}",
+      "empty": "No hay reservas en estas fechas.",
+      "filterStatus": "Estado de la reserva",
+      "filterDate": "Fecha de la reserva",
+      "range": "{{from}} al {{to}}",
+      "dates": {
+        "week": "Esta semana",
+        "today": "Hoy",
+        "day": "Día",
+        "range": "Rango"
+      },
+      "party_one": "{{count}} persona",
+      "party_other": "{{count}} personas",
+      "statusAll": "Todas",
+      "status": {
+        "pending": "Pendiente",
+        "confirmed": "Confirmada",
+        "cancelled": "Cancelada"
+      }
     },
     "funnel": {
       "search": "Buscar contacto o mensaje",
@@ -159,7 +193,10 @@
           "name": "Nombre",
           "cart": "Carrito",
           "delivery": "Modalidad",
-          "payment": "Método de pago"
+          "payment": "Método de pago",
+          "party": "Personas",
+          "schedule": "Fecha y hora",
+          "zone": "Zona"
         },
         "states": {
           "received": "Recibido",
@@ -497,6 +534,9 @@
     "deleteAccountHint": "La solicitud se hace por correo. La app no borra la cuenta sola"
   },
   "menu": {
+    "loadError": "No pudimos cargar el catálogo",
+    "noProducts": "Aún no tienes productos. Añade el primero con el botón +.",
+    "availability": "Disponibilidad de {{name}}",
     "title": "Productos",
     "subtitle": "Gestor de menú",
     "search": "Buscar producto...",
@@ -511,7 +551,9 @@
       "price": "Precio base (S/)",
       "publish": "Publicar en carta",
       "publishHint": "Disponible para tus clientes al guardar",
-      "submit": "Crear producto"
+      "submit": "Crear producto",
+      "noCategories": "Primero crea una categoría en el gestor de menú para añadir productos.",
+      "saving": "Creando producto…"
     },
     "soldOut": "Agotado",
     "empty": "No hay productos con ese filtro",
@@ -558,6 +600,7 @@
     }
   },
   "locationsPage": {
+    "saving": "Guardando local…",
     "title": "Mis locales",
     "subtitle": "Gestión de locales",
     "intro": "Gestiona las sucursales de tu restaurante",
@@ -612,6 +655,7 @@
     "saving": "Guardando..."
   },
   "onboarding": {
+    "progress": "Paso {{current}} de {{total}}",
     "title": "Primeros pasos",
     "welcomeTitle": "Listo para operar {{brand}}",
     "welcomeBody": "Desde aquí gestionas pedidos, cocina y reportes en tiempo real.",
@@ -625,12 +669,12 @@
     "back": "Atrás",
     "next": "Siguiente",
     "skip": "Omitir",
-    "start": "Ir a operaciones",
+    "start": "Entrar a Agilito",
     "businessHint": "Menú, clientes, locales y marca desde Negocio.",
     "agentTitle": "Agente Agilito",
     "agentHint": "Desactivado por defecto. Actívalo cuando quieras automatizar respuestas.",
     "paymentsHint": "Menú, marketing, locales y marca.",
-    "agilitoHint": "Chat central en la barra inferior para consultas y acciones."
+    "agilitoHint": "Consulta y accede a las herramientas de tu negocio desde Agilito."
   },
   "orderDetail": {
     "buyer": "Nombre del comprador",
@@ -805,9 +849,17 @@
     "activeOrders": "Pedidos activos",
     "unreadAlerts": "Alertas",
     "locations": "Locales",
+    "unreadCount_one": "{{count}} mensaje sin leer",
     "unreadCount": "{{count}} sin leer"
   },
   "chats": {
+    "loading": "Cargando conversaciones…",
+    "retry": "Reintentar",
+    "refreshError": "No se pudieron actualizar los chats. Se muestra la última lista disponible.",
+    "noMatches": "No encontramos ese contacto",
+    "searchHint": "Prueba con otro nombre o número.",
+    "emptyHint": "Tus conversaciones aparecerán aquí cuando recibas mensajes.",
+    "unreadCount": "{{count}} mensajes sin leer",
     "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
     "search": "Buscar contacto",
@@ -970,6 +1022,10 @@
     "noBrand": "Tu cuenta no tiene una marca asignada."
   },
   "motorized": {
+    "loadedDeliveries": "Entregas cargadas",
+    "branchCount_one": "{{count}} local",
+    "allBranches": "Todos los locales",
+    "groupScopeHint": "Sin locales seleccionados, el grupo recibe avisos de todos los locales.",
     "deliveries": "Entregas",
     "inKitchen": "En cocina",
     "onRoute": "En ruta",
@@ -1011,11 +1067,37 @@
     "chooseRider": "Elegir repartidor",
     "noRiders": "Todavía no hay repartidores",
     "ridersError": "No se pudo cargar la lista de repartidores",
-    "assignFailed": "No se pudo asignar el repartidor"
+    "assignFailed": "No se pudo asignar el repartidor",
+    "dispatch": "Despacho",
+    "riders": "Repartidores",
+    "assigned": "Asignadas",
+    "onTheWay": "En camino",
+    "queueClear": "Nada en cocina ni en camino.",
+    "emptyAssigned": "Nada asignado en cocina.",
+    "emptyOnTheWay": "Nada en camino.",
+    "emptyDelivered": "No hay entregados.",
+    "presenceOnTrip": "En viaje",
+    "presenceOnShift": "En turno",
+    "presenceOffHours": "Fuera de horario",
+    "presenceAway": "Sin seguimiento",
+    "groupFallback": "Grupo",
+    "groupInactive": "Inactivo",
+    "branchCount": "{{count}} locales",
+    "hours": "Horario",
+    "noHours": "Sin horario"
   },
   "rider": {
     "title": "Viaje",
-    "empty": "No tienes pedidos en cocina.",
+    "phaseEmpty": "Sin viaje",
+    "phaseWaiting": "Programado",
+    "phaseKitchen": "En el local",
+    "phaseRoute": "En camino",
+    "empty": "No tienes un viaje asignado",
+    "onShift": "En turno",
+    "offHours": "Fuera de horario",
+    "customerUnknown": "Cliente",
+    "call": "Llamar",
+    "whatsapp": "WhatsApp",
     "localUnknown": "Local",
     "addressUnknown": "Sin dirección",
     "collect": "Cobrar {{amount}}",
@@ -1023,6 +1105,7 @@
     "copyLink": "Copiar enlace de seguimiento",
     "copied": "Enlace copiado",
     "pickedUp": "Recogí",
+    "arrived": "Llegué al local",
     "delivered": "Entregué",
     "statusFailed": "No se pudo actualizar el viaje."
   },

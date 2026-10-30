@@ -11,9 +11,10 @@ export function contactAttentionLocation(contact: ContactInfo, context?: Operati
   return context.branches.find(branch => branch.id === branchId)?.name.trim() || undefined;
 }
 
-export type ContactProgressField = 'name' | 'cart' | 'delivery' | 'payment';
+export type ContactProgressField = 'name' | 'cart' | 'delivery' | 'payment' | 'party' | 'schedule' | 'zone';
 export type ContactProgressState = 'received' | 'pending' | 'unknown';
-const fields: ContactProgressField[] = ['name', 'cart', 'delivery', 'payment'];
+const orderFields = ['name', 'cart', 'delivery', 'payment'] as const;
+const reservationFields = ['name', 'party', 'schedule', 'zone'] as const;
 const record = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const text = (value: unknown) => typeof value === 'string' && value.trim().length > 0;
@@ -25,8 +26,20 @@ const items = (value: unknown) => Array.isArray(value) && value.some(item => {
 /** Same data-collection semantics as panel; this does not confirm delivery or payment. */
 export function contactProgress(contact: ContactInfo): { field: ContactProgressField; state: ContactProgressState }[] {
   const progress = contact.progress;
-  if (progress && typeof progress.hasSession === 'boolean' && fields.every(field => typeof progress[field] === 'boolean')) {
-    return fields.map(field => ({ field, state: progress[field] ? 'received' : progress.hasSession ? 'pending' : 'unknown' }));
+  const reservation = progress?.reservation;
+  if (
+    progress?.flow === 'reservation' &&
+    typeof progress.hasSession === 'boolean' &&
+    reservation &&
+    reservationFields.every(field => typeof reservation[field] === 'boolean')
+  ) {
+    return reservationFields.map(field => ({
+      field,
+      state: reservation[field] ? 'received' : progress.hasSession ? 'pending' : 'unknown',
+    }));
+  }
+  if (progress && typeof progress.hasSession === 'boolean' && orderFields.every(field => typeof progress[field] === 'boolean')) {
+    return orderFields.map(field => ({ field, state: progress[field] ? 'received' : progress.hasSession ? 'pending' : 'unknown' }));
   }
   const session = record(contact.sessionData);
   const hasSession = contact.sessionData != null && typeof contact.sessionData === 'object' && !Array.isArray(contact.sessionData);
@@ -36,5 +49,5 @@ export function contactProgress(contact: ContactInfo): { field: ContactProgressF
     delivery: text(record(session.orderMode).mode),
     payment: text(record(session.paymentInfo).method),
   };
-  return fields.map(field => ({ field, state: received[field] ? 'received' : hasSession ? 'pending' : 'unknown' }));
+  return orderFields.map(field => ({ field, state: received[field] ? 'received' : hasSession ? 'pending' : 'unknown' }));
 }

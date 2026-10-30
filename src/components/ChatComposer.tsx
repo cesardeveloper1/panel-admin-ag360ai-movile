@@ -304,7 +304,7 @@ export function ChatComposer({
   return (
     <div className="chat-composer-wrap">
       {emojiOpen ? (
-        <div className="chat-emoji-sheet" role="listbox" aria-label={t('chats.emojiAria')}>
+        <div className="chat-emoji-sheet" role="group" aria-label={t('chats.emojiAria')}>
           {EMOJI_SET.map((emoji) => (
             <button
               key={emoji}
@@ -326,6 +326,7 @@ export function ChatComposer({
               value={quickSearch}
               onChange={(e) => setQuickSearch(e.target.value)}
               placeholder={t('chats.quickSearch')}
+              aria-label={t('chats.quickSearch')}
               autoFocus
             />
             <button type="button" onClick={() => setQuickOpen(false)} aria-label={t('chats.close')}>
@@ -379,6 +380,7 @@ export function ChatComposer({
             value={fileCaption}
             onChange={(e) => setFileCaption(e.target.value)}
             placeholder={t('chats.captionPlaceholder')}
+            aria-label={t('chats.captionPlaceholder')}
           />
           <button
             type="button"
@@ -408,6 +410,7 @@ export function ChatComposer({
           </div>
           <textarea
             className="chat-attach-preview__caption chat-attach-preview__caption--area"
+            aria-label={t('chats.captionPlaceholder')}
             value={quickCaption}
             onChange={(e) => setQuickCaption(e.target.value)}
             rows={3}
@@ -430,6 +433,7 @@ export function ChatComposer({
             className="chat-composer__tool"
             disabled={isDisabled || busy || isRecording}
             aria-label={t('chats.emojiAria')}
+            aria-expanded={emojiOpen}
             onClick={() => {
               setQuickOpen(false);
               setEmojiOpen((v) => !v);
@@ -458,6 +462,7 @@ export function ChatComposer({
         <textarea
           ref={textareaRef}
           className="chat-composer__input"
+          aria-label={t('chats.messagePlaceholder')}
           value={draft}
           rows={1}
           placeholder={isTablet ? t('chats.placeholder') : t('chats.messagePlaceholder')}
@@ -480,7 +485,7 @@ export function ChatComposer({
               setQuickOpen(false);
               return;
             }
-            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               onSendText();
             }
@@ -494,6 +499,7 @@ export function ChatComposer({
             disabled={isDisabled || busy || isRecording}
             aria-label={t('chats.quickAria')}
             title={t('chats.quickAria')}
+            aria-expanded={quickOpen}
             onClick={() => {
               setEmojiOpen(false);
               setQuickOpen((v) => !v);
@@ -507,6 +513,7 @@ export function ChatComposer({
             <button
               type="button"
               className="chat-composer__send"
+              aria-busy={sending || uploading}
               disabled={isDisabled || busy || !draft.trim()}
               aria-label={t('chats.send')}
               onClick={onSendText}

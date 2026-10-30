@@ -28,6 +28,7 @@ const MarketingPage: React.FC = () => {
   const history = useHistory();
   const [clients, setClients] = useState<CustomerAnalyticsCustomer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -85,7 +86,7 @@ const MarketingPage: React.FC = () => {
     }).finally(() => {
       if (requestId === requestIdRef.current) setLoading(false);
     });
-  }, [brandId, debouncedQuery, segment, t]);
+  }, [brandId, debouncedQuery, segment, t, retry]);
 
   const chips = useMemo(
     () => [
@@ -131,11 +132,15 @@ const MarketingPage: React.FC = () => {
       <FilterChips chips={chips} value={segment} onChange={(id) => setSegment(id as SegmentFilter)} />
 
       {loading ? (
-        <div className="module-loading">
+        <div className="module-loading" role="status" aria-label={t('app.loading')}>
           <IonSpinner name="crescent" />
         </div>
       ) : error ? (
-        <p className="module-empty">{error}</p>
+        <div className="clients-empty-state" role="alert">
+          <IonIcon icon={peopleOutline} aria-hidden="true" />
+          <p>{error}</p>
+          <button type="button" className="ag-btn" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button>
+        </div>
       ) : clients.length === 0 ? (
         <div className="clients-empty-state" role="status">
           <IonIcon icon={peopleOutline} aria-hidden="true" />
@@ -146,8 +151,8 @@ const MarketingPage: React.FC = () => {
           {clients.map((client) => (
             <article key={client.documentId} className="client-card">
               <div className="client-card__head">
-                <div className="client-card__avatar">{initialsFromName(client.name)}</div>
-                <div>
+                <div className="client-card__avatar" aria-hidden="true">{initialsFromName(client.name)}</div>
+                <div className="client-card__identity">
                   <h3>{client.name}</h3>
                   <p className="client-card__phone">{client.phone}</p>
                 </div>
@@ -170,7 +175,7 @@ const MarketingPage: React.FC = () => {
                   aria-label={t('marketing.chat')}
                   onClick={() => history.push(`${CHATS_PATH}?phone=${encodeURIComponent(client.phone)}`)}
                 >
-                  <IonIcon icon={chatbubbleOutline} />
+                  <IonIcon icon={chatbubbleOutline} aria-hidden="true" /><span>{t('marketing.chat')}</span>
                 </button>
               </div>
             </article>

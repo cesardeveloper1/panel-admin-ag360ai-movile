@@ -12,10 +12,13 @@ export const LOGO_ICON_URL =
 import logoWhiteBundled from '../assets/logo-white.png';
 import logoColorBundled from '../assets/logo-color.png';
 import logoIconBundled from '../assets/logo-icon.png';
+import logoWordmarkColorBundled from '../assets/logo-wordmark-color.png';
 
 /** Rutas empaquetadas por Vite (funcionan en web y Capacitor). */
 export const LOGO_WHITE_LOCAL = logoWhiteBundled;
 export const LOGO_COLOR_LOCAL = logoColorBundled;
+/** Versión horizontal oficial en color, para superficies claras. */
+export const LOGO_WORDMARK_COLOR_LOCAL = logoWordmarkColorBundled;
 
 /** Solo empaquetado para script de iconos Android (no usar en UI). */
 export const LOGO_ICON_LOCAL = logoIconBundled;

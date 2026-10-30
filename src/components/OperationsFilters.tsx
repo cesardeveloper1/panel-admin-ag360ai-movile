@@ -5,9 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../hooks/useApp';
 import { toLocalIsoDate, type OrdersListFilters, type OrdersDateMode } from '../services/ordersQuery';
 import { getOperationsContext, type OperationsContext } from '../services/operationsContextService';
+import { currentReservationWeek, type ReservationStatus } from '../services/reservationService';
 
 export interface OperationsScopeResult { scope: string; data: OperationsContext | null; state: 'loading' | 'ready' | 'error' }
-export type OperationsPanel = 'local' | 'channel' | 'date';
+export type OperationsPanel = 'local' | 'channel' | 'date' | 'status';
+export type ReservationDateChoice = 'week' | 'today' | 'day' | 'range';
+export type ReservationStatusFilter = 'all' | ReservationStatus;
 export type FunnelChannel = 'all' | 'whatsapp' | 'instagram' | 'messenger';
 const modes: OrdersDateMode[] = ['all', 'today', 'last12Hours', 'day', 'range'];
 const conversationChannels: FunnelChannel[] = ['all', 'whatsapp', 'instagram', 'messenger'];
@@ -23,13 +26,21 @@ function SourceIcon({ kind }: { kind: keyof typeof sourceIcons }) {
   return <IonIcon className="ops-channel-icon" icon={sourceIcons[kind]} aria-hidden="true" />;
 }
 
-export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 'all', onFunnelChannel }: {
+const reservationStatuses: ReservationStatusFilter[] = ['all', 'pending', 'confirmed', 'cancelled'];
+const reservationDateChoices: ReservationDateChoice[] = ['week', 'today', 'day', 'range'];
+
+export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 'all', onFunnelChannel, reservationStatus = 'all', onReservationStatus, reservationDateMode = 'week', reservationRange, onReservationDate }: {
   panel: OperationsPanel | null;
   onClose: () => void;
-  mode: 'orders' | 'funnel';
+  mode: 'orders' | 'funnel' | 'reservations';
   onScopeChange?: (result: OperationsScopeResult) => void;
   funnelChannel?: FunnelChannel;
   onFunnelChannel?: (channel: FunnelChannel) => void;
+  reservationStatus?: ReservationStatusFilter;
+  onReservationStatus?: (status: ReservationStatusFilter) => void;
+  reservationDateMode?: ReservationDateChoice;
+  reservationRange?: { dateFrom: string; dateTo: string };
+  onReservationDate?: (choice: ReservationDateChoice, range: { dateFrom: string; dateTo: string }) => void;
 }) {
   const { t } = useTranslation();
   const channelName = useId();
@@ -56,7 +67,20 @@ export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 
   useEffect(() => { setDraft({ ...ordersFilters }); }, [ordersFilters]);
   const current = context?.scope === scope ? context.data : null;
   const branches = current?.branches ?? [];
+  const [reservationChoice, setReservationChoice] = useState<ReservationDateChoice>(reservationDateMode);
+  const [reservationDraft, setReservationDraft] = useState(reservationRange ?? currentReservationWeek());
+  useEffect(() => { setReservationChoice(reservationDateMode); }, [reservationDateMode]);
+  useEffect(() => { if (reservationRange) setReservationDraft(reservationRange); }, [reservationRange]);
   const showDate = panel === 'date' && mode === 'orders';
+  const showReservationDate = panel === 'date' && mode === 'reservations';
+  const selectReservationDate = (choice: ReservationDateChoice) => {
+    const today = toLocalIsoDate(new Date(), brand?.timezone);
+    setReservationChoice(choice);
+    if (choice === 'week') onReservationDate?.('week', currentReservationWeek());
+    else if (choice === 'today') onReservationDate?.('today', { dateFrom: today, dateTo: today });
+    else if (choice === 'day' && reservationDraft.dateFrom) onReservationDate?.('day', { dateFrom: reservationDraft.dateFrom, dateTo: reservationDraft.dateFrom });
+    else if (choice === 'range' && reservationDraft.dateFrom && reservationDraft.dateTo) onReservationDate?.('range', reservationDraft);
+  };
   const commit = (patch: Partial<OrdersListFilters>) => {
     if (!current) return;
     const next = { ...patch };
@@ -76,8 +100,8 @@ export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 
     if ((value === 'day' && !next.dateFrom) || (value === 'range' && (!next.dateFrom || !next.dateTo))) return;
     commit(next);
   };
-  if (!panel || (panel === 'date' && mode !== 'orders')) return null;
-  const title = panel === 'local' ? t('ops.filters.local') : panel === 'date' ? t('ops.filters.date') : t('ops.filters.channel');
+  if (!panel || (panel === 'date' && mode === 'funnel') || (panel === 'status' && mode !== 'reservations')) return null;
+  const title = panel === 'local' ? t('ops.filters.local') : panel === 'date' ? t(mode === 'reservations' ? 'ops.reservations.filterDate' : 'ops.filters.date') : panel === 'status' ? t('ops.reservations.filterStatus') : t('ops.filters.channel');
   const status = state === 'loading' ? <p role="status">{t('ops.filters.loading')}</p> : state === 'error' ? (
     <div role="alert"><p>{t('ops.filters.contextError')}</p><button className="ag-btn" type="button" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button></div>
   ) : null;
@@ -89,6 +113,28 @@ export function OperationsFilters({ panel, mode, onScopeChange, funnelChannel = 
           <select aria-label={t('ops.filters.local')} value={draft.branchId ?? ''} onChange={event => commit({ branchId: event.target.value || undefined })}>
             <option value="">{t('ops.filters.allLocals')}</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
           </select>)}
+      </fieldset> : null}
+      {showReservationDate ? <fieldset aria-label={title}>
+        <div className="ops-date-options">{reservationDateChoices.map(choice =>
+          <button key={choice} className="ag-btn" type="button" aria-pressed={reservationChoice === choice} onClick={() => selectReservationDate(choice)}>{t(`ops.reservations.dates.${choice}`)}</button>)}</div>
+        {reservationChoice === 'day' || reservationChoice === 'range' ? <div className="ops-date-inputs">
+          <label>{t('ops.filters.from')}<input type="date" value={reservationDraft.dateFrom} onChange={event => {
+            const dateFrom = event.target.value;
+            const next = { dateFrom, dateTo: reservationChoice === 'day' ? dateFrom : reservationDraft.dateTo };
+            setReservationDraft(next);
+            if (dateFrom && (reservationChoice === 'day' || next.dateTo)) onReservationDate?.(reservationChoice, next);
+          }} /></label>
+          {reservationChoice === 'range' ? <label>{t('ops.filters.to')}<input type="date" value={reservationDraft.dateTo} onChange={event => {
+            const dateTo = event.target.value;
+            const next = { dateFrom: reservationDraft.dateFrom, dateTo };
+            setReservationDraft(next);
+            if (next.dateFrom && dateTo) onReservationDate?.('range', next);
+          }} /></label> : null}
+        </div> : null}
+      </fieldset> : null}
+      {panel === 'status' ? <fieldset aria-label={title}>
+        <div className="ops-channel-options">{reservationStatuses.map(value =>
+          <label key={value}><input type="radio" name={`${channelName}-status`} checked={reservationStatus === value} onChange={() => onReservationStatus?.(value)} />{t(value === 'all' ? 'ops.reservations.statusAll' : `ops.reservations.status.${value}`)}</label>)}</div>
       </fieldset> : null}
       {showDate ? <fieldset aria-label={title}>
         {status ?? <><div className="ops-date-options">{modes.map(value =>

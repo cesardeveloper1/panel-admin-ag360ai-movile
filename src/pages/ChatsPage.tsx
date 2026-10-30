@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSearchbar, IonSpinner } from '@ionic/react';
-import { searchOutline } from 'ionicons/icons';
+import { chatbubblesOutline, searchOutline } from 'ionicons/icons';
 import { ChannelIcon } from '../components/ChannelIcon';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -70,6 +70,7 @@ const ChatsPage: React.FC = () => {
   const [items, setItems] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inboxError, setInboxError] = useState(false);
   const [threadLoading, setThreadLoading] = useState(false);
   const [olderMessagesLoading, setOlderMessagesLoading] = useState(false);
   const [nextHistoryCursor, setNextHistoryCursor] = useState<string | undefined>();
@@ -144,6 +145,7 @@ const ChatsPage: React.FC = () => {
       const cacheKey = createChatInboxCacheKey(inboxCacheScope, search);
       const cached = getCachedChatInbox(cacheKey);
       const requestId = ++inboxRequestIdRef.current;
+      setInboxError(false);
       if (cached) {
         itemsRef.current = cached;
         setItems(cached);
@@ -159,6 +161,7 @@ const ChatsPage: React.FC = () => {
         setItems(data);
       } catch {
         if (requestId !== inboxRequestIdRef.current) return;
+        setInboxError(true);
         if (cached) return;
         itemsRef.current = [];
         setItems([]);
@@ -720,14 +723,25 @@ const ChatsPage: React.FC = () => {
                 )}
               />
               <div className="ag-body module-body chats-body ag-page-stack">
+                {inboxError ? (
+                  <section className="chats-feedback" role="alert">
+                    <IonIcon icon={chatbubblesOutline} aria-hidden="true" />
+                    <p>{t(items.length ? 'chats.refreshError' : 'chats.loadError')}</p>
+                    <button type="button" className="ag-btn" onClick={() => void loadInbox(query.trim() || undefined)}>{t('chats.retry')}</button>
+                  </section>
+                ) : null}
                 {loading ? (
-                  <div className="module-loading">
+                  <div className="module-loading" role="status" aria-label={t('chats.loading')}>
                     <IonSpinner name="crescent" />
                   </div>
                 ) : (
                   <div className="chats-list ag-enter">
                     {filtered.length === 0 ? (
-                      <p className="chats-empty">{t('chats.empty')}</p>
+                      !inboxError ? <div className="chats-feedback" role="status">
+                        <IonIcon icon={chatbubblesOutline} aria-hidden="true" />
+                        <p>{t(query.trim() ? 'chats.noMatches' : 'chats.empty')}</p>
+                        <span>{t(query.trim() ? 'chats.searchHint' : 'chats.emptyHint')}</span>
+                      </div> : null
                     ) : (
                       filtered.map((chat) => {
                         const label = conversationLabel(chat, t);
@@ -739,9 +753,10 @@ const ChatsPage: React.FC = () => {
                           <button
                             key={chat.id}
                             type="button"
-                            className="chat-row"
+                            className={`chat-row${chat.unread > 0 ? ' chat-row--unread' : ''}`}
                             onClick={() => onOpenChat(chat)}
                           >
+                            <div className="chat-row-identity">
                             <div
                               className="chat-row-avatar"
                               style={{ backgroundColor: avatarColor(chat.id || chat.phone) }}
@@ -749,24 +764,23 @@ const ChatsPage: React.FC = () => {
                             >
                               {label.slice(0, 1)}
                             </div>
+                            <span className="chat-row-channel"><ChannelIcon channel={chat.channel} /></span>
+                            </div>
                             <div className="chat-row-main">
                               <div className="chat-row-top">
                                 <strong>{label}</strong>
                                 <span>{chat.time}</span>
                               </div>
                               <div className="chat-row-bottom">
-                                <p>{preview}</p>
+                                <p>{preview || t('chats.noPreview')}</p>
                                 {chat.unread > 0 ? (
-                                  <span className="chat-row-badge">{chat.unread}</span>
+                                  <span className="chat-row-badge" aria-label={t('chats.unreadCount', { count: chat.unread })}>{chat.unread > 99 ? '99+' : chat.unread}</span>
                                 ) : null}
                               </div>
                               <span className={`chat-row-bot${chat.botActive ? ' chat-row-bot--on' : ''}`}>
                                 {chat.botActive ? t('chats.botOn') : t('chats.botOff')}
                               </span>
                             </div>
-                            <span className="chat-row-channel">
-                              <ChannelIcon channel={chat.channel} />
-                            </span>
                           </button>
                         );
                       })

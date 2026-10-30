@@ -5,7 +5,7 @@ Fecha: 2026-10-28. Estado: borrador. Patrón B.
 El panel web cambia de menú según el rol. El móvil entra siempre a la cáscara del owner y recorta por permiso. Cada rol que falta tiene su PRP:
 
 - [Gerente y trabajador](prp-roles--gerente-trabajador.md) — implementado en local
-- [Motorizado](prp-roles--motorizado.md) — implementado en local
+- [Motorizado](prp-roles--motorizado.md) — implementado en local. Lo que falta mostrar, visto en el teléfono: [despacho móvil](prp-flota--despacho-movil.md) y [viaje del repartidor](prp-flota--viaje-movil.md)
 - [Superadmin](prp-roles--superadmin.md) — implementado en local
 
 ## Contrato común

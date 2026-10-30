@@ -5,14 +5,14 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { PROFILE_PATH, isNavActive, mobileNavItems, CHATS_PATH } from '../navigation/navConfig';
+import { PROFILE_PATH, isNavActive, mobileNavItems, motorizedNavItems, riderNavItems, CHATS_PATH } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { PanelChatIcon } from './PanelChatIcon';
 import { brandLabel } from '../utils/brandLabel';
 import { canNavigate } from '../navigation/navigationAccess';
 import { isStaffRole } from '../navigation/staffScreens';
-import { isFleetPhoneRole } from '../navigation/motorizedScreens';
+import { isFleetPhoneRole, isMotorizedRole, isRiderRole } from '../navigation/motorizedScreens';
 
 export function MobileSideNav() {
   const { t } = useTranslation();
@@ -80,7 +80,9 @@ export function MobileSideNav() {
             </button>
           </div>
           <nav className="ag-mobile-side-nav__items">
-            {mobileNavItems.filter((item) => canNavigate(session, item.path, { locations: brand?.locations })).map((item) => {
+            {(isMotorizedRole(session?.role) ? motorizedNavItems : isRiderRole(session?.role) ? riderNavItems : mobileNavItems)
+              .filter((item) => canNavigate(session, item.path, { locations: brand?.locations }))
+              .map((item) => {
               const active = isNavActive(location.pathname, item);
               return (
                 <button

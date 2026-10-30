@@ -18,6 +18,7 @@ import { authService } from './authService';
 import { brandService } from './brandService';
 import { chatService, type SendChatAttachment, type SendChatMessageInput } from './chatService';
 import { contactService } from './contactService';
+import { reservationService, type ReservationListQuery } from './reservationService';
 import { dashboardService } from './dashboardService';
 import { catalogService } from './catalogService';
 import {
@@ -222,6 +223,11 @@ export const apiFacade = {
       return { subDomain, isOn, lockedBySuperadmin: false };
     }
     return botService.setEnabled(subDomain, isOn);
+  },
+
+  async listReservations(query: ReservationListQuery) {
+    if (config.useApiMock) return apiMock.getReservations(query);
+    return reservationService.list(query);
   },
 
   async listContacts(params: ListContactsParams): Promise<ContactListResult> {

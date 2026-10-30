@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IonButton, IonContent, IonItem, IonLabel, IonPage, IonToggle } from '@ionic/react';
-import { useHistory } from 'react-router-dom';
+import { useAppNavigation } from '../hooks/useAppNavigation';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../components/AppHeader';
 import { useApp } from '../hooks/useApp';
@@ -10,55 +10,11 @@ import { brandLabel } from '../utils/brandLabel';
 
 const STEPS = ['welcome', 'modules', 'ready'] as const;
 
-const OnboardingWizardPage: React.FC = () => {
+export function OnboardingPanel({ current, brandName, agentEnabled, saving, onAgentChange }: {
+  current: typeof STEPS[number]; brandName: string; agentEnabled: boolean; saving: boolean; onAgentChange: (enabled: boolean) => void;
+}) {
   const { t } = useTranslation();
-  const history = useHistory();
-  const { brand, completeOnboarding } = useApp();
-  const [step, setStep] = useState(0);
-  const [agentEnabled, setAgentEnabled] = useState(false);
-
-  useEffect(() => {
-    if (!brand) return;
-    void apiMock.getBrandConfig(brand.id).then((config) => {
-      setAgentEnabled(config.agentEnabled ?? false);
-    });
-  }, [brand]);
-
-  const finish = async () => {
-    if (brand) {
-      const config = await apiMock.getBrandConfig(brand.id);
-      await apiMock.saveBrandConfig({ ...config, agentEnabled });
-    }
-    completeOnboarding();
-    history.replace('/app/agilito');
-  };
-
-  const next = () => {
-    if (step >= STEPS.length - 1) {
-      void finish();
-      return;
-    }
-    setStep((s) => s + 1);
-  };
-
-  const current = STEPS[step];
-  const brandName = brandLabel(brand, t);
-
-  return (
-    <IonPage>
-      <IonContent className="ag-screen">
-        <AppHeader
-          title={t('onboarding.title')}
-          subtitle={brandName}
-          avatar={brand?.initials}
-        />
-        <div className="ag-body onboarding-body">
-          <div className="onboarding-progress" aria-hidden="true">
-            {STEPS.map((_, idx) => (
-              <span key={idx} className={`onboarding-dot${idx <= step ? ' active' : ''}`} />
-            ))}
-          </div>
-
+  return <>
           {current === 'welcome' ? (
             <section className="onboarding-panel">
               <img src={LOGO_COLOR_LOCAL} alt="" className="onboarding-logo" />
@@ -71,8 +27,10 @@ const OnboardingWizardPage: React.FC = () => {
                 </IonLabel>
                 <IonToggle
                   slot="end"
+                  aria-label={t('onboarding.agentTitle')}
+                  disabled={saving}
                   checked={agentEnabled}
-                  onIonChange={(e) => setAgentEnabled(e.detail.checked)}
+                  onIonChange={(e) => onAgentChange(e.detail.checked)}
                 />
               </IonItem>
             </section>
@@ -109,18 +67,84 @@ const OnboardingWizardPage: React.FC = () => {
             </section>
           ) : null}
 
+  </>;
+}
+
+const OnboardingWizardPage: React.FC = () => {
+  const { t } = useTranslation();
+  const { goRoot } = useAppNavigation();
+  const { brand, completeOnboarding } = useApp();
+  const [step, setStep] = useState(0);
+  const [agentEnabled, setAgentEnabled] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+
+  useEffect(() => {
+    if (!brand) return;
+    void apiMock.getBrandConfig(brand.id).then((config) => {
+      setAgentEnabled(config.agentEnabled ?? false);
+    });
+  }, [brand]);
+
+  const finish = async () => {
+    if (saving) return;
+    setSaving(true); setSaveError(false);
+    try {
+      if (brand) {
+        const config = await apiMock.getBrandConfig(brand.id);
+        await apiMock.saveBrandConfig({ ...config, agentEnabled });
+      }
+      completeOnboarding();
+      goRoot('/app/agilito', 'replace');
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const next = () => {
+    if (step >= STEPS.length - 1) {
+      void finish();
+      return;
+    }
+    setStep((s) => s + 1);
+  };
+
+  const current = STEPS[step];
+  const brandName = brandLabel(brand, t);
+
+  return (
+    <IonPage data-ag-route="/app/onboarding">
+      <IonContent className="ag-screen">
+        <AppHeader
+          title={t('onboarding.title')}
+          subtitle={brandName}
+          avatar={brand?.initials}
+        />
+        <div className="ag-body onboarding-body">
+          <p className="onboarding-step-label" role="status">{t('onboarding.progress', { current: step + 1, total: STEPS.length })}</p>
+          <div className="onboarding-progress" aria-hidden="true">
+            {STEPS.map((_, idx) => (
+              <span key={idx} className={`onboarding-dot${idx <= step ? ' active' : ''}`} />
+            ))}
+          </div>
+
+          <OnboardingPanel current={current} brandName={brandName} agentEnabled={agentEnabled} saving={saving} onAgentChange={setAgentEnabled} />
+
+          {saveError ? <p className="onboarding-error" role="alert">{t('toast.brandSaveError')}</p> : null}
           <div className="onboarding-actions">
             {step > 0 ? (
-              <IonButton fill="outline" onClick={() => setStep((s) => s - 1)}>
+              <IonButton disabled={saving} fill="outline" onClick={() => setStep((s) => s - 1)}>
                 {t('onboarding.back')}
               </IonButton>
             ) : (
-              <IonButton fill="clear" onClick={() => void finish()}>
+              <IonButton disabled={saving} fill="clear" onClick={() => void finish()}>
                 {t('onboarding.skip')}
               </IonButton>
             )}
-            <IonButton onClick={next}>
-              {step >= STEPS.length - 1 ? t('onboarding.start') : t('onboarding.next')}
+            <IonButton disabled={saving} onClick={next}>
+              {saving ? t('app.loading') : step >= STEPS.length - 1 ? t('onboarding.start') : t('onboarding.next')}
             </IonButton>
           </div>
         </div>

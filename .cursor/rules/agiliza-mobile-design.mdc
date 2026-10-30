@@ -1,0 +1,7 @@
+---
+description: Consolidated Agiliza360 mobile design for screens, components, forms and Ionic navigation
+globs: "src/**/*.tsx,src/**/*.css,src/navigation/**/*.ts,src/hooks/useAppNavigation.ts,src/hooks/useModuleNav.ts"
+alwaysApply: false
+---
+
+Read and apply `.claude/skills/agiliza-mobile-design/SKILL.md` for mobile UI/UX changes. This is the shared repository source; do not create a divergent Cursor design system. Follow `AGENTS.md` and the user's current scope. Work on the requested screen and verify it before expanding to another one. Load the skill's references only as needed.

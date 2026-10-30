@@ -18,7 +18,15 @@ export interface ContactInfo {
   attentionBranchId?: string | null;
   branchId?: string | null;
   branchName?: string | null;
-  progress?: { hasSession: boolean; name: boolean; cart: boolean; delivery: boolean; payment: boolean };
+  progress?: {
+    hasSession: boolean;
+    flow?: 'order' | 'reservation';
+    name: boolean;
+    cart: boolean;
+    delivery: boolean;
+    payment: boolean;
+    reservation?: { name: boolean; party: boolean; schedule: boolean; zone: boolean };
+  };
   orderItems?: unknown[];
   orderItemsSource?: 'session' | 'lastOrder' | 'none';
   threadId?: string | null;

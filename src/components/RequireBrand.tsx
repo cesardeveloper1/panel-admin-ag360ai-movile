@@ -3,8 +3,9 @@ import { useLocation } from 'react-router-dom';
 import { BRAND_KEY, PICK_BRAND_KEY } from '../context/AppContext';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { normalizePath } from '../navigation/appRouteRegistry';
-import { isFleetPhoneRole } from '../navigation/motorizedScreens';
+import { normalizePath, OPERATIONS_PATH } from '../navigation/appRouteRegistry';
+import { canNavigate } from '../navigation/navigationAccess';
+import { TRIP_PATH, isFleetPhoneRole, isMotorizedRole, isRiderRole } from '../navigation/motorizedScreens';
 import { isPlatformPath, PLATFORM_PATH } from '../navigation/platformScreens';
 import { apiFacade } from '../services/apiFacade';
 import { BrandBootShell } from './BrandBootShell';
@@ -31,13 +32,21 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
       goRoot('/login');
       return;
     }
+    if (isMotorizedRole(session?.role) && !canNavigate(session, pathname)) {
+      goRoot(OPERATIONS_PATH);
+      return;
+    }
+    if (isRiderRole(session?.role) && !canNavigate(session, pathname)) {
+      goRoot(TRIP_PATH);
+      return;
+    }
     if (isFleetPhoneRole(session?.role) || brand || brandLoading || pendingBrand) return;
     if (session?.role === 'superadmin') {
       if (!onPlatform) goRoot(PLATFORM_PATH);
       return;
     }
     goRoot('/welcome');
-  }, [session, authRestoring, brand, brandLoading, pendingBrand, onPlatform, goRoot]);
+  }, [session, authRestoring, brand, brandLoading, pendingBrand, onPlatform, goRoot, pathname]);
 
   useLayoutEffect(() => {
     if (!session || brand || brandLoading || !pendingBrand || manualPick || hydratingRef.current) return;
@@ -69,6 +78,16 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
 
   if (!session) {
     return null;
+  }
+
+  if (isMotorizedRole(session.role)) {
+    if (!canNavigate(session, pathname)) return null;
+    return <>{children}</>;
+  }
+
+  if (isRiderRole(session.role)) {
+    if (!canNavigate(session, pathname)) return null;
+    return <>{children}</>;
   }
 
   if (isFleetPhoneRole(session.role) || (session.role === 'superadmin' && onPlatform)) {
