@@ -1,34 +1,22 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
-  barChartOutline,
-  calendarOutline,
-  closeOutline,
-  gridOutline,
-  menuOutline,
   micOutline,
   notificationsOutline,
-  personOutline,
   sendOutline,
   sparklesOutline,
   stopCircleOutline,
-  storefrontOutline,
 } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppShell } from '../components/AppShell';
-import { PanelChatIcon } from '../components/PanelChatIcon';
 import { AgentControls } from '../components/AgentControls';
 import { AgentToggle } from '../components/AgentToggle';
 import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
-import { useViewport } from '../hooks/useViewport';
-import { AGILITO_PATH, CHATS_PATH, NOTIFICATIONS_PATH, OPERATIONS_PATH, PAYMENTS_PATH, PROFILE_PATH, REPORTS_PATH } from '../navigation/navConfig';
+import { AGILITO_PATH, NOTIFICATIONS_PATH } from '../navigation/navConfig';
 import { BUSINESS_MODULES } from '../navigation/businessModules';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 import { canNavigate } from '../navigation/navigationAccess';
-import { isStaffRole, STAFF_SCREENS } from '../navigation/staffScreens';
-import { requestChatsInbox } from '../navigation/chatNavFrom';
 
 interface AgilitoMessage {
   id: string;
@@ -40,13 +28,9 @@ interface AgilitoMessage {
 
 const AgilitoPage: React.FC = () => {
   const { t } = useTranslation();
-  const { go, goRoot } = useAppNavigation();
-  const { notifications, showToast, session, brand, startBrandSwitch } = useApp();
-  const { isTablet } = useViewport();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPresent, setMenuPresent] = useState(false);
+  const { go } = useAppNavigation();
+  const { notifications, showToast, session, brand } = useApp();
   const [agentOpen, setAgentOpen] = useState(false);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const agentRef = useRef<HTMLDivElement>(null);
   const agentMenuId = useId();
   const [messages, setMessages] = useState<AgilitoMessage[]>([]);
@@ -123,49 +107,6 @@ const AgilitoPage: React.FC = () => {
     };
   }, [agentOpen]);
 
-  useEffect(() => {
-    if (menuOpen) setMenuPresent(true);
-    else if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setMenuPresent(false);
-  }, [menuOpen]);
-
-  useEffect(() => {
-    if (!menuPresent) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
-    };
-    document.body.classList.add('agilito-nav-open');
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.body.classList.remove('agilito-nav-open');
-      document.removeEventListener('keydown', onKey);
-      if (!menuOpen) menuButtonRef.current?.focus();
-    };
-  }, [menuOpen, menuPresent]);
-
-  const destinations = [
-    { path: OPERATIONS_PATH, icon: gridOutline, labelKey: 'ops.title' },
-    { path: CHATS_PATH, icon: '', labelKey: 'nav.chats' },
-    { path: REPORTS_PATH, icon: barChartOutline, labelKey: 'nav.reports' },
-    { path: PAYMENTS_PATH, icon: storefrontOutline, labelKey: 'nav.payments' },
-    ...BUSINESS_MODULES.map((mod) => ({ path: mod.path, icon: mod.icon, labelKey: mod.i18n.agilitoLabel })),
-    ...STAFF_SCREENS.filter((screen) => screen.parent === OPERATIONS_PATH).map((screen) => ({
-      path: screen.path, icon: calendarOutline, labelKey: screen.titleKey,
-    })),
-    { path: NOTIFICATIONS_PATH, icon: notificationsOutline, labelKey: 'nav.alerts' },
-    { path: PROFILE_PATH, icon: personOutline, labelKey: 'nav.profile' },
-  ].filter((item) => canNavigate(session, item.path, { locations: brand?.locations }));
-
-  const openDestination = (path: string) => {
-    setMenuOpen(false);
-    if (BUSINESS_MODULES.some((mod) => mod.path === path)) setModuleNavFrom(AGILITO_PATH);
-    if (path === CHATS_PATH) {
-      requestChatsInbox();
-      goRoot(CHATS_PATH, 'replace', true);
-      return;
-    }
-    go(path);
-  };
-
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
     if (!recorder || recorder.state === 'inactive') {
@@ -218,23 +159,10 @@ const AgilitoPage: React.FC = () => {
   return (
     <IonPage data-ag-route="/app/agilito">
       <IonContent className="ag-screen agilito-screen welcome-screen">
-        <AppShell agilitoChrome hideMobileMenu lockScroll>
+        <AppShell agilitoChrome lockScroll>
           <div className="agilito-layout">
             <header className="agilito-top">
-              <div className={`agilito-top-row${isTablet ? '' : ' agilito-top-row--menu'}`}>
-                {isTablet ? null : (
-                  <button
-                    ref={menuButtonRef}
-                    type="button"
-                    className="agilito-menu-trigger"
-                    aria-label={t('nav.sidebar')}
-                    aria-expanded={menuPresent}
-                    aria-controls="agilito-nav"
-                    onClick={() => setMenuOpen(true)}
-                  >
-                    <IonIcon icon={menuOutline} aria-hidden="true" />
-                  </button>
-                )}
+              <div className="agilito-top-row">
                 <div className="agilito-top-trailing">
                   <div className="agilito-agent" ref={agentRef}>
                     <AgentToggle
@@ -386,54 +314,6 @@ const AgilitoPage: React.FC = () => {
             </form>
           </div>
         </AppShell>
-        {menuPresent ? createPortal(
-          <div
-            className={`agilito-nav-layer${menuOpen ? ' is-open' : ' is-closing'}`}
-            onAnimationEnd={(event) => {
-              if (event.target !== event.currentTarget || event.animationName !== 'agilito-nav-out') return;
-              setMenuPresent(false);
-            }}
-          >
-            <aside id="agilito-nav" className="agilito-nav" role="dialog" aria-modal="true" aria-label={t('nav.sidebar')}>
-              <div className="agilito-nav__head">
-                <strong>{t('nav.agilito')}</strong>
-                <button type="button" className="agilito-nav__close" onClick={() => setMenuOpen(false)} aria-label={t('common.close')}>
-                  <IonIcon icon={closeOutline} aria-hidden="true" />
-                </button>
-              </div>
-              <nav className="agilito-nav__list">
-                {destinations.map((item, index) => (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className="agilito-nav__item"
-                    style={{ animationDelay: `${48 + index * 32}ms` }}
-                    onClick={() => openDestination(item.path)}
-                  >
-                    {item.path === CHATS_PATH ? <PanelChatIcon /> : <IonIcon icon={item.icon} aria-hidden="true" />}
-                    <span>{t(item.labelKey)}</span>
-                  </button>
-                ))}
-              </nav>
-              {isStaffRole(session?.role) ? null : (
-              <button
-                type="button"
-                className="agilito-nav__item agilito-nav__brand"
-                style={{ animationDelay: `${48 + destinations.length * 32}ms` }}
-                onClick={() => {
-                  setMenuOpen(false);
-                  startBrandSwitch();
-                  goRoot('/welcome', 'replace', true);
-                }}
-              >
-                <IonIcon icon={storefrontOutline} aria-hidden="true" />
-                <span>{t('settings.changeBrand')}</span>
-              </button>
-              )}
-            </aside>
-          </div>,
-          document.body,
-        ) : null}
       </IonContent>
     </IonPage>
   );
