@@ -9864,3 +9864,91 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
 .agilito-nav__item .panel-chat-icon { font-size: 22px; }
 .ag-side-nav-item .panel-chat-icon { font-size: 1.125rem; }
 .ag-side-nav.is-collapsed .ag-side-nav-item .panel-chat-icon { font-size: 1.5rem; }
+
+/* Dispatch: readable orders and deliberate assignment on phone. */
+.dispatch-order-card {
+  font-family: var(--ag-font-body);
+  padding: 1rem;
+  border: 1px solid var(--ag-line);
+  border-radius: var(--ag-radius-md);
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+  overflow-wrap: anywhere;
+}
+.dispatch-order-card__number { font: 600 1.0625rem var(--ag-font-display); }
+.dispatch-order-card p { margin: 0.5rem 0 0; font-size: 0.875rem; line-height: 1.45; }
+.dispatch-order-card__branch { font-weight: 600; }
+.dispatch-order-card__address { color: var(--ag-muted); }
+.dispatch-order-card__rider { display: flex; align-items: center; gap: 0.5rem; color: var(--ag-muted); }
+.dispatch-order-card .fleet-rider-field { display: grid; gap: 0.5rem; margin-top: 1rem; font-size: 0.8125rem; }
+.dispatch-order-card select { width: 100%; min-width: 0; min-height: 48px; padding: 0.65rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-sm); background: var(--ag-mist); color: var(--ag-ink); font: inherit; }
+.dispatch-order-card select:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+.dispatch-section-head { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.dispatch-section-head h2 { margin: 0; font-family: var(--ag-font-display); }
+.dispatch-section-head > span { padding: 0.2rem 0.5rem; border-radius: 99px; background: var(--ag-pulse-soft); color: var(--ag-pulse); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.dispatch-empty { padding: 2.5rem 1rem; text-align: center; color: var(--ag-muted); }
+.dispatch-empty ion-icon { font-size: 2rem; color: var(--ag-pulse); }
+.dispatch-list { overflow-y: visible; }
+
+/* Rider: destination and next action stay together. */
+.rider-trip-card, .rider-trip-empty {
+  padding: 1.125rem;
+  border: 1px solid var(--ag-line);
+  border-radius: var(--ag-radius-lg);
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+  font-family: var(--ag-font-body);
+  overflow-wrap: anywhere;
+}
+.rider-trip-card h2, .rider-trip-empty h2 { margin: 0; font: 600 1.375rem/1.3 var(--ag-font-display); }
+.rider-trip-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; font-size: 0.8125rem; color: var(--ag-muted); }
+.rider-trip-meta strong { color: var(--ag-pulse); font-variant-numeric: tabular-nums; }
+.rider-trip-destination { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 0.5rem; padding: 1rem 0; }
+.rider-trip-destination > ion-icon { color: var(--ag-pulse); font-size: 1.25rem; margin-top: 2px; }
+.rider-trip-destination p { margin: 0; font-size: 1rem; line-height: 1.5; }
+.rider-trip-destination .rider-trip-reference { margin-top: 0.5rem; font-size: 0.875rem; color: var(--ag-muted); }
+.rider-trip-collection { margin: 0; padding: 0.875rem; border-radius: var(--ag-radius-sm); background: var(--ag-pulse-soft); color: var(--ag-ink); font-weight: 600; }
+.rider-trip-card .ag-btn { box-sizing: border-box; width: 100%; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 48px; white-space: normal; text-align: center; }
+.rider-trip-card .ag-btn:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+.rider-trip-next ion-spinner { width: 18px; height: 18px; }
+.rider-trip-empty p { margin: 0; line-height: 1.5; color: var(--ag-muted); }
+
+.rider-trip-card a.ag-btn {
+  padding: 0.75rem;
+  border: 1px solid var(--ag-line);
+  border-radius: var(--ag-radius-sm);
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+.rider-trip-card a.rider-trip-navigate { color: var(--ag-pulse); background: var(--ag-pulse-soft); border-color: transparent; }
+
+/* Partner riders: presence is readable without relying on a dot color. */
+.rider-presence-card { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 0.875rem; align-items: center; padding: 1rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); font-family: var(--ag-font-body); }
+.rider-presence-avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--ag-pulse-soft); color: var(--ag-pulse); font-weight: 600; }
+.rider-presence-copy { min-width: 0; }
+.rider-presence-copy h2 { margin: 0; overflow-wrap: anywhere; color: var(--ag-ink); font: 600 1rem/1.4 var(--ag-font-display); }
+.rider-presence-state { display: inline-flex; align-items: center; gap: 0.375rem; margin-top: 0.375rem; color: var(--ag-muted); font-size: 0.8125rem; line-height: 1.4; }
+.rider-presence-state::before { content: ''; flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.rider-presence-state--onShift { color: var(--ag-done); }
+.rider-presence-state--onTrip { color: var(--ag-pulse); }
+.rider-list-feedback { display: grid; justify-items: center; gap: 0.75rem; padding: 2.5rem 1rem; text-align: center; color: var(--ag-muted); }
+.rider-list-feedback ion-icon { font-size: 2rem; color: var(--ag-pulse); }
+.rider-list-feedback p { margin: 0; line-height: 1.5; }
+
+/* Partner zones: area identity and delivery details before editing. */
+.partner-zone-card { display: grid; grid-template-columns: 44px minmax(0, 1fr) 16px; align-items: center; gap: 0.75rem; width: 100%; padding: 1rem; text-align: left; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); color: var(--ag-ink); font-family: var(--ag-font-body); }
+.partner-zone-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--ag-pulse-soft); color: var(--ag-pulse); font-size: 1.25rem; }
+.partner-zone-copy { min-width: 0; display: grid; gap: 0.35rem; overflow-wrap: anywhere; }
+.partner-zone-copy strong { font: 600 1rem/1.4 var(--ag-font-display); }
+.partner-zone-copy > span { color: var(--ag-muted); font-size: 0.8125rem; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.partner-zone-card > ion-icon { color: var(--ag-muted); }
+.partner-zone-card:focus-visible, .partner-zones-page button:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+.partner-zone-feedback { display: grid; justify-items: center; gap: 0.75rem; padding: 2rem 1rem; text-align: center; color: var(--ag-muted); }
+.partner-zone-feedback ion-icon { color: var(--ag-pulse); font-size: 2rem; }
+.partner-zone-feedback p { margin: 0; }
+.partner-zones-page .staff-form { padding: 1rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); }
+.partner-zones-page .staff-form label { gap: 0.5rem; font-size: 0.875rem; color: var(--ag-ink); }
+.partner-zones-page .staff-form input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 0.75rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-sm); background: var(--ag-mist); color: var(--ag-ink); font: inherit; }
+.partner-zones-page .staff-form input:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 2px; }

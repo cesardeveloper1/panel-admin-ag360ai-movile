@@ -9,8 +9,9 @@ import { PROFILE_PATH } from '../../navigation/appRouteRegistry';
 import { orderService } from '../../services/orderService';
 import { sessionDisplayName } from '../../utils/sessionDisplayName';
 import type { Order } from '../../types';
-import { navigationHref, riderScreen, type RiderTripPhase } from './fleetTrip';
+import { riderScreen, type RiderTripPhase } from './fleetTrip';
 import { useFleetSchedule } from './useFleetSchedule';
+import { RiderTripCard } from './RiderTripCard';
 
 const PHASE_TITLE: Record<RiderTripPhase | 'empty', string> = {
   empty: 'rider.phaseEmpty',
@@ -32,10 +33,6 @@ function tripWhen(value: string | undefined, language: string): string | null {
   }).format(date);
 }
 
-function whatsappHref(phone: string): string {
-  return `https://wa.me/${phone.replace(/\D/g, '')}`;
-}
-
 export function RiderTripPage() {
   const { t, i18n } = useTranslation();
   const { go } = useAppNavigation();
@@ -50,7 +47,6 @@ export function RiderTripPage() {
     : null;
   const { withinHours, shift } = useFleetSchedule(session?.role === 'rider');
   const when = tripWhen(trip?.scheduledAt, i18n.language);
-  const maps = trip ? navigationHref(trip) : null;
 
   useEffect(() => {
     if (screen.kind !== 'trip') {
@@ -110,44 +106,14 @@ export function RiderTripPage() {
               ) : loading && orders.length === 0 ? (
                 <p role="status">{t('ops.filters.loadingMessages')}</p>
               ) : !trip ? (
-                <article className="fleet-trip">
+                <article className="fleet-trip rider-trip-empty" role="status">
                   <h2>{sessionDisplayName(session, t)}</h2>
                   {shift === 'on' ? <p>{t('rider.onShift')}</p> : null}
                   {shift === 'off' ? <p>{t('rider.offHours')}</p> : null}
                   <p>{t('rider.empty')}</p>
                 </article>
-              ) : phase === 'route' ? (
-                <article className="fleet-trip">
-                  <h2>{trip.customerName || t('rider.customerUnknown')}</h2>
-                  {trip.orderNumber ? <p>#{trip.orderNumber}</p> : null}
-                  <p>{trip.address || t('rider.addressUnknown')}</p>
-                  {trip.addressReference ? <p>{trip.addressReference}</p> : null}
-                  {trip.paymentMethod === 'cash' ? <p>{t('rider.collect', { amount: trip.total })}</p> : null}
-                  {trip.phone ? (
-                    <div className="trip-contact">
-                      <a className="ag-btn" href={`tel:${trip.phone}`}>{t('rider.call')}</a>
-                      <a className="ag-btn" href={whatsappHref(trip.phone)} target="_blank" rel="noreferrer">{t('rider.whatsapp')}</a>
-                    </div>
-                  ) : null}
-                  {maps ? <a className="ag-btn" href={maps}>{t('rider.navigate')}</a> : null}
-                  <button type="button" className="ag-btn ag-btn--primary" disabled={pending} onClick={() => void move('delivered')}>
-                    {t('rider.delivered')}
-                  </button>
-                </article>
               ) : (
-                <article className="fleet-trip">
-                  {trip.orderNumber ? <p>#{trip.orderNumber}</p> : null}
-                  {when ? <p>{when}</p> : null}
-                  <h2>{trip.branchName || t('rider.localUnknown')}</h2>
-                  <p>{trip.address || t('rider.addressUnknown')}</p>
-                  {trip.addressReference ? <p>{trip.addressReference}</p> : null}
-                  {phase === 'kitchen' && maps ? <a className="ag-btn" href={maps}>{t('rider.navigate')}</a> : null}
-                  {phase === 'kitchen' ? (
-                    <button type="button" className="ag-btn ag-btn--primary" disabled={pending} onClick={() => void move('on_the_way')}>
-                      {t('rider.arrived')}
-                    </button>
-                  ) : null}
-                </article>
+                <RiderTripCard trip={trip} phase={phase === 'empty' ? 'waiting' : phase} when={when} pending={pending} onMove={move} />
               )}
               {error ? <p role="alert">{error}</p> : null}
             </div>

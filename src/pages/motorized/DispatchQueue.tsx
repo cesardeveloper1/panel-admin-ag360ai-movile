@@ -20,7 +20,7 @@ import { orderService } from '../../services/orderService';
 import type { Order } from '../../types';
 import { dispatchBoard } from './fleetTrip';
 
-function OrderRow({
+export function DispatchOrderCard({
   order,
   riderName,
   children,
@@ -29,13 +29,13 @@ function OrderRow({
   riderName?: string;
   children?: ReactNode;
 }) {
-  const place = order.branchName || order.address || order.customerName;
   return (
-    <article className="ops-connection motorized-card">
-      <strong>{order.orderNumber ? `#${order.orderNumber}` : order.customerName}</strong>
-      {place ? <p>{place}</p> : null}
-      {order.address && order.branchName ? <p>{order.address}</p> : null}
-      {riderName ? <p>{riderName}</p> : null}
+    <article className="motorized-card dispatch-order-card">
+      <strong className="dispatch-order-card__number">{order.orderNumber ? `#${order.orderNumber}` : order.id}</strong>
+      {order.branchName ? <p className="dispatch-order-card__branch">{order.branchName}</p> : null}
+      {order.customerName ? <p>{order.customerName}</p> : null}
+      {order.address ? <p className="dispatch-order-card__address">{order.address}</p> : null}
+      {riderName ? <p className="dispatch-order-card__rider"><IonIcon icon={personOutline} aria-hidden="true" />{riderName}</p> : null}
       {children}
     </article>
   );
@@ -48,6 +48,7 @@ export function DispatchQueue() {
   const { orders, ordersError, loading, refreshOrders } = useApp();
   const [riders, setRiders] = useState<Array<{ id: string; fullName: string; isActive?: boolean }>>([]);
   const [ridersError, setRidersError] = useState(false);
+  const [ridersLoading, setRidersLoading] = useState(true);
   const [pendingId, setPendingId] = useState('');
   const [error, setError] = useState('');
   const board = dispatchBoard(orders);
@@ -58,11 +59,13 @@ export function DispatchQueue() {
     let active = true;
     void deliveryPartnerClient.listRiders()
       .then((rows) => { if (active) setRiders(rows.filter((row) => row.isActive !== false)); })
-      .catch(() => { if (active) setRidersError(true); });
+      .catch(() => { if (active) setRidersError(true); })
+      .finally(() => { if (active) setRidersLoading(false); });
     return () => { active = false; };
   }, []);
 
   const assign = async (orderId: string, riderId: string) => {
+    if (pendingId) return;
     setError('');
     setPendingId(orderId);
     try {
@@ -93,27 +96,27 @@ export function DispatchQueue() {
   );
 
   const section = (title: string, rows: Order[], emptyKey: string, withAssign = false) => (
-    <section className="fleet-section">
-      <h2>{title}</h2>
+    <section className="fleet-section dispatch-section">
+      <div className="dispatch-section-head"><h2>{title}</h2><span>{rows.length}</span></div>
       {rows.length === 0 ? (workEmpty ? null : <p>{t(emptyKey)}</p>) : rows.map((order) => (
-        <OrderRow key={order.id} order={order} riderName={withAssign ? undefined : riderName(order.riderId)}>
+        <DispatchOrderCard key={order.id} order={order} riderName={withAssign ? undefined : riderName(order.riderId)}>
           {withAssign ? (
             <label className="fleet-rider-field">
               <span>{t('motorized.chooseRider')}</span>
               <select
                 value=""
-                disabled={pendingId === order.id || riders.length === 0}
+                disabled={Boolean(pendingId) || ridersLoading || ridersError || riders.length === 0}
                 onChange={(event) => {
                   const riderId = event.target.value;
                   if (riderId) void assign(order.id, riderId);
                 }}
               >
-                <option value="">{riders.length === 0 ? t('motorized.noRiders') : t('motorized.chooseRider')}</option>
+                <option value="">{ridersLoading ? t('app.loading') : ridersError ? t('motorized.ridersError') : riders.length === 0 ? t('motorized.noRiders') : t('motorized.chooseRider')}</option>
                 {riders.map((rider) => <option key={rider.id} value={rider.id}>{rider.fullName}</option>)}
               </select>
             </label>
           ) : null}
-        </OrderRow>
+        </DispatchOrderCard>
       ))}
     </section>
   );
@@ -124,7 +127,7 @@ export function DispatchQueue() {
         <AppShell>
           <div className="fleet-screen">
             <AppHeader title={t('motorized.dispatch')} showAlerts={false} trailing={actions} />
-            <div className="ag-body module-body ag-page-stack fleet-list">
+            <div className="ag-body module-body ag-page-stack fleet-list dispatch-list">
               <div className="fleet-links">
                 <button type="button" className="fleet-row" onClick={() => go(PARTNER_RIDERS_PATH)}>{t('motorized.riders')}</button>
                 <button type="button" className="fleet-row" onClick={() => go(DISPATCH_DELIVERED_PATH)}>{t('motorized.delivered')}</button>
@@ -138,10 +141,10 @@ export function DispatchQueue() {
                 <p role="status">{t('ops.filters.loadingMessages')}</p>
               ) : (
                 <>
-                  {workEmpty ? <p>{t('motorized.queueClear')}</p> : null}
-                  {section(t('motorized.unassigned'), board.unassigned, 'motorized.emptyQueue', true)}
-                  {section(t('motorized.assigned'), board.assigned, 'motorized.emptyAssigned')}
-                  {section(t('motorized.onTheWay'), board.onTheWay, 'motorized.emptyOnTheWay')}
+                  {workEmpty ? <div className="dispatch-empty" role="status"><IonIcon icon={peopleOutline} aria-hidden="true" /><p>{t('motorized.queueClear')}</p></div> : null}
+                  {!workEmpty ? section(t('motorized.unassigned'), board.unassigned, 'motorized.emptyQueue', true) : null}
+                  {!workEmpty ? section(t('motorized.assigned'), board.assigned, 'motorized.emptyAssigned') : null}
+                  {!workEmpty ? section(t('motorized.onTheWay'), board.onTheWay, 'motorized.emptyOnTheWay') : null}
                 </>
               )}
               {ridersError ? <p role="alert">{t('motorized.ridersError')}</p> : null}
@@ -170,7 +173,7 @@ export function DispatchDelivered() {
         <p role="status">{t('ops.filters.loadingMessages')}</p>
       ) : delivered.length === 0 ? (
         <p>{t('motorized.emptyDelivered')}</p>
-      ) : delivered.map((order) => <OrderRow key={order.id} order={order} />)}
+      ) : delivered.map((order) => <DispatchOrderCard key={order.id} order={order} />)}
     </StackLayout>
   );
 }
