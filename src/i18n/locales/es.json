@@ -600,6 +600,7 @@
     }
   },
   "locationsPage": {
+    "saving": "Guardando local…",
     "title": "Mis locales",
     "subtitle": "Gestión de locales",
     "intro": "Gestiona las sucursales de tu restaurante",

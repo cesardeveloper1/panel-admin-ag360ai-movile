@@ -566,6 +566,7 @@
     }
   },
   "locationsPage": {
+    "saving": "Saving location…",
     "title": "My locations",
     "subtitle": "Location management",
     "intro": "Manage your restaurant branches",

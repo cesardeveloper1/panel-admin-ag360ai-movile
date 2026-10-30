@@ -43,7 +43,9 @@ Trabajada no significa publicada ni validada de extremo a extremo. Onboarding co
 - [ ] Detalle de pedido: validar hoja Ionic completa, scroll con muchos productos y Android Back en dispositivo, conservando permisos por rol.
 - [x] Alta de producto: hoja Ionic real a 360/390 px, campos de 48 px, acciones fuera del scroll, disponibilidad accesible y aviso sin categorías; 3 pruebas de validación, borrador y estado pendiente. Sin crear productos reales.
 - [ ] Alta de producto: validar teclado y cierre por Android Back en dispositivo.
-- [ ] Alta de marca, edición de producto y alta/edición de local: revisión completa; abrir los formularios no equivale a rediseñarlos.
+- [x] Alta/edición de local: patrón compartido de campos y acciones, nombres accesibles, estado pendiente y conservación del borrador al refrescar el mismo local. Hoja Ionic real a 360/390 px con datos de prueba; 3 pruebas del local y 3 del formulario de producto compartido. Sin guardar locales reales.
+- [ ] Locales: validar teclado y Android Back en dispositivo.
+- [ ] Alta de marca y edición de producto: revisión completa; abrir los formularios no equivale a rediseñarlos.
 - [ ] Configuración y lista de reservas, incluida su presentación por rol.
 - [ ] Editor de polígonos y flujo completo de edición de zonas.
 - [ ] Editor y guardado de grupos de WhatsApp con locales reales autorizados.
