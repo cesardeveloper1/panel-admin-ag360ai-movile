@@ -9952,3 +9952,42 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
 .partner-zones-page .staff-form label { gap: 0.5rem; font-size: 0.875rem; color: var(--ag-ink); }
 .partner-zones-page .staff-form input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 0.75rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-sm); background: var(--ag-mist); color: var(--ag-ink); font: inherit; }
 .partner-zones-page .staff-form input:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 2px; }
+
+/* Partner notification groups: active state and branch scope stay explicit. */
+.partner-group-card { display: grid; grid-template-columns: 44px minmax(0, 1fr) 16px; gap: 0.75rem; align-items: center; width: 100%; padding: 1rem; text-align: left; background: var(--ag-paper); border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); color: var(--ag-ink); font-family: var(--ag-font-body); }
+.partner-group-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--ag-pulse-soft); color: var(--ag-pulse); font-size: 1.25rem; }
+.partner-group-copy { display: grid; gap: 0.35rem; min-width: 0; overflow-wrap: anywhere; }
+.partner-group-copy strong { font: 600 1rem/1.4 var(--ag-font-display); }
+.partner-group-copy > span { font-size: 0.8125rem; color: var(--ag-muted); }
+.partner-group-copy .partner-group-state--active { color: var(--ag-done); }
+.partner-group-card:focus-visible, .partner-groups-page button:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+.partner-group-feedback { display: grid; justify-items: center; gap: 0.75rem; padding: 2rem 1rem; text-align: center; color: var(--ag-muted); }
+.partner-group-feedback ion-icon { font-size: 2rem; color: var(--ag-pulse); }
+.partner-group-feedback p { margin: 0; }
+.partner-groups-page .staff-form { padding: 1rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); }
+.partner-groups-page .staff-form label { gap: 0.5rem; color: var(--ag-ink); font-size: 0.875rem; }
+.partner-groups-page .staff-form input:not([type="checkbox"]) { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 0.75rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-sm); background: var(--ag-mist); color: var(--ag-ink); font: inherit; }
+.partner-group-scope-hint { font-size: 0.875rem; color: var(--ag-muted); line-height: 1.5; }
+
+/* Delivery partner account: hours and coverage before editing. */
+.partner-account-summary { display: grid; gap: 1rem; font-family: var(--ag-font-body); }
+.partner-account-hours { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 0.75rem; align-items: start; padding: 1rem; width: 100%; text-align: left; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); color: var(--ag-ink); }
+.partner-account-hours > ion-icon { color: var(--ag-pulse); font-size: 1.5rem; }
+.partner-account-hours span span { display: block; color: var(--ag-muted); font-size: 0.8125rem; }
+.partner-account-hours strong { display: block; margin-top: 0.5rem; font: 600 1.25rem/1.4 var(--ag-font-display); font-variant-numeric: tabular-nums; }
+.partner-account-hours small { display: block; margin-top: 0.5rem; font-size: 0.8125rem; color: var(--ag-muted); }
+.partner-account-facts { margin: 0; padding: 1rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); }
+.partner-account-facts > div + div { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--ag-line); }
+.partner-account-facts dt { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8125rem; color: var(--ag-muted); }
+.partner-account-facts dd { margin: 0.5rem 0 0; color: var(--ag-ink); font-weight: 600; overflow-wrap: anywhere; line-height: 1.5; }
+.partner-account-summary > .ag-btn { box-sizing: border-box; width: 100%; min-height: 48px; border-radius: var(--ag-radius-sm); background: var(--ag-pulse); color: white; font: 600 0.875rem var(--ag-font-body); }
+.partner-account-hours:focus-visible, .partner-account-page button:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+.partner-account-feedback { display: grid; justify-items: center; gap: 0.75rem; padding: 2rem 1rem; color: var(--ag-muted); text-align: center; }
+.partner-account-feedback p { margin: 0; }
+.partner-account-page .staff-form { padding: 1rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); }
+.partner-account-page .staff-form label { gap: 0.5rem; font-size: 0.875rem; }
+.partner-account-page .staff-form input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 0.75rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-sm); background: var(--ag-mist); color: var(--ag-ink); font: inherit; }
+
+.delivered-orders-list { font-family: var(--ag-font-body); display: grid; gap: 0.75rem; }
+.dispatch-section-head .delivered-orders-label { padding: 0; background: transparent; color: var(--ag-muted); font-size: 0.875rem; }
+.delivered-order-status { display: inline-flex; align-items: center; gap: 0.375rem; margin-top: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 99px; background: color-mix(in srgb, var(--ag-done) 10%, var(--ag-paper)); color: var(--ag-done); font-size: 0.8125rem; font-weight: 600; }

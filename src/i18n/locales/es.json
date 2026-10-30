@@ -1014,6 +1014,10 @@
     "noBrand": "Tu cuenta no tiene una marca asignada."
   },
   "motorized": {
+    "loadedDeliveries": "Entregas cargadas",
+    "branchCount_one": "{{count}} local",
+    "allBranches": "Todos los locales",
+    "groupScopeHint": "Sin locales seleccionados, el grupo recibe avisos de todos los locales.",
     "deliveries": "Entregas",
     "inKitchen": "En cocina",
     "onRoute": "En ruta",

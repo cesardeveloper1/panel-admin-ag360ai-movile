@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { mapOutline, peopleOutline, personOutline } from 'ionicons/icons';
+import { checkmarkCircleOutline, mapOutline, peopleOutline, personOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../../components/AppHeader';
 import { AppShell } from '../../components/AppShell';
@@ -157,6 +157,15 @@ export function DispatchQueue() {
   );
 }
 
+export function DeliveredOrdersList({ orders }: { orders: Order[] }) {
+  const { t } = useTranslation();
+  if (orders.length === 0) return <div className="dispatch-empty" role="status"><IonIcon icon={checkmarkCircleOutline} aria-hidden="true" /><p>{t('motorized.emptyDelivered')}</p></div>;
+  return <div className="delivered-orders-list">
+    <div className="dispatch-section-head"><span>{orders.length}</span><span className="delivered-orders-label">{t('motorized.loadedDeliveries')}</span></div>
+    {orders.map(order => <DispatchOrderCard key={order.id} order={order}><span className="delivered-order-status"><IonIcon icon={checkmarkCircleOutline} aria-hidden="true" />{t('ops.subStates.delivered')}</span></DispatchOrderCard>)}
+  </div>;
+}
+
 export function DispatchDelivered() {
   const { t } = useTranslation();
   const { orders, ordersError, loading, refreshOrders } = useApp();
@@ -171,9 +180,7 @@ export function DispatchDelivered() {
         </div>
       ) : loading && delivered.length === 0 ? (
         <p role="status">{t('ops.filters.loadingMessages')}</p>
-      ) : delivered.length === 0 ? (
-        <p>{t('motorized.emptyDelivered')}</p>
-      ) : delivered.map((order) => <DispatchOrderCard key={order.id} order={order} />)}
+      ) : <DeliveredOrdersList orders={delivered} />}
     </StackLayout>
   );
 }

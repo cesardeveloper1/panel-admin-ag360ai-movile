@@ -969,6 +969,10 @@
     "noBrand": "Your account has no assigned brand."
   },
   "motorized": {
+    "loadedDeliveries": "Loaded deliveries",
+    "branchCount_one": "{{count}} location",
+    "allBranches": "All locations",
+    "groupScopeHint": "With no locations selected, this group receives notifications for all locations.",
     "deliveries": "Deliveries",
     "inKitchen": "In kitchen",
     "onRoute": "On route",
