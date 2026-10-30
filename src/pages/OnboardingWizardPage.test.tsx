@@ -1,0 +1,40 @@
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+import OnboardingWizardPage from './OnboardingWizardPage';
+import { apiMock } from '../services/apiMock';
+import type { BrandConfig } from '../types';
+import '../i18n';
+const state=vi.hoisted(()=>({app:{brand:{id:'demo',nameKey:'brands.custom',displayName:'Marca Demo',initials:'MD'},completeOnboarding:vi.fn()},goRoot:vi.fn()}));
+vi.mock('../hooks/useApp',()=>({useApp:()=>state.app}));
+vi.mock('../hooks/useAppNavigation',()=>({useAppNavigation:()=>({goRoot:state.goRoot})}));
+vi.mock('../components/AppHeader',()=>({AppHeader:()=>null}));
+vi.mock('../services/apiMock',()=>({apiMock:{getBrandConfig:vi.fn(),saveBrandConfig:vi.fn()}}));
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+const config={agentEnabled:false} as BrandConfig;
+it('shows three steps and allows returning before finishing',async()=>{
+ vi.mocked(apiMock.getBrandConfig).mockResolvedValue(config);
+ await act(async()=>{render(<OnboardingWizardPage />);});
+ expect(screen.getByRole('status')).toHaveTextContent('Paso 1 de 3');
+ fireEvent.click(screen.getByText('Siguiente'));
+ expect(screen.getByRole('status')).toHaveTextContent('Paso 2 de 3');
+ fireEvent.click(screen.getByText('Atrás'));
+ expect(screen.getByRole('status')).toHaveTextContent('Paso 1 de 3');
+ expect(state.app.completeOnboarding).not.toHaveBeenCalled();
+});
+it('finishes only after saving the current configuration',async()=>{
+ vi.mocked(apiMock.getBrandConfig).mockResolvedValue(config);
+ vi.mocked(apiMock.saveBrandConfig).mockResolvedValue(config);
+ await act(async()=>{render(<OnboardingWizardPage />);});
+ fireEvent.click(screen.getByText('Siguiente')); fireEvent.click(screen.getByText('Siguiente'));
+ await act(async()=>{fireEvent.click(screen.getByText('Entrar a Agilito'));});
+ await vi.waitFor(()=>expect(state.goRoot).toHaveBeenCalledWith('/app/agilito','replace'));
+ expect(state.app.completeOnboarding).toHaveBeenCalledOnce();
+});
+it('keeps the user on the wizard when saving fails',async()=>{
+ vi.mocked(apiMock.getBrandConfig).mockResolvedValue(config);
+ vi.mocked(apiMock.saveBrandConfig).mockRejectedValue(new Error('offline'));
+ await act(async()=>{render(<OnboardingWizardPage />);}); await act(async()=>{fireEvent.click(screen.getByText('Omitir'));});
+ expect(await screen.findByRole('alert')).toBeInTheDocument();
+ expect(state.app.completeOnboarding).not.toHaveBeenCalled();
+ expect(state.goRoot).not.toHaveBeenCalled();
+});

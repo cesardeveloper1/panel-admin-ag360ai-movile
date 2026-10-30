@@ -3744,8 +3744,14 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
 
 /* ── Onboarding wizard ── */
 .onboarding-body {
-  padding-bottom: 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
 }
+.onboarding-step-label { margin: 0 0 0.75rem; text-align: center; color: var(--ag-muted); font-size: 0.8125rem; }
+.onboarding-error { color: var(--ag-hot); line-height: 1.5; text-align: center; }
+.onboarding-actions ion-button { min-height: 48px; flex: 1; --border-radius: 12px; --box-shadow: none; text-transform: none; font-weight: 600; }
+.onboarding-toggle ion-label { white-space: normal; }
+.onboarding-toggle ion-toggle { min-height: 44px; }
+
 
 .onboarding-progress {
   display: flex;
@@ -3768,7 +3774,11 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
 
 .onboarding-panel {
   text-align: center;
-  padding: 0.5rem 0 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--ag-line);
+  border-radius: var(--ag-radius-lg);
+  background: var(--ag-paper);
+  overflow-wrap: anywhere;
 }
 
 .onboarding-panel h2 {
@@ -3815,7 +3825,8 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
 }
 
 .onboarding-modules span {
-  font-size: 0.8125rem;
+  line-height: 1.5;
+  font-size: 0.875rem;
   color: var(--ag-muted);
 }
 

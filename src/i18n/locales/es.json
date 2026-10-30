@@ -652,6 +652,7 @@
     "saving": "Guardando..."
   },
   "onboarding": {
+    "progress": "Paso {{current}} de {{total}}",
     "title": "Primeros pasos",
     "welcomeTitle": "Listo para operar {{brand}}",
     "welcomeBody": "Desde aquí gestionas pedidos, cocina y reportes en tiempo real.",
@@ -665,12 +666,12 @@
     "back": "Atrás",
     "next": "Siguiente",
     "skip": "Omitir",
-    "start": "Ir a operaciones",
+    "start": "Entrar a Agilito",
     "businessHint": "Menú, clientes, locales y marca desde Negocio.",
     "agentTitle": "Agente Agilito",
     "agentHint": "Desactivado por defecto. Actívalo cuando quieras automatizar respuestas.",
     "paymentsHint": "Menú, marketing, locales y marca.",
-    "agilitoHint": "Chat central en la barra inferior para consultas y acciones."
+    "agilitoHint": "Consulta y accede a las herramientas de tu negocio desde Agilito."
   },
   "orderDetail": {
     "buyer": "Nombre del comprador",

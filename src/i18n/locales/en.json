@@ -618,6 +618,7 @@
     "saving": "Saving..."
   },
   "onboarding": {
+    "progress": "Step {{current}} of {{total}}",
     "title": "Getting started",
     "welcomeTitle": "Ready to run {{brand}}",
     "welcomeBody": "Manage orders, kitchen and live reports from here.",
@@ -631,12 +632,12 @@
     "back": "Back",
     "next": "Next",
     "skip": "Skip",
-    "start": "Go to operations",
+    "start": "Open Agilito",
     "businessHint": "Menu, clients, branches and brand from Business.",
     "agentTitle": "Agilito agent",
     "agentHint": "Off by default. Turn on when you want automated replies.",
     "paymentsHint": "Menu, marketing, locations and brand.",
-    "agilitoHint": "Central chat in the bottom bar for queries and actions."
+    "agilitoHint": "Ask questions and access your business tools from Agilito."
   },
   "orderDetail": {
     "title": "Order {{id}}",
