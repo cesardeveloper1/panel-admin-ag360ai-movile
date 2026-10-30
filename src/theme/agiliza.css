@@ -9991,3 +9991,12 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
 .delivered-orders-list { font-family: var(--ag-font-body); display: grid; gap: 0.75rem; }
 .dispatch-section-head .delivered-orders-label { padding: 0; background: transparent; color: var(--ag-muted); font-size: 0.875rem; }
 .delivered-order-status { display: inline-flex; align-items: center; gap: 0.375rem; margin-top: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 99px; background: color-mix(in srgb, var(--ag-done) 10%, var(--ag-paper)); color: var(--ag-done); font-size: 0.8125rem; font-weight: 600; }
+
+/* Quick replies: shortcut identity and readable multiline content. */
+.quick-message-card { padding: 1rem; border: 1px solid var(--ag-line); border-radius: var(--ag-radius-md); background: var(--ag-paper); color: var(--ag-ink); font-family: var(--ag-font-body); }
+.quick-message-shortcut { display: inline-block; max-width: 100%; overflow-wrap: anywhere; padding: 0.35rem 0.6rem; border-radius: var(--ag-radius-sm); background: var(--ag-pulse-soft); color: var(--ag-pulse); font: 600 0.875rem/1.4 var(--ag-font-mono); }
+.quick-message-card p { margin: 0.875rem 0 0; font-size: 0.9375rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.quick-message-hint { margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--ag-muted); }
+.quick-message-feedback { display: grid; justify-items: center; gap: 0.75rem; padding: 2.5rem 1rem; text-align: center; color: var(--ag-muted); }
+.quick-message-feedback p { margin: 0; line-height: 1.5; }
+.quick-message-feedback ion-icon { font-size: 2rem; color: var(--ag-pulse); }

@@ -4,14 +4,13 @@ Actualizado: 30 de octubre de 2026. Alcance: owner, manager, worker, motorizado 
 
 ## Pantallas principales trabajadas
 
-Login conservado por decisión del usuario; bienvenida, Agilito, Operaciones, listado de Chats, Reportes, Negocio, Productos, Clientes, Locales, Datos de marca, Perfil, Alertas, Captura de pagos, Impresoras, Despacho, Viaje RIDER, Repartidores, Zonas, Grupos, Cuenta del motorizado y listado de Entregados.
+Login conservado por decisión del usuario; bienvenida, Agilito, Operaciones, listado de Chats, Reportes, Negocio, Productos, Clientes, Locales, Datos de marca, Perfil, Alertas, Captura de pagos, Impresoras, Despacho, Viaje RIDER, Repartidores, Zonas, Grupos, Cuenta del motorizado listado de Entregados y Mensajes rápidos.
 
 Trabajada no significa publicada ni validada de extremo a extremo. Flota se revisó con componentes reales aislados y pruebas. Entregados muestra únicamente los registros ya cargados, no una consulta histórica completa. Captura e impresión requieren dispositivo.
 
 ## Pantallas aún sin pasada dedicada
 
 - [ ] Crear marca / onboarding — `/app/onboarding`
-- [ ] Mensajes rápidos — `/app/quick-messages`
 
 ### Pantallas secundarias configuradas en STAFF_SCREENS
 

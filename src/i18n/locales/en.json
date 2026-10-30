@@ -1,4 +1,8 @@
 {
+  "quickMessages": {
+    "search": "Search shortcut or message…",
+    "noMatches": "No messages match your search"
+  },
   "app": {
     "name": "Agiliza360",
     "loading": "Loading..."
