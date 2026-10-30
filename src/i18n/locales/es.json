@@ -159,7 +159,10 @@
           "name": "Nombre",
           "cart": "Carrito",
           "delivery": "Modalidad",
-          "payment": "Método de pago"
+          "payment": "Método de pago",
+          "party": "Personas",
+          "schedule": "Fecha y hora",
+          "zone": "Zona"
         },
         "states": {
           "received": "Recibido",

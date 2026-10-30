@@ -154,7 +154,10 @@
           "name": "Name",
           "cart": "Cart",
           "delivery": "Fulfillment",
-          "payment": "Payment method"
+          "payment": "Payment method",
+          "party": "Party size",
+          "schedule": "Date and time",
+          "zone": "Zone"
         },
         "states": {
           "received": "Received",
