@@ -74,6 +74,7 @@ export default function PartnerZonesPage() {
     setError('');
     try {
       await deliveryPartnerClient.deleteZone(zone._id);
+      setEditing(undefined);
       await load();
     } catch (cause) {
       setError(apiErrorMessage(cause, t('ops.reliability.unavailable')));
@@ -82,27 +83,31 @@ export default function PartnerZonesPage() {
 
   return (
     <StackLayout title={t('motorized.zones')} showAlerts={false} bodyClassName="ag-body module-body ag-page-stack staff-screen">
-      {zones === null ? <p role="status">{t('ops.filters.loadingMessages')}</p> : zones.length === 0 ? <p>{t('motorized.empty')}</p> : zones.map((zone) => (
-        <article key={zone._id} className="ops-connection">
-          <strong>{zone.name}</strong>
-          <p>{zone.coverageType === 'polygon' ? t('motorized.polygon') : zone.coverageType}</p>
-          <button type="button" className="ag-btn" onClick={() => open(zone)}>{t('motorized.edit')}</button>
-          <button type="button" className="ag-btn" onClick={() => void remove(zone)}>{t('motorized.delete')}</button>
-        </article>
-      ))}
-      <button type="button" className="ag-btn" onClick={() => open()}>{t('motorized.addZone')}</button>
       {editing !== undefined ? (
         <form className="staff-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+          <button type="button" className="fleet-row" onClick={() => setEditing(undefined)}>{t('common.back')}</button>
           <label>{t('motorized.zoneName')}<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
           <label>{t('motorized.deliveryAmount')}<input inputMode="decimal" value={form.deliveryAmount} onChange={(event) => setForm({ ...form, deliveryAmount: event.target.value })} /></label>
           <label>{t('motorized.startTime')}<input value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></label>
           <label>{t('motorized.endTime')}<input value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></label>
           <p>{t('motorized.mapHint')}</p>
           <PartnerZoneMap points={points} color={form.color} onChange={setPoints} />
-          <button type="button" className="ag-btn" onClick={() => setPoints((current) => current.slice(0, -1))}>{t('motorized.undoPoint')}</button>
-          <button type="submit" className="ag-btn" disabled={saving}>{t('staff.save')}</button>
+          <button type="button" className="fleet-row" onClick={() => setPoints((current) => current.slice(0, -1))}>{t('motorized.undoPoint')}</button>
+          <button type="submit" className="ag-btn ag-btn--primary" disabled={saving}>{t('staff.save')}</button>
+          {editing?._id ? (
+            <button type="button" className="fleet-row fleet-row--danger" onClick={() => void remove(editing)}>{t('motorized.delete')}</button>
+          ) : null}
         </form>
-      ) : null}
+      ) : zones === null ? <p role="status">{t('ops.filters.loadingMessages')}</p> : (
+        <>
+          {zones.length === 0 ? <p>{t('motorized.empty')}</p> : zones.map((zone) => (
+            <button key={zone._id} type="button" className="fleet-row" onClick={() => open(zone)}>
+              <strong>{zone.name}</strong>
+            </button>
+          ))}
+          <button type="button" className="ag-btn ag-btn--primary" onClick={() => open()}>{t('motorized.addZone')}</button>
+        </>
+      )}
       {error ? <p role="alert">{error}</p> : null}
     </StackLayout>
   );

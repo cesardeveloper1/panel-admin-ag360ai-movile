@@ -1,7 +1,32 @@
 import type { Order } from '../../types';
 
+export interface DispatchBoard {
+  unassigned: Order[];
+  assigned: Order[];
+  onTheWay: Order[];
+  delivered: Order[];
+}
+
+export function dispatchBoard(orders: Order[]): DispatchBoard {
+  const board: DispatchBoard = { unassigned: [], assigned: [], onTheWay: [], delivered: [] };
+  for (const order of orders) {
+    if (order.status === 'delivered') board.delivered.push(order);
+    else if (order.status === 'on_the_way') board.onTheWay.push(order);
+    else if (order.status === 'in_kitchen' && order.riderId) board.assigned.push(order);
+    else if (order.status === 'in_kitchen') board.unassigned.push(order);
+  }
+  return board;
+}
+
 export function unassignedDispatchOrders(orders: Order[]): Order[] {
-  return orders.filter((order) => order.status === 'in_kitchen' && !order.riderId);
+  return dispatchBoard(orders).unassigned;
+}
+
+export function riderPresenceKey(presence?: string | null): 'onTrip' | 'onShift' | 'offHours' | 'away' {
+  if (presence === 'tracking') return 'onTrip';
+  if (presence === 'online') return 'onShift';
+  if (presence === 'off_hours') return 'offHours';
+  return 'away';
 }
 
 export function riderScreen(orders: Order[], selectedId: string | null):

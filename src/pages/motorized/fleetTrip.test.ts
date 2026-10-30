@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { navigationHref, riderScreen, unassignedDispatchOrders } from './fleetTrip';
+import { dispatchBoard, navigationHref, riderPresenceKey, riderScreen, unassignedDispatchOrders } from './fleetTrip';
 import type { Order } from '../../types';
 
 const order = (patch: Partial<Order>): Order => ({
@@ -25,6 +25,29 @@ it('deja en la cola solo lo que está en cocina y no tiene repartidor', () => {
     order({ id: 'f', status: 'accepted' }),
   ]);
   expect(rows.map((item) => item.id)).toEqual(['a']);
+});
+
+it('separa por asignar, asignadas, en camino y entregados', () => {
+  const board = dispatchBoard([
+    order({ id: 'a' }),
+    order({ id: 'b', riderId: 'rider' }),
+    order({ id: 'c', status: 'on_the_way', riderId: 'rider' }),
+    order({ id: 'd', status: 'delivered' }),
+    order({ id: 'e', status: 'accepted' }),
+    order({ id: 'f', status: 'scheduled' }),
+  ]);
+  expect(board.unassigned.map((item) => item.id)).toEqual(['a']);
+  expect(board.assigned.map((item) => item.id)).toEqual(['b']);
+  expect(board.onTheWay.map((item) => item.id)).toEqual(['c']);
+  expect(board.delivered.map((item) => item.id)).toEqual(['d']);
+});
+
+it('traduce la presencia del repartidor', () => {
+  expect(riderPresenceKey('tracking')).toBe('onTrip');
+  expect(riderPresenceKey('online')).toBe('onShift');
+  expect(riderPresenceKey('off_hours')).toBe('offHours');
+  expect(riderPresenceKey('logged_out')).toBe('away');
+  expect(riderPresenceKey(null)).toBe('away');
 });
 
 it('abre el viaje en camino y, si no hay, el que el repartidor eligió', () => {

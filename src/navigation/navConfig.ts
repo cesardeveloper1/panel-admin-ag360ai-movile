@@ -1,7 +1,11 @@
 import {
   barChartOutline,
+  bicycleOutline,
   gridOutline,
+  mapOutline,
   notificationsOutline,
+  peopleOutline,
+  personOutline,
   sparklesOutline,
   logoWhatsapp,
   storefrontOutline,
@@ -16,6 +20,12 @@ import {
   REPORTS_PATH,
   getRoute,
 } from './appRouteRegistry';
+import {
+  PARTNER_ACCOUNT_PATH,
+  PARTNER_GROUPS_PATH,
+  PARTNER_RIDERS_PATH,
+  PARTNER_ZONES_PATH,
+} from './motorizedScreens';
 
 export {
   AGILITO_PATH,
@@ -91,6 +101,14 @@ export const mobileNavItems: NavItem[] = [
   ...ownerNavLeft,
   chatsNavItem,
   ownerNavRight[1],
+];
+
+export const motorizedNavItems: NavItem[] = [
+  { path: OPERATIONS_PATH, icon: gridOutline, labelKey: 'motorized.dispatch' },
+  { path: PARTNER_RIDERS_PATH, icon: bicycleOutline, labelKey: 'motorized.riders' },
+  { path: PARTNER_ZONES_PATH, icon: mapOutline, labelKey: 'motorized.zones' },
+  { path: PARTNER_GROUPS_PATH, icon: peopleOutline, labelKey: 'motorized.groups' },
+  { path: PARTNER_ACCOUNT_PATH, icon: personOutline, labelKey: 'motorized.account' },
 ];
 
 export const agilitoNavItem: NavItem = ownerNavRight[0];

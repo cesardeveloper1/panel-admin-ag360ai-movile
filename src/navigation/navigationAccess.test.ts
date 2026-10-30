@@ -19,6 +19,9 @@ it('does not turn delivery or an unknown role into a general operator', () => {
   const motorized = { ...manager, role: 'motorized' as const };
   expect(canNavigate(motorized, '/app/operations')).toBe(true);
   expect(canNavigate(motorized, '/app/partner/zones')).toBe(true);
+  expect(canNavigate(motorized, '/app/partner/riders')).toBe(true);
+  expect(canNavigate(motorized, '/app/operations/delivered')).toBe(true);
+  expect(canNavigate(motorized, '/app/payments')).toBe(false);
   expect(canNavigate(motorized, '/app/chats')).toBe(false);
   expect(canNavigate(motorized, '/app/reports')).toBe(false);
   expect(canNavigate(motorized, '/app/notifications')).toBe(false);

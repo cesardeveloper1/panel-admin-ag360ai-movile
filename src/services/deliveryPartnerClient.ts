@@ -1,5 +1,7 @@
 import { api } from './api';
 
+export type FleetPresence = 'tracking' | 'online' | 'off_hours' | 'logged_out';
+
 export interface PartnerCoverageItem {
   countryCode: string;
   regionCodes?: string[];
@@ -93,13 +95,18 @@ export const deliveryPartnerClient = {
     return rows.map((row) => ({ id: String(row._id ?? ''), name: row.name || String(row._id ?? '') })).filter((row) => row.id);
   },
 
-  async listRiders(): Promise<Array<{ id: string; fullName: string; isActive?: boolean }>> {
-    const data = unwrap<Array<{ id?: string; _id?: string; fullName?: string; isActive?: boolean }>>(
+  async listRiders(): Promise<Array<{ id: string; fullName: string; isActive?: boolean; presence?: FleetPresence | null }>> {
+    const data = unwrap<Array<{ id?: string; _id?: string; fullName?: string; isActive?: boolean; presence?: FleetPresence | null }>>(
       await api.get('/delivery-partners/delivery/me/riders'),
     );
     const rows = Array.isArray(data) ? data : [];
     return rows
-      .map((row) => ({ id: String(row.id ?? row._id ?? ''), fullName: row.fullName || '', isActive: row.isActive }))
+      .map((row) => ({
+        id: String(row.id ?? row._id ?? ''),
+        fullName: row.fullName || '',
+        isActive: row.isActive,
+        presence: row.presence ?? null,
+      }))
       .filter((row) => row.id);
   },
 };

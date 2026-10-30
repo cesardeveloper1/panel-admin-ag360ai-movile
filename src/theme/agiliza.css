@@ -9297,6 +9297,36 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 .partner-map { height: 240px; width: 100%; border-radius: 12px; overflow: hidden; }
 .motorized-detail { display: grid; gap: 8px; margin-top: 16px; }
 .fleet-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.fleet-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fleet-links .fleet-row { min-width: 0; padding-inline: 10px; }
+.fleet-section { display: flex; flex-direction: column; gap: 8px; }
+.fleet-section h2 { margin: 8px 0 0; font-size: 0.95rem; }
+.fleet-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--ag-line);
+  border-radius: 12px;
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+  text-align: left;
+}
+.fleet-row--static { cursor: default; }
+.fleet-row--danger { color: var(--ion-color-danger, #eb445a); }
+.fleet-check { display: flex; flex-direction: row; align-items: center; gap: 8px; min-height: 44px; }
+.staff-form input:not([type="checkbox"]) {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--ag-line);
+  border-radius: 12px;
+  background: var(--ag-paper);
+  color: var(--ag-ink);
+}
 .fleet-choice, .fleet-rider-field select, .fleet-trip .ag-btn, .fleet-trip .ag-btn--primary { min-height: 44px; }
 .fleet-rider-field select { width: 100%; border: 1px solid var(--ag-line); border-radius: 9px; background: var(--ag-paper); color: var(--ag-ink); padding: 0 12px; }
 .fleet-trip { display: flex; flex-direction: column; gap: 12px; }
