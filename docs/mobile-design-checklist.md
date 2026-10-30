@@ -39,7 +39,8 @@ Trabajada no significa publicada ni validada de extremo a extremo. Onboarding co
 
 - [x] Conversación y compositor: burbujas con texto largo, tokens, controles de 44 px, foco, emojis y etiquetas accesibles. Vista aislada a 360/390 px y 3 pruebas del compositor (fallo/reintento, envío pendiente, cambio de chat).
 - [ ] Chat: validar en Android teclado, adjuntos/audio reales, mensajes rápidos e historial completo; la vista aislada no demuestra envío ni recepción del proveedor.
-- [ ] Detalle de pedido y sus acciones (OrderDetailSheet).
+- [x] Detalle de pedido (OrderDetailSheet): jerarquía de cliente/estado, entrega, productos, notas y total; controles de 48 px, tokens y texto adaptable. Vista aislada a 360/390 px y 3 pruebas existentes de fallo/reintento y cierre tras confirmación.
+- [ ] Detalle de pedido: validar hoja Ionic completa, scroll con muchos productos y Android Back en dispositivo, conservando permisos por rol.
 - [ ] Alta de marca, alta/edición de producto y alta/edición de local: revisión completa; abrir los formularios no equivale a rediseñarlos.
 - [ ] Configuración y lista de reservas, incluida su presentación por rol.
 - [ ] Editor de polígonos y flujo completo de edición de zonas.

@@ -3689,7 +3689,7 @@ body.ag-module-header-hidden .operations-page .ops-view-switch--sticky {
 
 /* ── Order detail sheet ── */
 .order-sheet-content {
-  --background: var(--ag-bg);
+  --background: var(--ag-mist);
 }
 
 .order-sheet-body {
@@ -9909,3 +9909,69 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
 .quick-message-feedback { display: grid; justify-items: center; gap: 0.75rem; padding: 2.5rem 1rem; text-align: center; color: var(--ag-muted); }
 .quick-message-feedback p { margin: 0; line-height: 1.5; }
 .quick-message-feedback ion-icon { font-size: 2rem; color: var(--ag-pulse); }
+
+/* Order detail: one scrolling body, persistent total and permitted action. */
+.order-detail-modal {
+  --border-radius: 24px 24px 0 0;
+}
+.order-detail-modal ion-toolbar {
+  --background: var(--ag-paper);
+  --color: var(--ag-ink);
+  --min-height: 64px;
+}
+.order-detail-modal ion-title {
+  font-family: var(--ag-font-display);
+  font-weight: 600;
+}
+.order-sheet-summary {
+  padding: 8px 0 20px;
+  border-bottom: 1px solid var(--ag-line);
+}
+.order-sheet-summary > strong {
+  font-family: var(--ag-font-display);
+  line-height: 1.3;
+}
+.order-sheet-status {
+  background: var(--ag-pulse-soft);
+  color: var(--ag-ink);
+}
+.order-sheet-delivery {
+  color: var(--ag-muted);
+  font-size: 14px;
+}
+.order-sheet-detail .order-sheet-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(0, 2fr);
+  gap: 12px;
+  padding-block: 14px;
+}
+.order-sheet-section {
+  font-family: var(--ag-font-display);
+  color: var(--ag-ink);
+}
+.order-sheet-items li {
+  padding-block: 14px;
+}
+.order-sheet-notes {
+  background: var(--ag-mist);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+}
+.order-sheet-notes .order-sheet-section { margin-top: 0; }
+.order-sheet-notes p { margin-bottom: 0; white-space: pre-wrap; }
+.order-sheet-footer .order-sheet-total strong {
+  font-family: var(--ag-font-display);
+  font-size: 22px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.order-sheet-footer > .ag-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+}
+.order-sheet-footer button:focus-visible {
+  outline: 2px solid var(--ag-pulse);
+  outline-offset: 2px;
+}
