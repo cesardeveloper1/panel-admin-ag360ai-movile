@@ -5,7 +5,7 @@ import { useApp } from '../hooks/useApp';
 import { useAppNavigation } from '../hooks/useAppNavigation';
 import { normalizePath, OPERATIONS_PATH } from '../navigation/appRouteRegistry';
 import { canNavigate } from '../navigation/navigationAccess';
-import { isFleetPhoneRole, isMotorizedRole } from '../navigation/motorizedScreens';
+import { TRIP_PATH, isFleetPhoneRole, isMotorizedRole, isRiderRole } from '../navigation/motorizedScreens';
 import { isPlatformPath, PLATFORM_PATH } from '../navigation/platformScreens';
 import { apiFacade } from '../services/apiFacade';
 import { BrandBootShell } from './BrandBootShell';
@@ -34,6 +34,10 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
     }
     if (isMotorizedRole(session?.role) && !canNavigate(session, pathname)) {
       goRoot(OPERATIONS_PATH);
+      return;
+    }
+    if (isRiderRole(session?.role) && !canNavigate(session, pathname)) {
+      goRoot(TRIP_PATH);
       return;
     }
     if (isFleetPhoneRole(session?.role) || brand || brandLoading || pendingBrand) return;
@@ -77,6 +81,11 @@ export const RequireBrand: React.FC<RequireBrandProps> = ({ children }) => {
   }
 
   if (isMotorizedRole(session.role)) {
+    if (!canNavigate(session, pathname)) return null;
+    return <>{children}</>;
+  }
+
+  if (isRiderRole(session.role)) {
     if (!canNavigate(session, pathname)) return null;
     return <>{children}</>;
   }

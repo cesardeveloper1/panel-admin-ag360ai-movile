@@ -9330,6 +9330,8 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 .fleet-choice, .fleet-rider-field select, .fleet-trip .ag-btn, .fleet-trip .ag-btn--primary { min-height: 44px; }
 .fleet-rider-field select { width: 100%; border: 1px solid var(--ag-line); border-radius: 9px; background: var(--ag-paper); color: var(--ag-ink); padding: 0 12px; }
 .fleet-trip { display: flex; flex-direction: column; gap: 12px; }
+.trip-contact { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.trip-contact .ag-btn { min-width: 0; }
 .fleet-trip .ag-btn--primary { background: var(--ag-pulse); color: #fff; }
 .fleet-choice { text-align: left; }
 @media (max-width: 360px) {

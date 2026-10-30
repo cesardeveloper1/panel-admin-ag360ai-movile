@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { orderService } from '../../services/orderService';
-import { isWithinFleetHours } from './fleetHours';
+import { isWithinFleetHours, parseFleetClock } from './fleetHours';
 
 export function useFleetSchedule(enabled: boolean) {
   const [windowHours, setWindowHours] = useState<{ startTime: string | null; endTime: string | null } | null>(null);
@@ -26,5 +26,10 @@ export function useFleetSchedule(enabled: boolean) {
 
   void tick;
   const withinHours = !windowHours || isWithinFleetHours(windowHours.startTime, windowHours.endTime);
-  return { withinHours };
+  const start = parseFleetClock(windowHours?.startTime);
+  const end = parseFleetClock(windowHours?.endTime);
+  const shift: 'on' | 'off' | null = windowHours && start != null && end != null && start !== end
+    ? (isWithinFleetHours(windowHours.startTime, windowHours.endTime) ? 'on' : 'off')
+    : null;
+  return { withinHours, shift };
 }

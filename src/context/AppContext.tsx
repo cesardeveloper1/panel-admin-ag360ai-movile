@@ -14,7 +14,7 @@ import { clearChatInboxCache } from '../services/chatInboxState';
 import { nextNavigationIntent } from '../navigation/navigationIntent';
 import { clearOperationsViews } from '../navigation/operationsViewState';
 import { clearChatNavFrom } from '../navigation/chatNavFrom';
-import { isFleetPhoneRole } from '../navigation/motorizedScreens';
+import { isFleetPhoneRole, isRiderRole } from '../navigation/motorizedScreens';
 import { AppContext } from './appContextInstance';
 import { onSessionExpired } from '../utils/authSession';
 import { paymentNotificationCapture } from '../native/paymentNotificationCapture';
@@ -324,7 +324,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setOrdersHasMore(false);
     }
     try {
-      const result = await apiFacade.getMotorizedOrdersPage({ ...resolved, page: 1 });
+      const rider = isRiderRole(sessionRef.current?.role);
+      const result = await apiFacade.getMotorizedOrdersPage(rider
+        ? { dateMode: 'all', limit: resolved.limit ?? 150, page: 1 }
+        : { ...resolved, page: 1 });
       if (requestId !== ordersRequestId.current) return;
       ordersPage.current = 1;
       setOrders(result.data);

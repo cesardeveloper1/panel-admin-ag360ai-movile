@@ -7,29 +7,50 @@ import { useApp } from '../../hooks/useApp';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import { PROFILE_PATH } from '../../navigation/appRouteRegistry';
 import { orderService } from '../../services/orderService';
+import { sessionDisplayName } from '../../utils/sessionDisplayName';
 import type { Order } from '../../types';
-import { navigationHref, riderScreen } from './fleetTrip';
+import { navigationHref, riderScreen, type RiderTripPhase } from './fleetTrip';
 import { useFleetSchedule } from './useFleetSchedule';
 
-const ACTIVE_KEY = 'fleet-active-trip';
+const PHASE_TITLE: Record<RiderTripPhase | 'empty', string> = {
+  empty: 'rider.phaseEmpty',
+  waiting: 'rider.phaseWaiting',
+  kitchen: 'rider.phaseKitchen',
+  route: 'rider.phaseRoute',
+};
+
+function tripWhen(value: string | undefined, language: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(language, {
+    timeZone: 'America/Lima',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function whatsappHref(phone: string): string {
+  return `https://wa.me/${phone.replace(/\D/g, '')}`;
+}
 
 export function RiderTripPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { go } = useAppNavigation();
   const { orders, ordersError, loading, refreshOrders, setRiderOrderStatus, session } = useApp();
-  const [selectedId, setSelectedId] = useState<string | null>(() => sessionStorage.getItem(ACTIVE_KEY));
   const [detail, setDetail] = useState<Order | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
-  const screen = riderScreen(orders, selectedId);
-  const trip = screen.kind === 'trip' ? { ...screen.order, ...detail, id: screen.order.id, status: screen.order.status } : null;
-  const { withinHours } = useFleetSchedule(session?.role === 'rider');
-
-  useEffect(() => {
-    if (screen.kind === 'trip') sessionStorage.setItem(ACTIVE_KEY, screen.order.id);
-    else sessionStorage.removeItem(ACTIVE_KEY);
-  }, [screen]);
+  const screen = riderScreen(orders);
+  const phase: RiderTripPhase | 'empty' = screen.kind === 'trip' ? screen.phase : 'empty';
+  const trip = screen.kind === 'trip'
+    ? { ...screen.order, ...detail, id: screen.order.id, status: screen.order.status }
+    : null;
+  const { withinHours, shift } = useFleetSchedule(session?.role === 'rider');
+  const when = tripWhen(trip?.scheduledAt, i18n.language);
+  const maps = trip ? navigationHref(trip) : null;
 
   useEffect(() => {
     if (screen.kind !== 'trip') {
@@ -68,20 +89,7 @@ export function RiderTripPage() {
     const result = await setRiderOrderStatus(trip.id, status);
     setPending(false);
     if (!result.ok) setError(t('rider.statusFailed'));
-    else if (status === 'delivered') setSelectedId(null);
   };
-
-  const copyLink = async () => {
-    if (!trip?.sharingLink) return;
-    try {
-      await navigator.clipboard.writeText(trip.sharingLink);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  const maps = trip ? navigationHref(trip) : null;
 
   return (
     <IonPage data-ag-route="/app/trip">
@@ -89,7 +97,7 @@ export function RiderTripPage() {
         <AppShell hideNav>
           <div className="fleet-screen trip-screen">
             <AppHeader
-              title={t('rider.title')}
+              title={t(PHASE_TITLE[phase])}
               showAlerts={false}
               action={{ label: t('nav.profile'), onClick: () => go(PROFILE_PATH), iconOnly: false }}
             />
@@ -101,39 +109,46 @@ export function RiderTripPage() {
                 </div>
               ) : loading && orders.length === 0 ? (
                 <p role="status">{t('ops.filters.loadingMessages')}</p>
-              ) : screen.kind === 'list' ? (
-                screen.orders.length === 0 ? <p>{t('rider.empty')}</p> : screen.orders.map((order) => (
-                  <button key={order.id} type="button" className="ops-connection motorized-card fleet-choice" onClick={() => setSelectedId(order.id)}>
-                    <strong>{order.orderNumber ? `#${order.orderNumber}` : order.customerName}</strong>
-                    <p>{order.branchName || order.address || t('rider.localUnknown')}</p>
-                  </button>
-                ))
-              ) : trip ? (
+              ) : !trip ? (
                 <article className="fleet-trip">
+                  <h2>{sessionDisplayName(session, t)}</h2>
+                  {shift === 'on' ? <p>{t('rider.onShift')}</p> : null}
+                  {shift === 'off' ? <p>{t('rider.offHours')}</p> : null}
+                  <p>{t('rider.empty')}</p>
+                </article>
+              ) : phase === 'route' ? (
+                <article className="fleet-trip">
+                  <h2>{trip.customerName || t('rider.customerUnknown')}</h2>
+                  {trip.orderNumber ? <p>#{trip.orderNumber}</p> : null}
+                  <p>{trip.address || t('rider.addressUnknown')}</p>
+                  {trip.addressReference ? <p>{trip.addressReference}</p> : null}
+                  {trip.paymentMethod === 'cash' ? <p>{t('rider.collect', { amount: trip.total })}</p> : null}
+                  {trip.phone ? (
+                    <div className="trip-contact">
+                      <a className="ag-btn" href={`tel:${trip.phone}`}>{t('rider.call')}</a>
+                      <a className="ag-btn" href={whatsappHref(trip.phone)} target="_blank" rel="noreferrer">{t('rider.whatsapp')}</a>
+                    </div>
+                  ) : null}
+                  {maps ? <a className="ag-btn" href={maps}>{t('rider.navigate')}</a> : null}
+                  <button type="button" className="ag-btn ag-btn--primary" disabled={pending} onClick={() => void move('delivered')}>
+                    {t('rider.delivered')}
+                  </button>
+                </article>
+              ) : (
+                <article className="fleet-trip">
+                  {trip.orderNumber ? <p>#{trip.orderNumber}</p> : null}
+                  {when ? <p>{when}</p> : null}
                   <h2>{trip.branchName || t('rider.localUnknown')}</h2>
                   <p>{trip.address || t('rider.addressUnknown')}</p>
                   {trip.addressReference ? <p>{trip.addressReference}</p> : null}
-                  {trip.phone ? <a href={`tel:${trip.phone}`}>{trip.phone}</a> : null}
-                  {trip.items.length > 0 ? (
-                    <ul>{trip.items.map((item, index) => <li key={`${item.name ?? item.nameKey}-${index}`}>{item.qty} × {item.name || t(item.nameKey)}</li>)}</ul>
-                  ) : null}
-                  {trip.paymentMethod === 'cash' ? <p>{t('rider.collect', { amount: trip.total })}</p> : null}
-                  {maps ? <a className="ag-btn" href={maps}>{t('rider.navigate')}</a> : null}
-                  {trip.sharingLink ? (
-                    <button type="button" className="ag-btn" onClick={() => void copyLink()}>
-                      {copied ? t('rider.copied') : t('rider.copyLink')}
+                  {phase === 'kitchen' && maps ? <a className="ag-btn" href={maps}>{t('rider.navigate')}</a> : null}
+                  {phase === 'kitchen' ? (
+                    <button type="button" className="ag-btn ag-btn--primary" disabled={pending} onClick={() => void move('on_the_way')}>
+                      {t('rider.arrived')}
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    className="ag-btn ag-btn--primary"
-                    disabled={pending}
-                    onClick={() => void move(trip.status === 'on_the_way' ? 'delivered' : 'on_the_way')}
-                  >
-                    {t(trip.status === 'on_the_way' ? 'rider.delivered' : 'rider.arrived')}
-                  </button>
                 </article>
-              ) : null}
+              )}
               {error ? <p role="alert">{error}</p> : null}
             </div>
           </div>

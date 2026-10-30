@@ -50,12 +50,15 @@ it('traduce la presencia del repartidor', () => {
   expect(riderPresenceKey(null)).toBe('away');
 });
 
-it('abre el viaje en camino y, si no hay, el que el repartidor eligió', () => {
-  const kitchen = [order({ id: 'a' }), order({ id: 'b' })];
-  expect(riderScreen(kitchen, null).kind).toBe('list');
-  expect(riderScreen(kitchen, 'b')).toMatchObject({ kind: 'trip', order: { id: 'b' } });
-  expect(riderScreen([...kitchen, order({ id: 'c', status: 'on_the_way' })], 'b'))
-    .toMatchObject({ kind: 'trip', order: { id: 'c' } });
+it('elige un viaje: en camino, si no hay cocina, si no hay el asignado en espera', () => {
+  const waiting = order({ id: 'wait', status: 'pre_order', riderId: 'rider', scheduledAt: '2026-10-30T17:00:00.000Z' });
+  expect(riderScreen([])).toEqual({ kind: 'empty' });
+  expect(riderScreen([waiting])).toMatchObject({ kind: 'trip', phase: 'waiting', order: { id: 'wait' } });
+  expect(riderScreen([waiting, order({ id: 'kitchen' })]))
+    .toMatchObject({ kind: 'trip', phase: 'kitchen', order: { id: 'kitchen' } });
+  expect(riderScreen([waiting, order({ id: 'kitchen' }), order({ id: 'route', status: 'on_the_way' })]))
+    .toMatchObject({ kind: 'trip', phase: 'route', order: { id: 'route' } });
+  expect(riderScreen([order({ id: 'other', status: 'pre_order' })])).toEqual({ kind: 'empty' });
 });
 
 it('arma la navegación con coordenadas y, si faltan, con la dirección', () => {

@@ -25,6 +25,7 @@ import {
   PARTNER_GROUPS_PATH,
   PARTNER_RIDERS_PATH,
   PARTNER_ZONES_PATH,
+  TRIP_PATH,
 } from './motorizedScreens';
 
 export {
@@ -101,6 +102,10 @@ export const mobileNavItems: NavItem[] = [
   ...ownerNavLeft,
   chatsNavItem,
   ownerNavRight[1],
+];
+
+export const riderNavItems: NavItem[] = [
+  { path: TRIP_PATH, icon: bicycleOutline, labelKey: 'rider.title' },
 ];
 
 export const motorizedNavItems: NavItem[] = [

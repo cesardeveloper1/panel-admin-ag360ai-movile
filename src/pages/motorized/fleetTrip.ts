@@ -29,14 +29,21 @@ export function riderPresenceKey(presence?: string | null): 'onTrip' | 'onShift'
   return 'away';
 }
 
-export function riderScreen(orders: Order[], selectedId: string | null):
-  | { kind: 'trip'; order: Order }
-  | { kind: 'list'; orders: Order[] } {
+export type RiderTripPhase = 'route' | 'kitchen' | 'waiting';
+
+const WAITING_STATUSES = new Set<Order['status']>(['pre_order', 'accepted']);
+
+/** Un solo viaje: en camino, si no hay en cocina, si no hay el programado o aceptado ya asignado. */
+export function riderScreen(orders: Order[]):
+  | { kind: 'trip'; phase: RiderTripPhase; order: Order }
+  | { kind: 'empty' } {
   const onRoute = orders.find((order) => order.status === 'on_the_way');
-  if (onRoute) return { kind: 'trip', order: onRoute };
-  const selected = orders.find((order) => order.id === selectedId && order.status === 'in_kitchen');
-  if (selected) return { kind: 'trip', order: selected };
-  return { kind: 'list', orders: orders.filter((order) => order.status === 'in_kitchen') };
+  if (onRoute) return { kind: 'trip', phase: 'route', order: onRoute };
+  const kitchen = orders.find((order) => order.status === 'in_kitchen');
+  if (kitchen) return { kind: 'trip', phase: 'kitchen', order: kitchen };
+  const waiting = orders.find((order) => WAITING_STATUSES.has(order.status) && Boolean(order.riderId));
+  if (waiting) return { kind: 'trip', phase: 'waiting', order: waiting };
+  return { kind: 'empty' };
 }
 
 export function navigationHref(order: Pick<Order, 'latitude' | 'longitude' | 'address'>): string | null {

@@ -1,6 +1,6 @@
 # PRP: Viaje móvil del repartidor
 
-Fecha: 2026-10-30. Estado: borrador. Patrón B. Sigue a [Viaje del repartidor](prp-flota--repartidor.md). El despacho del compañero motorizado está en [prp-flota--despacho-movil.md](prp-flota--despacho-movil.md).
+Fecha: 2026-10-30. Estado: implementado en local. Patrón B. Sigue a [Viaje del repartidor](prp-flota--repartidor.md). El despacho del compañero motorizado está en [prp-flota--despacho-movil.md](prp-flota--despacho-movil.md).
 
 ## 1. Visión
 
