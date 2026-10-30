@@ -97,7 +97,13 @@ export const authService = {
   },
 
   restoreSession: async (): Promise<UserSession | null> => {
-    const refreshResponse = await api.post('/auth/refresh');
+    const refreshResponse = await api.post('/auth/refresh').catch((error: unknown) => {
+      // The HttpOnly cookie cannot be inspected by the client. On startup a
+      // 401 simply means there is no session to restore, including on /login.
+      if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 401) return null;
+      throw error;
+    });
+    if (!refreshResponse) return null;
     const refreshData = unwrapLoginData(refreshResponse);
     const accessToken = refreshData?.accessToken ?? (() => {
       if (!refreshResponse || typeof refreshResponse !== 'object') return null;

@@ -1,4 +1,8 @@
 {
+  "quickMessages": {
+    "search": "Search shortcut or message…",
+    "noMatches": "No messages match your search"
+  },
   "app": {
     "name": "Agiliza360",
     "loading": "Loading..."
@@ -26,6 +30,11 @@
     "deleteAccount": "Delete account and data"
   },
   "welcome": {
+    "staffSubtitle": "Your workspace based on your account access.",
+    "loadError": "We couldn't load your brands",
+    "loadErrorHint": "Check your connection and try again.",
+    "retry": "Try again",
+    "noBrands": "You don't have any available brands on this account yet.",
     "title": "Choose your brand",
     "question": "What will you run today?",
     "description": "Select a brand to see orders, reports and live menu.",
@@ -131,7 +140,32 @@
     "modeAria": "Operations view",
     "mode": {
       "funnel": "Funnel",
-      "orders": "Orders"
+      "orders": "Orders",
+      "reservations": "Reservations"
+    },
+    "reservations": {
+      "search": "Search reservation or customer",
+      "focusAria": "Reservation status",
+      "queueAria": "Made reservations",
+      "week": "Week of {{from}} to {{to}}",
+      "empty": "No reservations in these dates.",
+      "filterStatus": "Reservation status",
+      "filterDate": "Reservation date",
+      "range": "{{from}} to {{to}}",
+      "dates": {
+        "week": "This week",
+        "today": "Today",
+        "day": "Day",
+        "range": "Range"
+      },
+      "party_one": "{{count}} person",
+      "party_other": "{{count}} people",
+      "statusAll": "All",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled"
+      }
     },
     "funnel": {
       "search": "Search contact or message",
@@ -154,7 +188,10 @@
           "name": "Name",
           "cart": "Cart",
           "delivery": "Fulfillment",
-          "payment": "Payment method"
+          "payment": "Payment method",
+          "party": "Party size",
+          "schedule": "Date and time",
+          "zone": "Zone"
         },
         "states": {
           "received": "Received",
@@ -463,6 +500,9 @@
     "deleteAccountHint": "Request it by email. The app does not delete the account by itself"
   },
   "menu": {
+    "loadError": "We could not load the catalog",
+    "noProducts": "No products yet. Add your first one with the + button.",
+    "availability": "Availability of {{name}}",
     "title": "Products",
     "subtitle": "Menu manager",
     "search": "Search product...",
@@ -477,7 +517,9 @@
       "price": "Base price (S/)",
       "publish": "Publish on menu",
       "publishHint": "Available to your customers after saving",
-      "submit": "Create product"
+      "submit": "Create product",
+      "noCategories": "Create a category in the menu manager before adding products.",
+      "saving": "Creating product…"
     },
     "soldOut": "Sold out",
     "empty": "No products match this filter",
@@ -524,6 +566,7 @@
     }
   },
   "locationsPage": {
+    "saving": "Saving location…",
     "title": "My locations",
     "subtitle": "Location management",
     "intro": "Manage your restaurant branches",
@@ -578,6 +621,7 @@
     "saving": "Saving..."
   },
   "onboarding": {
+    "progress": "Step {{current}} of {{total}}",
     "title": "Getting started",
     "welcomeTitle": "Ready to run {{brand}}",
     "welcomeBody": "Manage orders, kitchen and live reports from here.",
@@ -591,12 +635,12 @@
     "back": "Back",
     "next": "Next",
     "skip": "Skip",
-    "start": "Go to operations",
+    "start": "Open Agilito",
     "businessHint": "Menu, clients, branches and brand from Business.",
     "agentTitle": "Agilito agent",
     "agentHint": "Off by default. Turn on when you want automated replies.",
     "paymentsHint": "Menu, marketing, locations and brand.",
-    "agilitoHint": "Central chat in the bottom bar for queries and actions."
+    "agilitoHint": "Ask questions and access your business tools from Agilito."
   },
   "orderDetail": {
     "title": "Order {{id}}",
@@ -760,9 +804,17 @@
     "activeOrders": "Active orders",
     "unreadAlerts": "Alerts",
     "locations": "Locations",
+    "unreadCount_one": "{{count}} unread message",
     "unreadCount": "{{count}} unread"
   },
   "chats": {
+    "loading": "Loading conversations…",
+    "retry": "Try again",
+    "refreshError": "Chats could not be updated. Showing the last available list.",
+    "noMatches": "No matching contact",
+    "searchHint": "Try another name or phone number.",
+    "emptyHint": "Your conversations will appear here when you receive messages.",
+    "unreadCount": "{{count}} unread messages",
     "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
     "search": "Search contact",
@@ -925,6 +977,10 @@
     "noBrand": "Your account has no assigned brand."
   },
   "motorized": {
+    "loadedDeliveries": "Loaded deliveries",
+    "branchCount_one": "{{count}} location",
+    "allBranches": "All locations",
+    "groupScopeHint": "With no locations selected, this group receives notifications for all locations.",
     "deliveries": "Deliveries",
     "inKitchen": "In kitchen",
     "onRoute": "On route",
@@ -966,11 +1022,37 @@
     "chooseRider": "Choose rider",
     "noRiders": "There are no riders yet",
     "ridersError": "The rider list could not be loaded",
-    "assignFailed": "The rider could not be assigned"
+    "assignFailed": "The rider could not be assigned",
+    "dispatch": "Dispatch",
+    "riders": "Riders",
+    "assigned": "Assigned",
+    "onTheWay": "On the way",
+    "queueClear": "Nothing in the kitchen or on the way.",
+    "emptyAssigned": "Nothing assigned in the kitchen.",
+    "emptyOnTheWay": "Nothing on the way.",
+    "emptyDelivered": "No delivered orders.",
+    "presenceOnTrip": "On a trip",
+    "presenceOnShift": "On shift",
+    "presenceOffHours": "Off hours",
+    "presenceAway": "Not tracking",
+    "groupFallback": "Group",
+    "groupInactive": "Inactive",
+    "branchCount": "{{count}} branches",
+    "hours": "Hours",
+    "noHours": "No hours"
   },
   "rider": {
     "title": "Trip",
-    "empty": "You have no orders in the kitchen.",
+    "phaseEmpty": "No trip",
+    "phaseWaiting": "Scheduled",
+    "phaseKitchen": "At the store",
+    "phaseRoute": "On the way",
+    "empty": "You have no assigned trip",
+    "onShift": "On shift",
+    "offHours": "Off hours",
+    "customerUnknown": "Customer",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
     "localUnknown": "Store",
     "addressUnknown": "No address",
     "collect": "Collect {{amount}}",
@@ -978,6 +1060,7 @@
     "copyLink": "Copy tracking link",
     "copied": "Link copied",
     "pickedUp": "Picked up",
+    "arrived": "I arrived at the store",
     "delivered": "Delivered",
     "statusFailed": "The trip could not be updated."
   },

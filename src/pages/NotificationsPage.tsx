@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { checkmarkDoneOutline } from 'ionicons/icons';
+import { IonIcon } from '@ionic/react';
+import { notificationsOutline, checkmarkDoneOutline } from 'ionicons/icons';
 import { StackLayout } from '../components/layouts';
 import { NotificationCard } from '../components/NotificationCard';
 import { useApp } from '../hooks/useApp';
@@ -26,7 +27,7 @@ const NotificationsPage: React.FC = () => {
       }
     >
       {notifications.length === 0 ? (
-        <div className="module-empty">{t('notifications.empty')}</div>
+        <div className="notifications-empty" role="status"><IonIcon icon={notificationsOutline} aria-hidden="true" /><p>{t('notifications.empty')}</p></div>
       ) : (
         <ul className="notification-list">
           {notifications.map((item) => (

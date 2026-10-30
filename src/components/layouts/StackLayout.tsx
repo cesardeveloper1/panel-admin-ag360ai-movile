@@ -28,6 +28,7 @@ export interface StackLayoutProps {
   showAlerts?: boolean;
   /** Si false, oculta la flecha de atrás (p. ej. Configuración). Default true. */
   showBack?: boolean;
+  onBack?: () => void;
   profileFromAvatar?: boolean;
   search?: HeaderSearch;
   action?: HeaderAction;
@@ -48,6 +49,7 @@ export function StackLayout({
   title,
   showAlerts = true,
   showBack = true,
+  onBack: onBackOverride,
   profileFromAvatar,
   search,
   action,
@@ -58,7 +60,7 @@ export function StackLayout({
   bodyClassName = 'ag-body module-body ag-page-stack',
   pageExtras,
 }: StackLayoutProps) {
-  const { onBack } = useModuleNav();
+  const { onBack: moduleBack } = useModuleNav();
   const { back } = useAppNavigation();
   const routePath = useRef(
     normalizePath(typeof window !== 'undefined' ? window.location.pathname : ''),
@@ -70,7 +72,7 @@ export function StackLayout({
   const alertsVisible = isBusinessModule ? false : showAlerts;
 
   /** Alertas: pop al origen real (sin forzar hub Agilito/Pagos). */
-  const handleBack = isNotifications ? () => back() : onBack;
+  const handleBack = onBackOverride ?? (isNotifications ? () => back() : moduleBack);
 
   return (
     <IonPage data-ag-route={routePath}>

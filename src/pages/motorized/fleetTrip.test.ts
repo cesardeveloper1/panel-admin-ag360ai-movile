@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { navigationHref, riderScreen, unassignedDispatchOrders } from './fleetTrip';
+import { dispatchBoard, navigationHref, riderPresenceKey, riderScreen, unassignedDispatchOrders } from './fleetTrip';
 import type { Order } from '../../types';
 
 const order = (patch: Partial<Order>): Order => ({
@@ -15,23 +15,50 @@ const order = (patch: Partial<Order>): Order => ({
   ...patch,
 });
 
-it('deja en la cola solo lo que todavía no tiene repartidor', () => {
+it('deja en la cola solo lo que está en cocina y no tiene repartidor', () => {
   const rows = unassignedDispatchOrders([
     order({ id: 'a' }),
     order({ id: 'b', riderId: 'rider' }),
     order({ id: 'c', status: 'delivered' }),
     order({ id: 'd', status: 'on_the_way' }),
     order({ id: 'e', status: 'cancelled' }),
+    order({ id: 'f', status: 'accepted' }),
   ]);
   expect(rows.map((item) => item.id)).toEqual(['a']);
 });
 
-it('abre el viaje en camino y, si no hay, el que el repartidor eligió', () => {
-  const kitchen = [order({ id: 'a' }), order({ id: 'b' })];
-  expect(riderScreen(kitchen, null).kind).toBe('list');
-  expect(riderScreen(kitchen, 'b')).toMatchObject({ kind: 'trip', order: { id: 'b' } });
-  expect(riderScreen([...kitchen, order({ id: 'c', status: 'on_the_way' })], 'b'))
-    .toMatchObject({ kind: 'trip', order: { id: 'c' } });
+it('separa por asignar, asignadas, en camino y entregados', () => {
+  const board = dispatchBoard([
+    order({ id: 'a' }),
+    order({ id: 'b', riderId: 'rider' }),
+    order({ id: 'c', status: 'on_the_way', riderId: 'rider' }),
+    order({ id: 'd', status: 'delivered' }),
+    order({ id: 'e', status: 'accepted' }),
+    order({ id: 'f', status: 'scheduled' }),
+  ]);
+  expect(board.unassigned.map((item) => item.id)).toEqual(['a']);
+  expect(board.assigned.map((item) => item.id)).toEqual(['b']);
+  expect(board.onTheWay.map((item) => item.id)).toEqual(['c']);
+  expect(board.delivered.map((item) => item.id)).toEqual(['d']);
+});
+
+it('traduce la presencia del repartidor', () => {
+  expect(riderPresenceKey('tracking')).toBe('onTrip');
+  expect(riderPresenceKey('online')).toBe('onShift');
+  expect(riderPresenceKey('off_hours')).toBe('offHours');
+  expect(riderPresenceKey('logged_out')).toBe('away');
+  expect(riderPresenceKey(null)).toBe('away');
+});
+
+it('elige un viaje: en camino, si no hay cocina, si no hay el asignado en espera', () => {
+  const waiting = order({ id: 'wait', status: 'pre_order', riderId: 'rider', scheduledAt: '2026-10-30T17:00:00.000Z' });
+  expect(riderScreen([])).toEqual({ kind: 'empty' });
+  expect(riderScreen([waiting])).toMatchObject({ kind: 'trip', phase: 'waiting', order: { id: 'wait' } });
+  expect(riderScreen([waiting, order({ id: 'kitchen' })]))
+    .toMatchObject({ kind: 'trip', phase: 'kitchen', order: { id: 'kitchen' } });
+  expect(riderScreen([waiting, order({ id: 'kitchen' }), order({ id: 'route', status: 'on_the_way' })]))
+    .toMatchObject({ kind: 'trip', phase: 'route', order: { id: 'route' } });
+  expect(riderScreen([order({ id: 'other', status: 'pre_order' })])).toEqual({ kind: 'empty' });
 });
 
 it('arma la navegación con coordenadas y, si faltan, con la dirección', () => {

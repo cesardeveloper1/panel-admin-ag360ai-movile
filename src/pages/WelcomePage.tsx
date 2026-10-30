@@ -21,13 +21,18 @@ import { apiFacade } from '../services/apiFacade';
 import type { Brand } from '../types';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
+import { useLocation } from 'react-router-dom';
+import { LOGO_WORDMARK_COLOR_LOCAL, LOGO_WHITE_LOCAL } from '../constants/assets';
 
 const WelcomePage: React.FC = () => {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const onWelcome = pathname === '/welcome';
   const { goRoot, go, replace } = useAppNavigation();
   const { session, authRestoring, brand, clearBrand, selectBrandAndLoad, brandLoading, showToast, authEpoch, logout } = useApp();
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectingId, setSelectingId] = useState<string | null>(null);
   const [newBrandOpen, setNewBrandOpen] = useState(false);
   const [creatingBrand, setCreatingBrand] = useState(false);
@@ -39,16 +44,16 @@ const WelcomePage: React.FC = () => {
     && Boolean(localStorage.getItem(BRAND_KEY))
     && (typeof sessionStorage === 'undefined' || sessionStorage.getItem(PICK_BRAND_KEY) !== '1');
   useLayoutEffect(() => {
-    if (!fleetPhone) return;
+    if (!onWelcome || !fleetPhone) return;
     const landing = navigationLandingPath(session);
     if (isTabRootPath(landing)) goRoot(landing, 'replace', true);
     else replace(landing);
-  }, [fleetPhone, session, goRoot, replace]);
+  }, [onWelcome, fleetPhone, session, goRoot, replace]);
   useLayoutEffect(() => {
-    if (session?.role !== 'superadmin' || resumeSavedBrand) return;
+    if (!onWelcome || session?.role !== 'superadmin' || resumeSavedBrand) return;
     sessionStorage.removeItem(PICK_BRAND_KEY);
     goRoot(PLATFORM_PATH, 'replace', true);
-  }, [session?.role, resumeSavedBrand, goRoot]);
+  }, [onWelcome, session?.role, resumeSavedBrand, goRoot]);
   const [awaitingAutoPick, setAwaitingAutoPick] = useState(() => {
     if (isStaffRole(session?.role)) return true;
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(PICK_BRAND_KEY) === '1') {
@@ -73,11 +78,14 @@ const WelcomePage: React.FC = () => {
   });
 
   const reloadBrands = useCallback(async () => {
+    setLoadError(false);
     try {
       const data = await apiFacade.getBrands();
       setBrands(data);
       return data;
     } catch {
+      setLoadError(true);
+      setAwaitingAutoPick(false);
       showToast('toast.brandsLoadError');
       setBrands([]);
       return [] as Brand[];
@@ -96,7 +104,7 @@ const WelcomePage: React.FC = () => {
   }, [session?.email, authEpoch]);
 
   useEffect(() => {
-    if (authRestoring) return;
+    if (!onWelcome || authRestoring || fleetPhone) return;
     if (!session) {
       goRoot('/login');
       return;
@@ -110,7 +118,7 @@ const WelcomePage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [session, authRestoring, authEpoch, goRoot, reloadBrands]);
+  }, [onWelcome, fleetPhone, session, authRestoring, authEpoch, goRoot, reloadBrands]);
 
   const handleSelect = useCallback(
     async (selected: Brand) => {
@@ -138,7 +146,7 @@ const WelcomePage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (loading) return;
+    if (!onWelcome || fleetPhone || loading) return;
     if (staff) {
       if (brands.length === 0) {
         setAwaitingAutoPick(false);
@@ -175,7 +183,7 @@ const WelcomePage: React.FC = () => {
     setAwaitingAutoPick(true);
     autoStartedRef.current = true;
     void handleSelect(savedBrand);
-  }, [loading, brands, brandLoading, handleSelect, staff, session?.role, goRoot]);
+  }, [onWelcome, fleetPhone, loading, brands, brandLoading, handleSelect, staff, session?.role, goRoot]);
 
   const handleCreateBrand = async (values: { name: string; subdomain: string }) => {
     if (!apiFacade.useMock) {
@@ -230,46 +238,67 @@ const WelcomePage: React.FC = () => {
               <div className="welcome-loading">
                 <IonSpinner name="crescent" />
                 <p>
-                  {t('welcome.loadingBrand', {
-                    brand: activeBrand
-                      ? brandLabel(activeBrand, t)
-                      : brandLabel(brands[0], t) || t('brands.pacifico'),
-                  })}
+                  {activeBrand || brands[0] ? t('welcome.loadingBrand', {
+                    brand: brandLabel(activeBrand ?? brands[0], t),
+                  }) : t('app.loading')}
                 </p>
               </div>
             ) : (
               <>
                 <header className="welcome-hero">
-                  <h1 className="welcome-greeting">
-                    {t('welcome.hello', { name: userName })}
-                  </h1>
-                  <p className="welcome-subtitle">{t('welcome.subtitle')}</p>
-
+                  <div className="welcome-toolbar">
+                  <img className="welcome-logo welcome-logo--light" src={LOGO_WORDMARK_COLOR_LOCAL} alt={t('app.name')} />
+                  <img className="welcome-logo welcome-logo--dark" src={LOGO_WHITE_LOCAL} alt={t('app.name')} />
                   <div className="welcome-actions">
                     <button
                       type="button"
                       className="welcome-action-btn"
+                      aria-label={t('nav.profile')}
+                      title={t('nav.profile')}
                       onClick={() => go(PROFILE_PATH)}
                     >
                       <IonIcon icon={personOutline} aria-hidden="true" />
-                      {t('nav.profile')}
                     </button>
                     <button
                       type="button"
                       className="welcome-action-btn welcome-action-btn--logout"
+                      aria-label={t('auth.logout')}
+                      title={t('auth.logout')}
                       onClick={handleLogout}
                     >
                       <IonIcon icon={logOutOutline} aria-hidden="true" />
-                      {t('auth.logout')}
                     </button>
                   </div>
+                  </div>
+                  <h1 className="welcome-greeting">
+                    {t('welcome.hello', { name: userName })}
+                  </h1>
+                  <p className="welcome-subtitle">{staff ? t('welcome.staffSubtitle') : t('welcome.subtitle')}</p>
                 </header>
 
                 {loading ? (
-                  <div className="welcome-loading welcome-loading--inline">
+                  <div className="welcome-loading welcome-loading--inline" role="status" aria-label={t('app.loading')}>
                     <IonSpinner name="crescent" />
                   </div>
+                ) : loadError ? (
+                  <div className="welcome-feedback" role="alert">
+                    <IonIcon icon={storefrontOutline} aria-hidden="true" />
+                    <h2>{t('welcome.loadError')}</h2>
+                    <p>{t('welcome.loadErrorHint')}</p>
+                    <button type="button" className="ag-btn" onClick={() => {
+                      setLoading(true);
+                      void reloadBrands().finally(() => setLoading(false));
+                    }}>{t('welcome.retry')}</button>
+                  </div>
                 ) : (
+                  <>
+                  <h2 className="welcome-section-title">{t('welcome.title')}</h2>
+                  {brands.length === 0 ? (
+                    <div className="welcome-feedback" role="status">
+                      <IonIcon icon={storefrontOutline} aria-hidden="true" />
+                      <p>{t(staff ? 'staff.noBrand' : 'welcome.noBrands')}</p>
+                    </div>
+                  ) : null}
                   <div className="brand-grid brand-grid--welcome">
                     {brands.map((item) => {
                       const name = brandLabel(item, t);
@@ -305,9 +334,7 @@ const WelcomePage: React.FC = () => {
                       );
                     })}
 
-                    {staff ? (
-                      brands.length === 0 ? <p>{t('staff.noBrand')}</p> : null
-                    ) : (
+                    {!staff ? (
                     <button
                       type="button"
                       className="brand-card brand-card--create"
@@ -318,8 +345,9 @@ const WelcomePage: React.FC = () => {
                       <strong>{t('welcome.createBrand')}</strong>
                       <small>{t('welcome.createBrandHint')}</small>
                     </button>
-                    )}
+                    ) : null}
                   </div>
+                  </>
                 )}
               </>
             )}

@@ -998,6 +998,21 @@ export const apiMock = {
     return structuredClone(brand);
   },
 
+  async getReservations(query: { search?: string; status?: string; page?: number }) {
+    await delay(160);
+    const rows = [
+      { id: 'mock-res-1', reservationNumber: 18, customerName: 'Lucía Demo', phone: '+51999888777', partySize: 4, reservationDate: '2026-10-31', reservationTime: '20:00', status: 'confirmed' as const, zoneName: 'Terraza' },
+      { id: 'mock-res-2', reservationNumber: 19, customerName: 'Carlos Demo', phone: '+51912345678', partySize: 2, reservationDate: '2026-11-01', reservationTime: '13:30', status: 'pending' as const },
+    ].filter(row => !query.status || row.status === query.status)
+      .filter(row => {
+        const search = query.search?.trim().toLowerCase();
+        if (!search) return true;
+        return `${row.customerName} ${row.phone} ${row.reservationNumber}`.toLowerCase().includes(search);
+      });
+    const page = query.page ?? 1;
+    return { data: page === 1 ? rows : [], page, hasMore: false, total: rows.length };
+  },
+
   resetDemo() {
     saveOrders(structuredClone(initialOrders));
     saveProducts(structuredClone(initialProducts));

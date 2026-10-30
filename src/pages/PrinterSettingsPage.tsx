@@ -194,7 +194,7 @@ const PrinterSettingsPage: React.FC = () => {
   if (loading) {
     return (
       <StackLayout title={t('printing.title')} showAlerts={false}>
-        <div className="printing-loading"><IonSpinner name="crescent" /></div>
+        <div className="printing-loading" role="status" aria-label={t('app.loading')}><IonSpinner name="crescent" /></div>
       </StackLayout>
     );
   }
@@ -202,8 +202,8 @@ const PrinterSettingsPage: React.FC = () => {
   if (!capabilities?.available) {
     return (
       <StackLayout title={t('printing.title')} showAlerts={false}>
-        <section className="printing-empty ag-enter">
-          <span className="printing-empty__icon"><IonIcon icon={printOutline} /></span>
+        <section className="printing-empty ag-enter" role="status">
+          <span className="printing-empty__icon"><IonIcon icon={printOutline} aria-hidden="true" /></span>
           <h2>{t('printing.nativeOnlyTitle')}</h2>
           <p>{t('printing.nativeOnlyBody')}</p>
         </section>
@@ -215,7 +215,7 @@ const PrinterSettingsPage: React.FC = () => {
     <StackLayout title={t('printing.title')} showAlerts={false} bodyClassName="ag-body module-body ag-page-stack printing-page">
       <section className="printing-status-card ag-enter">
         <span className={`printing-status-card__icon ${config.enabled ? 'is-on' : ''}`}>
-          <IonIcon icon={config.enabled ? checkmarkCircleOutline : warningOutline} />
+          <IonIcon icon={config.enabled ? checkmarkCircleOutline : warningOutline} aria-hidden="true" />
         </span>
         <span><strong>{t(config.enabled ? 'printing.active' : 'printing.paused')}</strong><small>{t('printing.statusHint')}</small></span>
         <IonToggle checked={config.enabled} onIonChange={(event) => void toggleEnabled(event.detail.checked)} aria-label={t('printing.autoPrint')} />
@@ -236,13 +236,13 @@ const PrinterSettingsPage: React.FC = () => {
 
         <div className="printing-transport" role="group" aria-label={t('printing.transport')}>
           {availableTransports.includes('tcp') && (
-            <button type="button" className={config.transport === 'tcp' ? 'is-selected' : ''} onClick={() => selectTransport('tcp')}>
-              <IonIcon icon={wifiOutline} /><span><strong>{t('printing.tcp')}</strong><small>{t('printing.tcpHint')}</small></span>
+            <button type="button" aria-pressed={config.transport === 'tcp'} className={config.transport === 'tcp' ? 'is-selected' : ''} onClick={() => selectTransport('tcp')}>
+              <IonIcon icon={wifiOutline} aria-hidden="true" /><span><strong>{t('printing.tcp')}</strong><small>{t('printing.tcpHint')}</small></span>
             </button>
           )}
           {availableTransports.includes('bluetooth-classic') && (
-            <button type="button" className={config.transport === 'bluetooth-classic' ? 'is-selected' : ''} onClick={() => selectTransport('bluetooth-classic')}>
-              <IonIcon icon={bluetoothOutline} /><span><strong>Bluetooth</strong><small>{t('printing.bluetoothHint')}</small></span>
+            <button type="button" aria-pressed={config.transport === 'bluetooth-classic'} className={config.transport === 'bluetooth-classic' ? 'is-selected' : ''} onClick={() => selectTransport('bluetooth-classic')}>
+              <IonIcon icon={bluetoothOutline} aria-hidden="true" /><span><strong>Bluetooth</strong><small>{t('printing.bluetoothHint')}</small></span>
             </button>
           )}
         </div>

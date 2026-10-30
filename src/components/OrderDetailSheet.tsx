@@ -1,7 +1,7 @@
 import { IonButton, IonContent, IonFooter, IonHeader, IonModal, IonSpinner, IonTitle, IonToolbar } from '@ionic/react';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
-import type { Order } from '../types';
+import type { Brand, Order } from '../types';
 import { useApp } from '../hooks/useApp';
 import { apiFacade } from '../services/apiFacade';
 import { getKanbanSubState } from '../utils/orderKanban';
@@ -9,6 +9,27 @@ import { nextOrderAction } from '../utils/orderActions';
 import { orderAmount, orderCreatedTime } from '../utils/orderPresentation';
 
 interface OrderDetailSheetProps { order: Order | null; open: boolean; onClose: () => void; onChat?: () => void }
+
+export function OrderDetailContent({ current, brand }: { current: Order; brand: Brand | null }) {
+  const { t, i18n } = useTranslation();
+  const money = (amount: number) => orderAmount(amount, brand, i18n.language);
+  const branchName = current.branchName || (current.branchId ? brand?.branchNames?.[current.branchId] : undefined);
+  const channel = current.messagingChannel && ['whatsapp', 'instagram', 'messenger'].includes(current.messagingChannel) ? current.messagingChannel : current.channel;
+  return <div className="order-sheet-detail">
+      <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.channel')}</span><span>{t(`orders.channel.${channel}`)}</span></div>
+      <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.location')}</span><span>{branchName || t(current.locationKey)}</span></div>
+      <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.paymentMethod')}</span><span>{current.paymentMethod ? t(`orderDetail.payment.${current.paymentMethod}`) : t('ops.reliability.noInformation')}</span></div>
+      {current.address ? <div className="order-sheet-row"><span className="order-sheet-label">{t('ops.actions.address')}</span><span>{current.address}{current.addressReference ? ` · ${current.addressReference}` : ''}</span></div> : null}
+      <h3 className="order-sheet-section">{t('orderDetail.cart')}</h3>
+      {current.items.length ? <ul className="order-sheet-items">{current.items.map((item, idx) => <li key={idx}>
+        <div><strong>{item.qty}× {item.name?.trim() || t(item.nameKey)}</strong>
+          {item.notes ? <p>{item.notes}</p> : null}
+          {item.modifiers?.map((modifier, index) => <p key={index}>{modifier.qty}× {modifier.name} · {money(modifier.price)}</p>)}
+        </div><span>{money(item.qty * item.price)}</span>
+      </li>)}</ul> : <p>{t('ops.actions.noItems')}</p>}
+      {current.notes ? <section className="order-sheet-notes"><h3 className="order-sheet-section">{t('ops.actions.notes')}</h3><p>{current.notes}</p></section> : null}
+  </div>;
+}
 
 export function OrderDetailSheet({ order, open, onClose, onChat }: OrderDetailSheetProps) {
   const { t, i18n } = useTranslation();
@@ -46,8 +67,6 @@ export function OrderDetailSheet({ order, open, onClose, onChat }: OrderDetailSh
   const action = nextOrderAction(current, Boolean(loaded && canChangeOrders));
   const createdTime = orderCreatedTime(current, brand, i18n.language);
   const money = (amount: number) => orderAmount(amount, brand, i18n.language);
-  const branchName = current.branchName || (current.branchId ? brand?.branchNames?.[current.branchId] : undefined);
-  const channel = current.messagingChannel && ['whatsapp', 'instagram', 'messenger'].includes(current.messagingChannel) ? current.messagingChannel : current.channel;
 
   const advance = async () => {
     const startedKey = key;
@@ -68,26 +87,13 @@ export function OrderDetailSheet({ order, open, onClose, onChat }: OrderDetailSh
         <div className="order-sheet-body">
           <div className="order-sheet-summary">
             <strong>{current.customerName ?? t(current.customerKey)}</strong>
-            <span className="ag-pill">{current.statusVerified === false ? t('ops.reliability.noInformation') : t(`ops.subStates.${getKanbanSubState(current)}`)}</span>
-            <span>{t(`orders.${current.deliveryType}`)}</span>
+            <span className="ag-pill order-sheet-status">{current.statusVerified === false ? t('ops.reliability.noInformation') : t(`ops.subStates.${getKanbanSubState(current)}`)}</span>
+            <span className="order-sheet-delivery">{t(`orders.${current.deliveryType}`)}</span>
             {createdTime ? <time dateTime={current.createdAt}>{t('ops.actions.created', { time: createdTime })}</time> : null}
           </div>
           {!loaded && !failed ? <div className="order-detail-loading" role="status"><IonSpinner name="crescent" />{t('ops.actions.loadingDetail')}</div> : null}
           {failed ? <div className="order-action-error" role="alert"><p>{t('ops.actions.detailFailed')}</p><button type="button" className="ag-btn" onClick={() => setAttempt(value => value + 1)}>{t('ops.reliability.retry')}</button></div> : null}
-          {loaded ? <>
-            <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.channel')}</span><span>{t(`orders.channel.${channel}`)}</span></div>
-            <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.location')}</span><span>{branchName || t(current.locationKey)}</span></div>
-            <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.paymentMethod')}</span><span>{current.paymentMethod ? t(`orderDetail.payment.${current.paymentMethod}`) : t('ops.reliability.noInformation')}</span></div>
-            {current.address ? <div className="order-sheet-row"><span className="order-sheet-label">{t('ops.actions.address')}</span><span>{current.address}{current.addressReference ? ` · ${current.addressReference}` : ''}</span></div> : null}
-            <h3 className="order-sheet-section">{t('orderDetail.cart')}</h3>
-            {current.items.length ? <ul className="order-sheet-items">{current.items.map((item, idx) => <li key={idx}>
-              <div><strong>{item.qty}× {item.name?.trim() || t(item.nameKey)}</strong>
-                {item.notes ? <p>{item.notes}</p> : null}
-                {item.modifiers?.map((modifier, index) => <p key={index}>{modifier.qty}× {modifier.name} · {money(modifier.price)}</p>)}
-              </div><span>{money(item.qty * item.price)}</span>
-            </li>)}</ul> : <p>{t('ops.actions.noItems')}</p>}
-            {current.notes ? <section><h3 className="order-sheet-section">{t('ops.actions.notes')}</h3><p>{current.notes}</p></section> : null}
-          </> : null}
+          {loaded ? <OrderDetailContent current={current} brand={brand} /> : null}
         </div>
       </IonContent>
       <IonFooter className="order-sheet-footer">

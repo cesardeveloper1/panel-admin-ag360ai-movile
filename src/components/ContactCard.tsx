@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { IonIcon } from '@ionic/react';
-import { personOutline, cartOutline, cardOutline, locationOutline } from 'ionicons/icons';
+import { personOutline, peopleOutline, cartOutline, cardOutline, calendarOutline, locationOutline } from 'ionicons/icons';
 import { ChannelIcon, channelLabel } from './ChannelIcon';
 import type { CSSProperties } from 'react';
 import type { ContactInfo } from '../types/contact';
@@ -30,7 +30,15 @@ export function ContactCard({ contact, attentionLocation, onClick, onChat, style
   const phone = contact.clientPhone?.trim() || '—';
   const preview = interactivePreview(contact.lastMessageContent ?? '') || t('ops.funnel.noPreview');
   const steps = contactProgress(contact);
-  const icons = { name: personOutline, cart: cartOutline, delivery: cardOutline, payment: cardOutline };
+  const icons = {
+    name: personOutline,
+    cart: cartOutline,
+    delivery: cardOutline,
+    payment: cardOutline,
+    party: peopleOutline,
+    schedule: calendarOutline,
+    zone: locationOutline,
+  };
   const channel = channelLabel(contact.channel);
   const unread = contact.unreadMessages > 0 ? contact.unreadMessages : 0;
 

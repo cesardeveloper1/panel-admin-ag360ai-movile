@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonIcon, IonSearchbar, IonSpinner, IonToggle } from '@ionic/react';
-import { addOutline, searchOutline } from 'ionicons/icons';
+import { addOutline, restaurantOutline, searchOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { FilterChips } from '../components/FilterChips';
 import NewProductSheet from '../components/NewProductSheet';
@@ -18,6 +18,8 @@ const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -29,15 +31,20 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     if (!brand) return;
+    let alive = true;
     setLoading(true);
+    setLoadError(false);
     setCategory('all');
     void apiFacade.getCatalogMenu(brand.id)
       .then((data) => {
+        if (!alive) return;
         setProducts(data.products);
         setCategories(data.categories);
       })
-      .finally(() => setLoading(false));
-  }, [brand]);
+      .catch(() => { if (alive) setLoadError(true); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [brand, retry]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -57,7 +64,7 @@ const ProductsPage: React.FC = () => {
 
   const chips = useMemo(
     () => {
-      const categoryMap = new Map(categories.map((item) => [item.id, item.name]));
+      const categoryMap = new Map(categories.map((item) => [item.id, item.name === item.id ? t(`menu.categories.${item.id}`, { defaultValue: item.name }) : item.name]));
       for (const product of products) {
         const id = product.categoryId || product.category;
         if (!categoryMap.has(id)) {
@@ -160,12 +167,21 @@ const ProductsPage: React.FC = () => {
     >
       <FilterChips chips={chips} value={category} onChange={(id) => setCategory(id as CategoryFilter)} />
 
-      {loading ? (
-        <div className="module-loading">
+      {loadError ? (
+        <div className="catalog-feedback" role="alert">
+          <IonIcon icon={restaurantOutline} aria-hidden="true" />
+          <p>{t('menu.loadError')}</p>
+          <button type="button" className="ag-btn" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button>
+        </div>
+      ) : loading ? (
+        <div className="module-loading" role="status" aria-label={t('app.loading')}>
           <IonSpinner name="crescent" />
         </div>
       ) : filtered.length === 0 ? (
-        <p className="module-empty">{t('menu.empty')}</p>
+        <div className="catalog-feedback" role="status">
+          <IonIcon icon={restaurantOutline} aria-hidden="true" />
+          <p>{t(products.length ? 'menu.empty' : 'menu.noProducts')}</p>
+        </div>
       ) : (
         <div className="product-list">
           {filtered.map((product) => (
@@ -184,6 +200,7 @@ const ProductsPage: React.FC = () => {
                 <p className="product-card__price">S/ {product.price.toFixed(2)}</p>
               </div>
               <IonToggle
+                aria-label={t('menu.availability', { name: product.name || (product.nameKey ? t(product.nameKey) : '') })}
                 checked={product.active}
                 disabled={product.soldOut}
                 onIonChange={(event) => onToggle(product, event.detail.checked)}

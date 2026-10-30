@@ -31,11 +31,11 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ item, onPres
     >
       <span className="notification-card__rail" aria-hidden />
       <span className="notification-card__icon-wrap">
-        <IonIcon icon={meta.icon} className="notification-card__icon" />
+        <IonIcon icon={meta.icon} className="notification-card__icon" aria-hidden="true" />
       </span>
       <span className="notification-card__content">
         <span className="notification-card__top">
-          <span className="notification-card__badge">{t(meta.labelKey)}</span>
+          <span className="notification-card__badge">{t(meta.labelKey)}{item.unread ? ` · ${t('notifications.unread')}` : ''}</span>
           {item.time ? <time className="notification-card__time">{item.time}</time> : null}
         </span>
         <span className="notification-card__title">{item.title ?? t(item.titleKey ?? '', item.params)}</span>
@@ -65,7 +65,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ item, onPres
           <span className="notification-card__body">{item.body ?? t(item.bodyKey ?? '', item.params)}</span>
         ) : null}
       </span>
-      {item.unread ? <span className="notification-card__dot" aria-label={t('notifications.unread')} /> : null}
+      {item.unread ? <span className="notification-card__dot" aria-hidden="true" /> : null}
     </button>
   );
 };

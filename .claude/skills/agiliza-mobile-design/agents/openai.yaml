@@ -1,0 +1,6 @@
+interface:
+  display_name: "Diseño móvil Agiliza360"
+  short_description: "Consolida el diseño y la UX de Agiliza360 móvil"
+  default_prompt: "Usa $agiliza-mobile-design para implementar este cambio con los componentes, tokens y patrones de navegación de la app móvil."
+policy:
+  allow_implicit_invocation: true

@@ -7,11 +7,15 @@ import { useAppNavigation } from '../hooks/useAppNavigation';
 import { LOGO_WHITE_LOCAL } from '../constants/assets';
 import { config } from '../config/env';
 import { requestCredentialSave } from '../services/credentialSaveService';
+import { useLocation } from 'react-router-dom';
+import { isFleetPhoneRole } from '../navigation/motorizedScreens';
+import { navigationLandingPath } from '../navigation/navigationAccess';
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const { goRoot } = useAppNavigation();
   const { session, login, loading, showToast } = useApp();
+  const { pathname } = useLocation();
   const [email, setEmail] = useState(config.useApiMock ? t('auth.demoOwner') : '');
   const [password, setPassword] = useState(config.useApiMock ? 'demo' : '');
   const [showPassword, setShowPassword] = useState(false);
@@ -20,15 +24,18 @@ const LoginPage: React.FC = () => {
   const passwordId = useId();
 
   useEffect(() => {
-    if (session) goRoot('/welcome');
-  }, [session, goRoot]);
+    // Ionic keeps this page mounted after login. Only the active login route
+    // owns this redirect; otherwise it fights the welcome/fleet destination.
+    if (session && pathname === '/login') {
+      goRoot(isFleetPhoneRole(session.role) ? navigationLandingPath(session) : '/welcome', 'replace', true);
+    }
+  }, [session, pathname, goRoot]);
 
   const onSubmit = async () => {
     setError(null);
     const ok = await login(email, password);
     if (ok) {
       void requestCredentialSave(email, password);
-      goRoot('/welcome');
       return;
     }
     const message = t('auth.loginFailed');

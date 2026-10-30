@@ -15,6 +15,18 @@ it('shows only the location and client phone, with accessible collected-data sta
   expect(screen.getByRole('img', { name: 'Modalidad: Recibido' })).toBeInTheDocument();
   expect(screen.getByRole('img', { name: 'Método de pago: Pendiente' })).toBeInTheDocument();
 });
+it('shows reservation steps and leaves the order icons off that row', () => {
+  render(<ContactCard contact={{ ...contact, progress: {
+    hasSession: true, flow: 'reservation', name: true, cart: true, delivery: true, payment: false,
+    reservation: { name: true, party: false, schedule: true, zone: false },
+  } }} />);
+  expect(screen.getByRole('img', { name: 'Nombre: Recibido' })).toHaveClass('contact-card__step--received');
+  expect(screen.getByRole('img', { name: 'Personas: Pendiente' })).toHaveClass('contact-card__step--pending');
+  expect(screen.getByRole('img', { name: 'Fecha y hora: Recibido' })).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: 'Zona: Pendiente' })).toBeInTheDocument();
+  expect(screen.queryByRole('img', { name: /Carrito|Modalidad|Método de pago/ })).toBeNull();
+  expect(document.querySelector('.contact-card__progress svg')).toBeNull();
+});
 it('keeps chat entry working once, without adding a local placeholder when none applies', () => {
   const onChat = vi.fn(); const onClick = vi.fn();
   render(<ContactCard contact={contact} onChat={onChat} onClick={onClick} />);

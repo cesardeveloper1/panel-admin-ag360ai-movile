@@ -74,7 +74,6 @@ export interface Order {
   branchName?: string;
   address?: string;
   addressReference?: string;
-  branchName?: string;
   riderId?: string;
   riderStep?: 'assigned' | 'picked_up' | 'delivered';
   latitude?: number;

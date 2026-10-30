@@ -11,13 +11,15 @@ import {
   PROFILE_PATH,
   isNavActive,
   mobileNavItems,
+  motorizedNavItems,
+  riderNavItems,
 } from '../navigation/navConfig';
 import { requestChatsInbox } from '../navigation/chatNavFrom';
 import { LOGO_COLOR_LOCAL } from '../constants/assets';
 import { PanelChatIcon } from './PanelChatIcon';
 import { canNavigate } from '../navigation/navigationAccess';
 import { isStaffRole } from '../navigation/staffScreens';
-import { isFleetPhoneRole } from '../navigation/motorizedScreens';
+import { isFleetPhoneRole, isMotorizedRole, isRiderRole } from '../navigation/motorizedScreens';
 import { brandLabel } from '../utils/brandLabel';
 
 const SIDEBAR_COLLAPSED_KEY = 'agiliza360.sidebar.collapsed';
@@ -97,7 +99,8 @@ export function SideNav() {
       </div>
 
       <nav className="ag-side-nav-items">
-        {mobileNavItems.filter(item => canNavigate(session, item.path, { locations: brand?.locations })).map(renderItem)}
+        {(isMotorizedRole(session?.role) ? motorizedNavItems : isRiderRole(session?.role) ? riderNavItems : mobileNavItems)
+          .filter(item => canNavigate(session, item.path, { locations: brand?.locations })).map(renderItem)}
       </nav>
 
       <div className="ag-side-nav-footer">

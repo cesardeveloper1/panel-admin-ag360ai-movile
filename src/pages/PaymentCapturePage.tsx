@@ -241,7 +241,7 @@ const PaymentCapturePage: React.FC = () => {
           {viewState.status === 'loading' ? (
             <IonSpinner name="crescent" />
           ) : (
-            <IonIcon icon={statePresentation.icon} />
+            <IonIcon icon={statePresentation.icon} aria-hidden="true" />
           )}
         </div>
         <p className="payment-capture-eyebrow">{t('paymentCapture.yapeOnly')}</p>
@@ -256,7 +256,6 @@ const PaymentCapturePage: React.FC = () => {
       </section>
 
       <section className="payment-capture-details">
-        <h3>{t('paymentCapture.diagnostics')}</h3>
         {diagnostics?.bindingState !== 'linked' ? (
           <div className="payment-capture-pairing">
             <IonSelect
@@ -290,6 +289,8 @@ const PaymentCapturePage: React.FC = () => {
             </IonButton>
           </div>
         )}
+        <details className="payment-capture-diagnostics">
+          <summary>{t('paymentCapture.diagnostics')}</summary>
         <dl>
           <div>
             <dt>{t('paymentCapture.binding')}</dt>
@@ -305,11 +306,11 @@ const PaymentCapturePage: React.FC = () => {
           </div>
           <div>
             <dt>{t('paymentCapture.pending')}</dt>
-            <dd>{diagnostics?.pendingCount ?? 0}</dd>
+            <dd>{diagnostics ? diagnostics.pendingCount : '—'}</dd>
           </div>
           <div>
             <dt>{t('paymentCapture.failed')}</dt>
-            <dd>{diagnostics?.deadLetterCount ?? 0}</dd>
+            <dd>{diagnostics ? diagnostics.deadLetterCount : '—'}</dd>
           </div>
           <div>
             <dt>{t('paymentCapture.lastAck')}</dt>
@@ -334,6 +335,7 @@ const PaymentCapturePage: React.FC = () => {
             </dd>
           </div>
         </dl>
+        </details>
         {(diagnostics?.deadLetterCount ?? 0) > 0 ? (
           <IonButton fill="outline" expand="block" disabled={bindingBusy} onClick={() => void retryFailed()}>
             {t('paymentCapture.retryFailed')}
@@ -348,7 +350,7 @@ const PaymentCapturePage: React.FC = () => {
             <h3>{t('paymentCapture.providersTitle')}</h3>
             <p>{t('paymentCapture.providersHint')}</p>
           </div>
-          <IonIcon icon={walletOutline} />
+          <IonIcon icon={walletOutline} aria-hidden="true" />
         </div>
         <div className="payment-provider-list">
           {PAYMENT_PROVIDERS.map((provider) => {
@@ -395,7 +397,7 @@ const PaymentCapturePage: React.FC = () => {
         </div>
         {captureLogs.length === 0 ? (
           <div className="payment-capture-log-empty">
-            <IonIcon icon={receiptOutline} />
+            <IonIcon icon={receiptOutline} aria-hidden="true" />
             <strong>{t('paymentCapture.logsEmptyTitle')}</strong>
             <span>{t('paymentCapture.logsEmptyBody')}</span>
           </div>
