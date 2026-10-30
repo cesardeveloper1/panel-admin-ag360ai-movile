@@ -1,0 +1,59 @@
+# Consolidación del diseño móvil
+
+Actualizado: 30 de octubre de 2026. Alcance: owner, manager, worker, motorizado y RIDER; plataforma de superadmin fuera de esta pasada.
+
+## Pantallas principales trabajadas
+
+Login conservado por decisión del usuario; bienvenida, Agilito, Operaciones, listado de Chats, Reportes, Negocio, Productos, Clientes, Locales, Datos de marca, Perfil, Alertas, Captura de pagos, Impresoras, Despacho, Viaje RIDER, Repartidores, Zonas, Grupos, Cuenta del motorizado y listado de Entregados.
+
+Trabajada no significa publicada ni validada de extremo a extremo. Flota se revisó con componentes reales aislados y pruebas. Entregados muestra únicamente los registros ya cargados, no una consulta histórica completa. Captura e impresión requieren dispositivo.
+
+## Pantallas aún sin pasada dedicada
+
+- [ ] Crear marca / onboarding — `/app/onboarding`
+- [ ] Mensajes rápidos — `/app/quick-messages`
+
+### Pantallas secundarias configuradas en STAFF_SCREENS
+
+- [ ] Configuración de reservas — `/app/reservations/config`
+- [ ] Órdenes — `/app/reports/orders`
+- [ ] Ventas por integración — `/app/reports/integration-sales`
+- [ ] Mapa de órdenes — `/app/reports/order-map`
+- [ ] Cierre de caja — `/app/reports/cash-close`
+- [ ] Órdenes canceladas — `/app/reports/cancelled`
+- [ ] Categorías — `/app/menu/categories`
+- [ ] Modificadores — `/app/menu/modifiers`
+- [ ] Agrupadores — `/app/menu/groups`
+- [ ] Integraciones de menú — `/app/menu/integrations`
+- [ ] Carta digital — `/app/menu/digital` (enlace externo; revisar acceso)
+- [ ] Configuración por local — `/app/menu/local`
+- [ ] Plantillas — `/app/marketing/templates`
+- [ ] Campañas — `/app/marketing/campaigns`
+- [ ] Reclamos — `/app/marketing/complaints`
+- [ ] Encuesta del local — `/app/marketing/branch-survey`
+- [ ] Zonas de cobertura — `/app/locations/zones`
+- [ ] Galería — `/app/locations/gallery`
+- [ ] Integraciones del local — `/app/locations/integrations`
+- [ ] Agilink — `/app/agilink`
+- [ ] Tutoriales — `/app/help`
+
+## Detalles, formularios y estados pendientes
+
+- [ ] Conversación de chat y compositor: adjuntos, audio, emojis, mensajes rápidos, historial y recuperación de errores.
+- [ ] Detalle de pedido y sus acciones (OrderDetailSheet).
+- [ ] Alta de marca, alta/edición de producto y alta/edición de local: revisión completa; abrir los formularios no equivale a rediseñarlos.
+- [ ] Configuración y lista de reservas, incluida su presentación por rol.
+- [ ] Editor de polígonos y flujo completo de edición de zonas.
+- [ ] Editor y guardado de grupos de WhatsApp con locales reales autorizados.
+- [ ] Formularios de cuenta del partner y preferencias de idioma.
+- [ ] Confirmaciones de cierre de sesión y eliminación de cuenta: revisión visual sin ejecutar eliminación real.
+
+## Verificación pendiente, distinta del diseño
+
+- [ ] Revisar con cuentas owner, manager y worker según sus permisos y locales.
+- [ ] Recorrer despacho, repartidores, zonas, grupos y cuenta con un motorizado real.
+- [ ] Recorrer espera/recogida/en ruta/entrega con un RIDER de prueba, sin modificar pedidos reales para capturas.
+- [ ] GPS, horarios, tracking y Android Back en dispositivo.
+- [ ] Captura de pagos y conexión/impresión en Android/iOS según soporte real.
+- [ ] Tema oscuro, teclado y textos largos en los flujos completos.
+- [ ] Resolver los errores de TypeScript previos en OperationsQuickAccess.tsx y fleetTrip.test.ts.
