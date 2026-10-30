@@ -26,6 +26,11 @@
     "deleteAccount": "Delete account and data"
   },
   "welcome": {
+    "staffSubtitle": "Your workspace based on your account access.",
+    "loadError": "We couldn't load your brands",
+    "loadErrorHint": "Check your connection and try again.",
+    "retry": "Try again",
+    "noBrands": "You don't have any available brands on this account yet.",
     "title": "Choose your brand",
     "question": "What will you run today?",
     "description": "Select a brand to see orders, reports and live menu.",
@@ -131,7 +136,32 @@
     "modeAria": "Operations view",
     "mode": {
       "funnel": "Funnel",
-      "orders": "Orders"
+      "orders": "Orders",
+      "reservations": "Reservations"
+    },
+    "reservations": {
+      "search": "Search reservation or customer",
+      "focusAria": "Reservation status",
+      "queueAria": "Made reservations",
+      "week": "Week of {{from}} to {{to}}",
+      "empty": "No reservations in these dates.",
+      "filterStatus": "Reservation status",
+      "filterDate": "Reservation date",
+      "range": "{{from}} to {{to}}",
+      "dates": {
+        "week": "This week",
+        "today": "Today",
+        "day": "Day",
+        "range": "Range"
+      },
+      "party_one": "{{count}} person",
+      "party_other": "{{count}} people",
+      "statusAll": "All",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled"
+      }
     },
     "funnel": {
       "search": "Search contact or message",
@@ -466,6 +496,9 @@
     "deleteAccountHint": "Request it by email. The app does not delete the account by itself"
   },
   "menu": {
+    "loadError": "We could not load the catalog",
+    "noProducts": "No products yet. Add your first one with the + button.",
+    "availability": "Availability of {{name}}",
     "title": "Products",
     "subtitle": "Menu manager",
     "search": "Search product...",
@@ -763,9 +796,17 @@
     "activeOrders": "Active orders",
     "unreadAlerts": "Alerts",
     "locations": "Locations",
+    "unreadCount_one": "{{count}} unread message",
     "unreadCount": "{{count}} unread"
   },
   "chats": {
+    "loading": "Loading conversations…",
+    "retry": "Try again",
+    "refreshError": "Chats could not be updated. Showing the last available list.",
+    "noMatches": "No matching contact",
+    "searchHint": "Try another name or phone number.",
+    "emptyHint": "Your conversations will appear here when you receive messages.",
+    "unreadCount": "{{count}} unread messages",
     "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
     "search": "Search contact",

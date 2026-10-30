@@ -26,6 +26,11 @@
     "deleteAccount": "Eliminar cuenta y datos"
   },
   "welcome": {
+    "staffSubtitle": "Tu espacio de trabajo según los accesos de tu cuenta.",
+    "loadError": "No pudimos cargar tus marcas",
+    "loadErrorHint": "Comprueba tu conexión y vuelve a intentarlo.",
+    "retry": "Volver a intentar",
+    "noBrands": "Aún no tienes marcas disponibles en esta cuenta.",
     "title": "Elige tu marca",
     "question": "¿Qué vas a operar hoy?",
     "description": "Selecciona la marca para ver pedidos, reportes y menú en tiempo real.",
@@ -136,7 +141,32 @@
     "modeAria": "Vista de operaciones",
     "mode": {
       "funnel": "Embudo",
-      "orders": "Pedidos"
+      "orders": "Pedidos",
+      "reservations": "Reservas"
+    },
+    "reservations": {
+      "search": "Buscar reserva o cliente",
+      "focusAria": "Estado de la reserva",
+      "queueAria": "Reservas hechas",
+      "week": "Semana del {{from}} al {{to}}",
+      "empty": "No hay reservas en estas fechas.",
+      "filterStatus": "Estado de la reserva",
+      "filterDate": "Fecha de la reserva",
+      "range": "{{from}} al {{to}}",
+      "dates": {
+        "week": "Esta semana",
+        "today": "Hoy",
+        "day": "Día",
+        "range": "Rango"
+      },
+      "party_one": "{{count}} persona",
+      "party_other": "{{count}} personas",
+      "statusAll": "Todas",
+      "status": {
+        "pending": "Pendiente",
+        "confirmed": "Confirmada",
+        "cancelled": "Cancelada"
+      }
     },
     "funnel": {
       "search": "Buscar contacto o mensaje",
@@ -500,6 +530,9 @@
     "deleteAccountHint": "La solicitud se hace por correo. La app no borra la cuenta sola"
   },
   "menu": {
+    "loadError": "No pudimos cargar el catálogo",
+    "noProducts": "Aún no tienes productos. Añade el primero con el botón +.",
+    "availability": "Disponibilidad de {{name}}",
     "title": "Productos",
     "subtitle": "Gestor de menú",
     "search": "Buscar producto...",
@@ -808,9 +841,17 @@
     "activeOrders": "Pedidos activos",
     "unreadAlerts": "Alertas",
     "locations": "Locales",
+    "unreadCount_one": "{{count}} mensaje sin leer",
     "unreadCount": "{{count}} sin leer"
   },
   "chats": {
+    "loading": "Cargando conversaciones…",
+    "retry": "Reintentar",
+    "refreshError": "No se pudieron actualizar los chats. Se muestra la última lista disponible.",
+    "noMatches": "No encontramos ese contacto",
+    "searchHint": "Prueba con otro nombre o número.",
+    "emptyHint": "Tus conversaciones aparecerán aquí cuando recibas mensajes.",
+    "unreadCount": "{{count}} mensajes sin leer",
     "title": "Chats",
     "subtitle": "Inbox · {{brand}}",
     "search": "Buscar contacto",

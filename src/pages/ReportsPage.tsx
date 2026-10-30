@@ -43,7 +43,7 @@ function VerticalBars({ data, valueKey, format }: { data: ChartPoint[]; valueKey
         <div key={d.label} className="reports-vbar-col">
           <span className="reports-vbar-value">{format ? format(d[valueKey]) : d[valueKey]}</span>
           <div className="reports-vbar-track">
-            <div className="reports-vbar-fill" style={{ height: `${Math.max(8, (d[valueKey] / max) * 100)}%` }} />
+            <div className="reports-vbar-fill" style={{ height: `${Math.max(0, (d[valueKey] / max) * 100)}%` }} />
           </div>
           <span className="reports-vbar-label">{d.label}</span>
         </div>
@@ -96,7 +96,7 @@ function RankingBlock({
                 <small>{displayLabel(item.categoryKey, t)}</small>
               ) : null}
               <div className="reports-rank-bar">
-                <div className="reports-rank-bar-fill" style={{ width: `${Math.max(8, (item.sales / max) * 100)}%` }} />
+                <div className="reports-rank-bar-fill" style={{ width: `${Math.max(0, (item.sales / max) * 100)}%` }} />
               </div>
             </div>
             <div className="reports-rank-stats">
@@ -126,6 +126,8 @@ const ReportsPage: React.FC = () => {
   const [period, setPeriod] = useState<ReportPeriod>('today');
   const [reports, setReports] = useState<Partial<Record<ReportPeriod, DashboardReport>>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [rangeOpen, setRangeOpen] = useState(false);
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
@@ -137,6 +139,7 @@ const ReportsPage: React.FC = () => {
     if (!brand) return;
     let alive = true;
     setLoading(true);
+    setLoadError(false);
     void Promise.all([
       apiFacade.getDashboard({ brand, period: 'today' }),
       apiFacade.getDashboard({ brand, period: 'range', rangeDays: 7 }),
@@ -147,6 +150,7 @@ const ReportsPage: React.FC = () => {
       })
       .catch(() => {
         if (!alive) return;
+        setLoadError(true);
         showToast('toast.reportsLoadError');
         setReports({});
       })
@@ -156,7 +160,7 @@ const ReportsPage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [brand, showToast]);
+  }, [brand, showToast, retry]);
 
   useEffect(() => {
     if (!rangeOpen) return;
@@ -435,8 +439,14 @@ const ReportsPage: React.FC = () => {
       </IonModal>
       }
     >
-            {loading || !report ? (
-              <div className="module-loading">
+            {loadError ? (
+              <section className="reports-feedback" role="alert">
+                <IonIcon icon={cubeOutline} aria-hidden="true" />
+                <p>{t('toast.reportsLoadError')}</p>
+                <button type="button" className="ag-btn" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button>
+              </section>
+            ) : loading || !report ? (
+              <div className="module-loading" role="status" aria-label={t('app.loading')}>
                 <IonSpinner name="crescent" />
               </div>
             ) : (
@@ -447,9 +457,11 @@ const ReportsPage: React.FC = () => {
                   <section className="reports-hero ag-enter">
                     <span className="reports-hero-label">{t(sales.labelKey)}</span>
                     <strong className="reports-hero-value">{formatValue(sales)}</strong>
-                    <span className={`reports-hero-delta${sales.deltaDown ? ' reports-hero-delta--down' : ''}`}>
-                      {t(sales.deltaKey, { value: sales.deltaValue ?? 12 })}
-                    </span>
+                    {typeof sales.deltaValue === 'number' ? (
+                      <span className={`reports-hero-delta${sales.deltaDown ? ' reports-hero-delta--down' : ''}`}>
+                        {t(sales.deltaKey, { value: sales.deltaValue })}
+                      </span>
+                    ) : null}
                   </section>
                 ) : null}
 
@@ -527,7 +539,7 @@ const ReportsPage: React.FC = () => {
 
                 <section className="reports-chart ag-enter">
                   <div className="reports-chart-head">
-                    <h2>{t(period === 'range' ? 'reports.chartTitleRange' : 'reports.ordersTrend')}</h2>
+                    <h2>{t(period === 'range' ? 'reports.chartTitleRange' : 'reports.chartTitle')}</h2>
                   </div>
                   {report.hourlySales.length > 0 ? (
                     <div className="reports-chart-bars" aria-hidden="true">
@@ -535,7 +547,7 @@ const ReportsPage: React.FC = () => {
                         <div key={idx} className="reports-chart-col">
                           <div
                             className="reports-chart-bar"
-                            style={{ height: `${Math.max(12, (height / maxBar) * 100)}%` }}
+                            style={{ height: `${Math.max(0, (height / maxBar) * 100)}%` }}
                           />
                           <span className="reports-chart-hour">{chartLabels[idx] ?? ''}</span>
                         </div>

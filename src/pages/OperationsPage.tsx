@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonIcon, IonPage, IonSpinner, useIonViewDidEnter } from '@ionic/react';
 import type { ScrollDetail } from '@ionic/react';
-import { peopleOutline, receiptOutline } from 'ionicons/icons';
+import { calendarOutline, peopleOutline, receiptOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
 import { DispatchQueue } from './motorized/DispatchQueue';
 import { OperationsQuickAccess } from '../components/OperationsQuickAccess';
-import { OperationsFilters, type FunnelChannel, type OperationsPanel, type OperationsScopeResult } from '../components/OperationsFilters';
+import { OperationsFilters, type FunnelChannel, type OperationsPanel, type OperationsScopeResult, type ReservationDateChoice, type ReservationStatusFilter } from '../components/OperationsFilters';
 import { AppHeader } from '../components/AppHeader';
 import { AppShell } from '../components/AppShell';
 import { ContactCard } from '../components/ContactCard';
+import { ReservationCard } from '../components/ReservationCard';
 import { OrderCard } from '../components/OrderCard';
 import { OrderDetailSheet } from '../components/OrderDetailSheet';
 import { useApp } from '../hooks/useApp';
@@ -28,8 +29,9 @@ import { readOperationsView, writeOperationsView, operationsViewGeneration } fro
 import { contactAttentionLocation } from '../utils/contactPresentation';
 import { canNavigate } from '../navigation/navigationAccess';
 import { appendPage } from '../services/listPage';
+import { currentReservationWeek, type MadeReservation } from '../services/reservationService';
 
-type OpsMode = 'funnel' | 'orders';
+type OpsMode = 'funnel' | 'orders' | 'reservations';
 type OpsFocus = KanbanGroup;
 type OpsSubFilter = 'all' | KanbanSubState;
 type FunnelFocus = FunnelStage;
@@ -95,6 +97,23 @@ const OperationsPage: React.FC = () => {
   const contacts = useMemo(() => contactResult.scope === contactsScope ? contactResult.data : [], [contactResult, contactsScope]);
   const contactsRef = useRef(contacts);
   contactsRef.current = contacts;
+  const [reservationStatus, setReservationStatus] = useState<ReservationStatusFilter>('all');
+  const [reservationDateMode, setReservationDateMode] = useState<ReservationDateChoice>('week');
+  const [reservationRange, setReservationRange] = useState(() => currentReservationWeek());
+  const [reservationResult, setReservationResult] = useState<{ scope: string; data: MadeReservation[] }>({ scope: '', data: [] });
+  const [reservationsLoading, setReservationsLoading] = useState(false);
+  const [reservationsError, setReservationsError] = useState(false);
+  const [reservationsHasMore, setReservationsHasMore] = useState(false);
+  const [reservationsLoadingMore, setReservationsLoadingMore] = useState(false);
+  const reservationsPage = useRef(1);
+  const reservationsRequestId = useRef(0);
+  const reservationsBusy = useRef(false);
+  const reservationScope = `${authEpoch}|${brand?.id}|${brand?.subdomain}|${ordersFilters.branchId ?? ''}|${funnelChannel}|${reservationStatus}|${query.trim()}|${reservationRange.dateFrom}|${reservationRange.dateTo}`;
+  const reservationScopeRef = useRef(reservationScope);
+  reservationScopeRef.current = reservationScope;
+  const reservations = useMemo(() => reservationResult.scope === reservationScope ? reservationResult.data : [], [reservationResult, reservationScope]);
+  const reservationsRef = useRef(reservations);
+  reservationsRef.current = reservations;
 
   const loadContacts = useCallback(async (search?: string, more = false) => {
     const subdomain = brand?.subdomain?.trim();
@@ -138,6 +157,56 @@ const OperationsPage: React.FC = () => {
     }
   }, [brand?.subdomain, ordersFilters.branchId]);
 
+  const loadReservations = useCallback(async (search?: string, more = false) => {
+    const subdomain = brand?.subdomain?.trim();
+    if (!subdomain || (more && reservationsBusy.current)) return;
+    const scope = reservationScopeRef.current;
+    const requestId = ++reservationsRequestId.current;
+    reservationsBusy.current = true;
+    setReservationsError(false);
+    if (more) setReservationsLoadingMore(true);
+    else {
+      setReservationsLoading(true);
+      setReservationResult({ scope, data: [] });
+      setReservationsHasMore(false);
+    }
+    try {
+      const page = more ? reservationsPage.current + 1 : 1;
+      const result = await apiFacade.listReservations({
+        brandSubdomain: subdomain,
+        ...reservationRange,
+        branchId: ordersFilters.branchId,
+        search: search?.trim() || undefined,
+        status: reservationStatus === 'all' ? undefined : reservationStatus,
+        sourceChannel: funnelChannel === 'all' ? undefined : funnelChannel,
+        page,
+        limit: 30,
+      });
+      if (requestId !== reservationsRequestId.current || scope !== reservationScopeRef.current) return;
+      if (more && result.data.length > 0 && !result.data.some(item => !reservationsRef.current.some(old => old.id === item.id))) {
+        throw new Error('Pagination made no progress');
+      }
+      setReservationResult(previous => ({
+        scope,
+        data: more ? appendPage(previous.data, result.data, item => item.id) : result.data,
+      }));
+      reservationsPage.current = page;
+      setReservationsHasMore(result.hasMore);
+    } catch {
+      if (requestId === reservationsRequestId.current && scope === reservationScopeRef.current) {
+        setReservationResult({ scope, data: [] });
+        setReservationsHasMore(false);
+        setReservationsError(true);
+      }
+    } finally {
+      if (requestId === reservationsRequestId.current) {
+        reservationsBusy.current = false;
+        setReservationsLoading(false);
+        setReservationsLoadingMore(false);
+      }
+    }
+  }, [brand?.subdomain, ordersFilters.branchId, reservationRange, reservationStatus, funnelChannel]);
+
   // Invalidate requests/caches immediately when auth, brand or branch changes.
   useEffect(() => {
     contactsRequestId.current += 1;
@@ -160,21 +229,24 @@ const OperationsPage: React.FC = () => {
       }
       if (opsMode === 'orders') {
         void setOrdersFilters({ search: search || undefined });
+      } else if (opsMode === 'reservations') {
+        void loadReservations(search);
       } else {
         void loadContacts(search);
       }
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [query, opsMode, setOrdersFilters, loadContacts, authEpoch, brand?.id]);
+  }, [query, opsMode, setOrdersFilters, loadContacts, loadReservations, authEpoch, brand?.id]);
 
   useEffect(() => {
     const reconnect = () => {
       if (opsMode === 'funnel') void loadContacts(query);
+      else if (opsMode === 'reservations') void loadReservations(query);
       else void refreshOrders();
     };
     window.addEventListener('online', reconnect);
     return () => window.removeEventListener('online', reconnect);
-  }, [opsMode, query, loadContacts, refreshOrders]);
+  }, [opsMode, query, loadContacts, loadReservations, refreshOrders]);
 
   useEffect(() => {
     const state = { mode: opsMode, query, focus: activeFocus, subFilter, funnelFocus, visibleCount,
@@ -235,7 +307,11 @@ const OperationsPage: React.FC = () => {
     setOpsMode(mode);
     setVisibleCount(6);
     searchBootstrapped.current = false;
-    if (mode !== 'orders') setPanel(current => current === 'date' ? null : current);
+    setPanel(current => {
+      if (mode === 'funnel' && (current === 'date' || current === 'status')) return null;
+      if (mode === 'orders' && current === 'status') return null;
+      return current;
+    });
   };
 
   const filtered = useMemo(() => {
@@ -329,11 +405,19 @@ const OperationsPage: React.FC = () => {
     go(`${CHATS_PATH}?${params.toString()}`);
   };
 
-  const listLoading = opsMode === 'funnel' ? contactsLoading || contactResult.scope !== contactsScope : loading || query.trim() !== (ordersFilters.search ?? '');
-  const listError = opsMode === 'funnel' ? contactsError && contactResult.scope === contactsScope : ordersError && query.trim() === (ordersFilters.search ?? '');
-  const hasMore = opsMode === 'funnel' ? contactsHasMore : ordersHasMore;
-  const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : ordersLoadingMore;
-  const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : 'ops.queueEmpty';
+  const listLoading = opsMode === 'funnel'
+    ? contactsLoading || contactResult.scope !== contactsScope
+    : opsMode === 'reservations'
+      ? reservationsLoading || reservationResult.scope !== reservationScope
+      : loading || query.trim() !== (ordersFilters.search ?? '');
+  const listError = opsMode === 'funnel'
+    ? contactsError && contactResult.scope === contactsScope
+    : opsMode === 'reservations'
+      ? reservationsError && reservationResult.scope === reservationScope
+      : ordersError && query.trim() === (ordersFilters.search ?? '');
+  const hasMore = opsMode === 'funnel' ? contactsHasMore : opsMode === 'reservations' ? reservationsHasMore : ordersHasMore;
+  const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : opsMode === 'reservations' ? reservationsLoadingMore : ordersLoadingMore;
+  const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : opsMode === 'reservations' ? 'ops.reservations.empty' : 'ops.queueEmpty';
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
   if (session?.role === 'rider') return null;
@@ -353,7 +437,7 @@ const OperationsPage: React.FC = () => {
         <AppShell>
           <AppHeader title={t('ops.title')} trailing={
             <OperationsQuickAccess mode={opsMode} query={query} onQueryChange={setQuery} panel={panel} onPanel={setPanel} branchCount={verifiedScope?.state === 'ready' ? scopedBranches.length : undefined}>
-              <OperationsFilters panel={panel} onClose={() => setPanel(null)} mode={opsMode} onScopeChange={setScopeContext} funnelChannel={funnelChannel} onFunnelChannel={setFunnelChannel} />
+              <OperationsFilters panel={panel} onClose={() => setPanel(null)} mode={opsMode} onScopeChange={setScopeContext} funnelChannel={funnelChannel} onFunnelChannel={setFunnelChannel} reservationStatus={reservationStatus} onReservationStatus={setReservationStatus} reservationDateMode={reservationDateMode} reservationRange={reservationRange} onReservationDate={(choice, range) => { setReservationDateMode(choice); setReservationRange(range); }} />
             </OperationsQuickAccess>
           } />
           <div className="ag-body module-body ops-body ag-page-stack">
@@ -376,6 +460,15 @@ const OperationsPage: React.FC = () => {
               >
                 {t('ops.mode.orders')}
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={opsMode === 'reservations'}
+                className={opsMode === 'reservations' ? 'active' : ''}
+                onClick={() => switchMode('reservations')}
+              >
+                {t('ops.mode.reservations')}
+              </button>
             </div>
 
             {listError ? (
@@ -384,6 +477,7 @@ const OperationsPage: React.FC = () => {
                 <p>{t('ops.reliability.retryDescription')}</p>
                 <button type="button" className="ag-btn ag-btn--primary" onClick={() => {
                   if (opsMode === 'funnel') void loadContacts(query);
+                  else if (opsMode === 'reservations') void loadReservations(query);
                   else void refreshOrders();
                 }}>{t('ops.reliability.retry')}</button>
               </section>
@@ -404,7 +498,7 @@ const OperationsPage: React.FC = () => {
                       className={`ops-summary-card ops-summary-card--funnel-${stage.toLowerCase()}${funnelFocus === stage ? ' active' : ''}`}
                       onClick={() => selectFunnelFocus(stage)}
                     >
-                      <strong>{groupedContacts[stage].length}</strong>
+                      <strong>{listLoading ? '—' : groupedContacts[stage].length}</strong>
                       <span>{t(`ops.funnel.stages.${stage}`)}</span>
                     </button>
                   ))}
@@ -418,12 +512,12 @@ const OperationsPage: React.FC = () => {
                 >
                   <header className="ops-queue__head">
                     <h2>{t(`ops.funnel.stages.${funnelFocus}`)}</h2>
-                    <span className="kanban-count">{funnelQueue.length}</span>
+                    <span className="kanban-count">{listLoading ? '—' : funnelQueue.length}</span>
                   </header>
 
                   <div className="ops-queue__cards">
                     {listLoading ? (
-                      <div className="module-loading">
+                      <div className="module-loading" role="status" aria-label={t('ops.filters.loading')}>
                         <IonSpinner name="crescent" />
                       </div>
                     ) : (
@@ -449,7 +543,7 @@ const OperationsPage: React.FC = () => {
                   {visibleCount < queueLen ? <div ref={loadMoreSentinelRef} className="ops-scroll-sentinel" aria-hidden="true" /> : null}
                 </section>
               </>
-            ) : (
+            ) : opsMode === 'orders' ? (
               <>
                 <div
                   className="ops-summary ag-enter"
@@ -464,7 +558,7 @@ const OperationsPage: React.FC = () => {
                     className={`ops-summary-card ops-summary-card--new${activeFocus === 'new' ? ' active' : ''}`}
                     onClick={() => selectFocus('new')}
                   >
-                    <strong>{groups.new.length}</strong>
+                    <strong>{listLoading ? '—' : groups.new.length}</strong>
                     <span>{t('ops.kanbanNew')}</span>
                   </button>
                   <button
@@ -475,7 +569,7 @@ const OperationsPage: React.FC = () => {
                     className={`ops-summary-card ops-summary-card--hot${activeFocus === 'processing' ? ' active' : ''}`}
                     onClick={() => selectFocus('processing')}
                   >
-                    <strong>{groups.processing.length}</strong>
+                    <strong>{listLoading ? '—' : groups.processing.length}</strong>
                     <span>{t('ops.kanbanProcessing')}</span>
                   </button>
                   <button
@@ -486,7 +580,7 @@ const OperationsPage: React.FC = () => {
                     className={`ops-summary-card ops-summary-card--done${activeFocus === 'delivered' ? ' active' : ''}`}
                     onClick={() => selectFocus('delivered')}
                   >
-                    <strong>{groups.delivered.length}</strong>
+                    <strong>{listLoading ? '—' : groups.delivered.length}</strong>
                     <span>{t('ops.kanbanDelivered')}</span>
                   </button>
                 </div>
@@ -531,12 +625,12 @@ const OperationsPage: React.FC = () => {
                         ? t(FOCUS_LABEL_KEY[activeFocus])
                         : t(`ops.subStates.${subFilter}`)}
                     </h2>
-                    <span className="kanban-count">{queueItems.length}</span>
+                    <span className="kanban-count">{listLoading ? '—' : queueItems.length}</span>
                   </header>
 
                   <div className="ops-queue__cards">
                     {listLoading ? (
-                      <div className="module-loading">
+                      <div className="module-loading" role="status" aria-label={t('ops.filters.loading')}>
                         <IonSpinner name="crescent" />
                       </div>
                     ) : (
@@ -569,10 +663,33 @@ const OperationsPage: React.FC = () => {
                   {visibleCount < queueItems.length ? <div ref={loadMoreSentinelRef} className="ops-scroll-sentinel" aria-hidden="true" /> : null}
                 </section>
               </>
+            ) : (
+              <section className="ops-queue ag-enter" aria-label={t('ops.reservations.queueAria')}>
+                  <header className="ops-queue__head">
+                    <h2>{t('ops.reservations.range', { from: reservationRange.dateFrom, to: reservationRange.dateTo })}</h2>
+                    <span className="kanban-count">{listLoading ? '—' : reservations.length}</span>
+                  </header>
+                  <div className="ops-queue__cards">
+                    {listLoading ? (
+                      <div className="module-loading" role="status" aria-label={t('ops.filters.loading')}>
+                        <IonSpinner name="crescent" />
+                      </div>
+                    ) : reservations.map((reservation) => (
+                      <ReservationCard key={reservation.id} reservation={reservation} />
+                    ))}
+                  </div>
+                  {!listLoading && reservations.length === 0 ? (
+                    <div className="ops-empty-state" role="status">
+                      <IonIcon icon={calendarOutline} aria-hidden="true" />
+                      <p>{t(emptyKey)}</p>
+                    </div>
+                  ) : null}
+                </section>
             )}
             {!listError && !listLoading && hasMore ? (
               <button type="button" className="ag-btn ops-load-more" disabled={loadingMore} onClick={() => {
                 if (opsMode === 'funnel') void loadContacts(query, true);
+                else if (opsMode === 'reservations') void loadReservations(query, true);
                 else void loadMoreOrders();
               }}>{t(loadingMore ? 'ops.reliability.loadingMore' : 'ops.reliability.loadMore')}</button>
             ) : null}

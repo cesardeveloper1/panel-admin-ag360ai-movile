@@ -6,18 +6,15 @@ import { createMemoryHistory } from 'history';
 import LoginPage from './LoginPage';
 import WelcomePage from './WelcomePage';
 import type { AppContextValue } from '../context/appContextInstance';
-import type { UserSession } from '../types';
+import type { Brand, UserSession } from '../types';
 import '../i18n';
 
-const mocks = vi.hoisted(() => ({ goRoot: vi.fn(), replace: vi.fn(), brands: vi.fn(async () => []) }));
+const mocks = vi.hoisted(() => ({ goRoot: vi.fn(), replace: vi.fn(), go: vi.fn(), brands: vi.fn(async (): Promise<Brand[]> => []) }));
 const SessionContext = createContext<AppContextValue>(null!);
 vi.mock('../hooks/useApp', () => ({ useApp: () => useContext(SessionContext) }));
 // Ionic retains auth pages after leaving them. Keep them mounted here and change
 // the actual Router location, rather than unmounting away the regression.
-vi.mock('../hooks/useAppNavigation', () => ({ useAppNavigation: () => ({
-  goRoot: (...args: unknown[]) => mocks.goRoot(...args),
-  replace: (...args: unknown[]) => mocks.replace(...args), go: vi.fn(),
-}) }));
+vi.mock('../hooks/useAppNavigation', () => ({ useAppNavigation: () => mocks }));
 vi.mock('../services/apiFacade', () => ({ apiFacade: { getBrands: () => mocks.brands() } }));
 vi.mock('../services/credentialSaveService', () => ({ requestCredentialSave: vi.fn() }));
 vi.mock('../components/NewBrandSheet', () => ({ default: () => null }));
@@ -53,4 +50,30 @@ it.each(['rider', 'motorized'] as const)('keeps the cached welcome page inactive
   await waitFor(() => expect(mocks.brands).not.toHaveBeenCalled());
   expect(mocks.replace).not.toHaveBeenCalled();
   expect(mocks.goRoot).not.toHaveBeenCalled();
+});
+
+it('distinguishes a brand loading error from an empty account and can retry', async () => {
+  const history = createMemoryHistory({ initialEntries: ['/welcome'] });
+  mocks.brands.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce([
+    { id: 'demo', initials: 'D', nameKey: 'Demo', displayName: 'Marca de prueba', locations: 1, ordersToday: 0 },
+  ]);
+  render(<Router history={history}><SessionContext.Provider value={{ session: { ...rider, role: 'owner' },
+    authRestoring: false, brand: null, brandLoading: false, authEpoch: 1, showToast: vi.fn(),
+    clearBrand: vi.fn(), selectBrandAndLoad: vi.fn(),
+  } as unknown as AppContextValue}><WelcomePage /></SessionContext.Provider></Router>);
+  await screen.findByRole('alert');
+  expect(screen.queryByText('Aún no tienes marcas disponibles en esta cuenta.')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Volver a intentar' }));
+  await screen.findByRole('button', { name: 'Marca de prueba 1 sucursal' });
+  expect(screen.queryByRole('alert')).toBeNull();
+});
+
+it('explains a staff account with no assigned brand without showing owner creation actions', async () => {
+  const history = createMemoryHistory({ initialEntries: ['/welcome'] });
+  mocks.brands.mockResolvedValueOnce([]);
+  render(<Router history={history}><SessionContext.Provider value={{ session: { ...rider, role: 'worker' },
+    authRestoring: false, brand: null, brandLoading: false, authEpoch: 1, showToast: vi.fn(), clearBrand: vi.fn(),
+  } as unknown as AppContextValue}><WelcomePage /></SessionContext.Provider></Router>);
+  await screen.findByText('Tu cuenta no tiene una marca asignada.');
+  expect(screen.queryByRole('button', { name: /Crear nueva marca/ })).toBeNull();
 });

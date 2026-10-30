@@ -1,7 +1,7 @@
 import type { FunnelStage } from '../types/contact';
 import type { KanbanGroup, KanbanSubState } from '../types';
 export interface OperationsViewState {
-  mode: 'orders' | 'funnel'; query: string; focus: KanbanGroup; subFilter: 'all' | KanbanSubState;
+  mode: 'orders' | 'funnel' | 'reservations'; query: string; focus: KanbanGroup; subFilter: 'all' | KanbanSubState;
   funnelFocus: FunnelStage; visibleCount: number; selectedOrderId?: string; scrollTop: number;
 }
 let generation = 0;

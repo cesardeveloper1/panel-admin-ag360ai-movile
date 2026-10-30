@@ -218,7 +218,7 @@ const AgilitoPage: React.FC = () => {
   return (
     <IonPage data-ag-route="/app/agilito">
       <IonContent className="ag-screen agilito-screen welcome-screen">
-        <AppShell agilitoChrome hideMobileMenu>
+        <AppShell agilitoChrome hideMobileMenu lockScroll>
           <div className="agilito-layout">
             <header className="agilito-top">
               <div className={`agilito-top-row${isTablet ? '' : ' agilito-top-row--menu'}`}>
@@ -263,11 +263,16 @@ const AgilitoPage: React.FC = () => {
             </header>
 
             <div className="agilito-body">
-              <div ref={listRef} className="agilito-messages">
+              <div ref={listRef} className="agilito-messages" role="log" aria-label={t('agilito.chatTitle')} aria-live="polite">
                 {messages.length === 0 && !thinking ? (
                   <div className="agilito-empty">
-                    <h2 className="agilito-empty-title">{t('agilito.heroHint')}</h2>
+                    <span className="agilito-empty-symbol" aria-hidden="true"><IonIcon icon={sparklesOutline} /></span>
+                    <div className="agilito-intro">
+                      <h2 className="agilito-empty-title">{t('agilito.chatTitle')}</h2>
+                      <p>{t('agilito.heroHint')}</p>
+                    </div>
                     <div className="agilito-modules-card" aria-label={t('agilito.modulesTitle')}>
+                      <h3 className="agilito-section-label">{t('agilito.modulesTitle')}</h3>
                       <div className="agilito-modules-track">
                         {BUSINESS_MODULES.filter((mod) => canNavigate(session, mod.path, { locations: brand?.locations })).map((mod) => (
                           <button
@@ -361,7 +366,7 @@ const AgilitoPage: React.FC = () => {
                       aria-label={t('agilito.placeholder')}
                     />
                     {input.trim() ? (
-                      <button type="submit" className="agilito-composer-send" disabled={thinking}>
+                      <button type="submit" className="agilito-composer-send" disabled={thinking} aria-label={t('chats.send')}>
                         <IonIcon icon={sendOutline} />
                       </button>
                     ) : (
