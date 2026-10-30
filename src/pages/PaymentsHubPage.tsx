@@ -8,7 +8,6 @@ import { useAppNavigation } from '../hooks/useAppNavigation';
 import { PAYMENTS_PATH } from '../navigation/navConfig';
 import { PAYMENT_CAPTURE_PATH, PRINTING_PATH } from '../navigation/appRouteRegistry';
 import { canNavigate, navigationAccess } from '../navigation/navigationAccess';
-import { STAFF_SCREENS } from '../navigation/staffScreens';
 import { setModuleNavFrom } from '../navigation/moduleNavFrom';
 
 const PaymentsHubPage: React.FC = () => {
@@ -16,7 +15,6 @@ const PaymentsHubPage: React.FC = () => {
   const { go } = useAppNavigation();
   const { session, brand } = useApp();
   const locations = brand?.locations;
-  const staffCards = STAFF_SCREENS.filter((screen) => screen.parent === PAYMENTS_PATH && canNavigate(session, screen.path, { locations }));
   const caps = session ? navigationAccess(session.role, session.permissions) : null;
   const showOwnerTools = Boolean(caps && (caps.products || caps.clients || caps.locations || caps.brand));
 
@@ -32,24 +30,6 @@ const PaymentsHubPage: React.FC = () => {
           go(mod.path);
         }}
       >
-        {staffCards.map((screen, index) => (
-          <button
-            key={screen.path}
-            type="button"
-            className={`hub-card hub-card--${screen.hubTone ?? 'ink'} ag-enter`}
-            style={{ animationDelay: `${(index + 4) * 60}ms` }}
-            onClick={() => go(screen.path)}
-          >
-            {screen.icon ? (
-              <span className="hub-card-icon">
-                <IonIcon icon={screen.icon} />
-              </span>
-            ) : null}
-            <span className="hub-card-copy">
-              <strong>{t(screen.titleKey)}</strong>
-            </span>
-          </button>
-        ))}
         {showOwnerTools ? <>
         <button
           type="button"
