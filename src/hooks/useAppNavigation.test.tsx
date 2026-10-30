@@ -39,6 +39,19 @@ it('does not let a delayed child-to-root navigation overtake a newer intent', ()
   expect(window.location.pathname).toBe('/app/operations');
   expect(router.push.mock.calls.some(call => call[0] === '/app/agilito')).toBe(false);
 });
+it('replaces authentication routes directly without popping back into the protected stack', () => {
+  window.history.replaceState({}, '', '/app/profile');
+  router.canGoBack.mockReturnValue(true);
+  const { result } = renderHook(useAppNavigation);
+  act(() => { result.current.goRoot('/login'); vi.runAllTimers(); });
+  expect(router.goBack).not.toHaveBeenCalled();
+  expect(window.location.pathname).toBe('/login');
+});
+it('does not push the current destination again when cached guards rerender', () => {
+  const { result } = renderHook(useAppNavigation);
+  act(() => { result.current.goRoot('/app/trip'); result.current.goRoot('/app/trip'); vi.runAllTimers(); });
+  expect(router.push).toHaveBeenCalledTimes(1);
+});
 it('pops a business detail to its parent and invalidates a pending destination on logout', () => {
   pages(); window.history.replaceState({}, '', '/app/products'); router.canGoBack.mockReturnValue(true);
   router.goBack.mockImplementation(() => window.history.replaceState({}, '', '/app/payments'));

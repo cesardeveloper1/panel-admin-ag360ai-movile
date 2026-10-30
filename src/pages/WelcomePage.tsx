@@ -21,9 +21,12 @@ import { apiFacade } from '../services/apiFacade';
 import type { Brand } from '../types';
 import { brandLabel } from '../utils/brandLabel';
 import { sessionDisplayName } from '../utils/sessionDisplayName';
+import { useLocation } from 'react-router-dom';
 
 const WelcomePage: React.FC = () => {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const onWelcome = pathname === '/welcome';
   const { goRoot, go, replace } = useAppNavigation();
   const { session, authRestoring, brand, clearBrand, selectBrandAndLoad, brandLoading, showToast, authEpoch, logout } = useApp();
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -39,16 +42,16 @@ const WelcomePage: React.FC = () => {
     && Boolean(localStorage.getItem(BRAND_KEY))
     && (typeof sessionStorage === 'undefined' || sessionStorage.getItem(PICK_BRAND_KEY) !== '1');
   useLayoutEffect(() => {
-    if (!fleetPhone) return;
+    if (!onWelcome || !fleetPhone) return;
     const landing = navigationLandingPath(session);
     if (isTabRootPath(landing)) goRoot(landing, 'replace', true);
     else replace(landing);
-  }, [fleetPhone, session, goRoot, replace]);
+  }, [onWelcome, fleetPhone, session, goRoot, replace]);
   useLayoutEffect(() => {
-    if (session?.role !== 'superadmin' || resumeSavedBrand) return;
+    if (!onWelcome || session?.role !== 'superadmin' || resumeSavedBrand) return;
     sessionStorage.removeItem(PICK_BRAND_KEY);
     goRoot(PLATFORM_PATH, 'replace', true);
-  }, [session?.role, resumeSavedBrand, goRoot]);
+  }, [onWelcome, session?.role, resumeSavedBrand, goRoot]);
   const [awaitingAutoPick, setAwaitingAutoPick] = useState(() => {
     if (isStaffRole(session?.role)) return true;
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(PICK_BRAND_KEY) === '1') {
@@ -96,7 +99,7 @@ const WelcomePage: React.FC = () => {
   }, [session?.email, authEpoch]);
 
   useEffect(() => {
-    if (authRestoring) return;
+    if (!onWelcome || authRestoring || fleetPhone) return;
     if (!session) {
       goRoot('/login');
       return;
@@ -110,7 +113,7 @@ const WelcomePage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [session, authRestoring, authEpoch, goRoot, reloadBrands]);
+  }, [onWelcome, fleetPhone, session, authRestoring, authEpoch, goRoot, reloadBrands]);
 
   const handleSelect = useCallback(
     async (selected: Brand) => {
@@ -138,7 +141,7 @@ const WelcomePage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (loading) return;
+    if (!onWelcome || fleetPhone || loading) return;
     if (staff) {
       if (brands.length === 0) {
         setAwaitingAutoPick(false);
@@ -175,7 +178,7 @@ const WelcomePage: React.FC = () => {
     setAwaitingAutoPick(true);
     autoStartedRef.current = true;
     void handleSelect(savedBrand);
-  }, [loading, brands, brandLoading, handleSelect, staff, session?.role, goRoot]);
+  }, [onWelcome, fleetPhone, loading, brands, brandLoading, handleSelect, staff, session?.role, goRoot]);
 
   const handleCreateBrand = async (values: { name: string; subdomain: string }) => {
     if (!apiFacade.useMock) {

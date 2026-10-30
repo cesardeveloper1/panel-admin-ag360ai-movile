@@ -30,7 +30,14 @@ function pushTabRoot(
   const current = window.location.pathname;
   const onChild = !TAB_ROOT_PATHS.has(current);
 
-  if (onChild && ionRouter.canGoBack()) {
+  if (`${current}${window.location.search}` === path) {
+    scheduleOutletSync(path, 30);
+    return;
+  }
+
+  // Pop only when returning from an app detail to a tab. Auth/fleet roots
+  // must replace directly, never revisit a cached protected page on the way.
+  if (onChild && current.startsWith('/app/') && TAB_ROOT_PATHS.has(path) && ionRouter.canGoBack()) {
     ionRouter.goBack(anim);
     window.setTimeout(() => {
       if (!isCurrentNavigationIntent(intent)) return;
