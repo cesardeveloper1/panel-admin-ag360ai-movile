@@ -551,7 +551,9 @@
       "price": "Precio base (S/)",
       "publish": "Publicar en carta",
       "publishHint": "Disponible para tus clientes al guardar",
-      "submit": "Crear producto"
+      "submit": "Crear producto",
+      "noCategories": "Primero crea una categoría en el gestor de menú para añadir productos.",
+      "saving": "Creando producto…"
     },
     "soldOut": "Agotado",
     "empty": "No hay productos con ese filtro",

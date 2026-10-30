@@ -41,7 +41,9 @@ Trabajada no significa publicada ni validada de extremo a extremo. Onboarding co
 - [ ] Chat: validar en Android teclado, adjuntos/audio reales, mensajes rápidos e historial completo; la vista aislada no demuestra envío ni recepción del proveedor.
 - [x] Detalle de pedido (OrderDetailSheet): jerarquía de cliente/estado, entrega, productos, notas y total; controles de 48 px, tokens y texto adaptable. Vista aislada a 360/390 px y 3 pruebas existentes de fallo/reintento y cierre tras confirmación.
 - [ ] Detalle de pedido: validar hoja Ionic completa, scroll con muchos productos y Android Back en dispositivo, conservando permisos por rol.
-- [ ] Alta de marca, alta/edición de producto y alta/edición de local: revisión completa; abrir los formularios no equivale a rediseñarlos.
+- [x] Alta de producto: hoja Ionic real a 360/390 px, campos de 48 px, acciones fuera del scroll, disponibilidad accesible y aviso sin categorías; 3 pruebas de validación, borrador y estado pendiente. Sin crear productos reales.
+- [ ] Alta de producto: validar teclado y cierre por Android Back en dispositivo.
+- [ ] Alta de marca, edición de producto y alta/edición de local: revisión completa; abrir los formularios no equivale a rediseñarlos.
 - [ ] Configuración y lista de reservas, incluida su presentación por rol.
 - [ ] Editor de polígonos y flujo completo de edición de zonas.
 - [ ] Editor y guardado de grupos de WhatsApp con locales reales autorizados.

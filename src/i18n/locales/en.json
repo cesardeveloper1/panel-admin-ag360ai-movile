@@ -517,7 +517,9 @@
       "price": "Base price (S/)",
       "publish": "Publish on menu",
       "publishHint": "Available to your customers after saving",
-      "submit": "Create product"
+      "submit": "Create product",
+      "noCategories": "Create a category in the menu manager before adding products.",
+      "saving": "Creating product…"
     },
     "soldOut": "Sold out",
     "empty": "No products match this filter",

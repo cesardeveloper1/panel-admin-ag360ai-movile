@@ -9975,3 +9975,41 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
   outline: 2px solid var(--ag-pulse);
   outline-offset: 2px;
 }
+
+/* Product creation keeps actions outside its only scroll container. */
+.new-product-modal .new-product-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100dvh - 100px - env(safe-area-inset-top, 0px));
+  font-family: var(--ag-font-body);
+  color: var(--ag-ink);
+  background: var(--ag-paper);
+}
+.new-product-modal .new-product-sheet {
+  min-height: 0;
+  padding: 20px;
+  overscroll-behavior: contain;
+}
+.new-product-modal .new-product-sheet__intro { font-size: 14px; line-height: 1.5; margin-bottom: 24px; }
+.new-product-modal .new-product-field { margin-bottom: 20px; }
+.new-product-modal .new-product-field > span { font-size: 14px; color: var(--ag-ink); }
+.new-product-modal .new-product-field ion-input { min-height: 48px; --padding-start: 12px; --padding-end: 12px; }
+.new-product-modal .new-product-field select { min-height: 48px; }
+.new-product-modal .new-product-availability { gap: 16px; padding-block: 16px; }
+.new-product-modal .new-product-availability > div { min-width: 0; }
+.new-product-modal .new-product-availability span { font-size: 14px; line-height: 1.45; }
+.new-product-modal .new-product-availability ion-toggle { flex-shrink: 0; min-height: 44px; display: flex; align-items: center; }
+.new-product-modal .new-product-actions {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  margin: 0;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--ag-line);
+}
+.new-product-modal .new-product-actions button { min-width: 0; min-height: 48px; white-space: normal; }
+.new-product-modal .new-product-actions ion-spinner { width: 18px; height: 18px; flex-shrink: 0; }
+.new-product-modal .new-product-empty { padding: 12px; background: var(--ag-mist); border-radius: 12px; color: var(--ag-muted); font-size: 14px; }
+.new-product-modal button:focus-visible,
+.new-product-modal select:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 2px; }
