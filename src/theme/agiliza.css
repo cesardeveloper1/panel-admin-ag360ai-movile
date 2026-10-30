@@ -1354,7 +1354,8 @@ ion-page {
 }
 
 .payment-capture-section-heading ion-button {
-  min-height: 2.5rem;
+  min-width: 44px;
+  min-height: 44px;
   margin: -0.35rem -0.5rem 0 0;
   --color: var(--ag-pulse);
 }
@@ -1548,6 +1549,24 @@ ion-page {
   justify-self: end;
   margin: 0.25rem 0 -0.5rem;
 }
+
+.payment-capture-diagnostics { margin-top: 1rem; }
+.payment-capture-diagnostics summary {
+  min-height: 44px;
+  padding: 0.75rem 0;
+  cursor: pointer;
+  color: var(--ag-ink);
+  font: 600 0.9375rem/1.4 var(--ag-font-body);
+}
+.payment-capture-diagnostics summary:focus-visible {
+  outline: 2px solid var(--ag-pulse);
+  outline-offset: 3px;
+}
+.payment-capture-body ion-button { min-height: 44px; }
+.payment-capture-body ion-toggle { min-height: 44px; flex-shrink: 0; }
+.payment-capture-body .payment-provider-row > div { min-width: 0; overflow-wrap: anywhere; }
+.payment-capture-log-copy { overflow-wrap: anywhere; }
+.payment-capture-details dd { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 
 .payment-capture-details dl {
   margin: 0.75rem 0 0;
@@ -2187,12 +2206,16 @@ ion-page {
 }
 
 .client-card__head {
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: flex-start;
   gap: 0.65rem;
 }
 
+.client-card__identity { min-width: 0; }
 .client-card__head h3 {
+  overflow-wrap: anywhere;
+  line-height: 1.35;
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -2213,8 +2236,9 @@ ion-page {
 }
 
 .client-card__phone {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
   color: var(--ag-muted);
 }
 
@@ -2234,13 +2258,15 @@ ion-page {
 
 .client-card__stat span {
   display: block;
-  font-size: 0.625rem;
+  font-size: 0.8125rem;
   color: var(--ag-muted);
   margin-bottom: 0.15rem;
 }
 
 .client-card__stat strong {
-  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.0625rem;
   font-weight: 700;
 }
 
@@ -2255,6 +2281,10 @@ ion-page {
   margin-top: 0.75rem;
 }
 
+.client-card__chat span { font: 600 0.875rem var(--ag-font-body); }
+.client-card__chat:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+[data-ag-route="/app/clients"] .filter-chip { min-height: 44px; }
+
 .client-card__campaign {
   flex: 1;
   gap: 0.35rem;
@@ -2263,7 +2293,10 @@ ion-page {
 }
 
 .client-card__chat {
-  width: 44px;
+  gap: 0.5rem;
+  padding: 0 0.875rem;
+  min-width: 44px;
+  width: auto;
   height: 44px;
   border-radius: var(--ag-radius-sm);
   border: 1px solid rgba(135, 70, 255, 0.25);
@@ -4426,6 +4459,8 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
   flex-shrink: 0;
 }
 
+.profile-hero-copy { min-width: 0; overflow-wrap: anywhere; }
+
 .profile-hero-copy h2 {
   margin: 0;
   font-size: 1.0625rem;
@@ -4450,7 +4485,7 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
 
 .profile-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -4477,14 +4512,24 @@ ion-page.ion-page-hidden .ag-mobile-menu-trigger {
 
 .profile-stat span {
   display: block;
-  margin-top: 0.15rem;
-  font-size: 0.625rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ag-muted);
 }
 
+.settings-body ion-toggle { min-height: 44px; }
+.settings-body .settings-item { --min-height: 60px; }
+.settings-body .settings-item ion-label { white-space: normal; }
+.settings-body .settings-item p { font-size: 0.8125rem; line-height: 1.45; }
+.settings-body .settings-section-label { font-size: 0.75rem; }
+.profile-stat:focus-visible,
+.settings-language-select:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
+
 .settings-language-select {
-  min-height: 38px;
+  min-height: 44px;
   border: 0;
   background: transparent;
   color: var(--ag-ink);
@@ -8846,13 +8891,30 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 }
 
 .notification-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
   gap: 0.75rem;
 }
+
+.notifications-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--ag-muted);
+}
+.notifications-empty ion-icon { font-size: 2.5rem; color: var(--ag-pulse); }
+.notifications-empty p { margin: 0; }
+.notification-card:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 3px; }
 
 .notification-card {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: flex-start;
   gap: 0.75rem;
   width: 100%;
@@ -8860,7 +8922,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   padding: 0.95rem 0.95rem 0.95rem 0.85rem;
   border: 1px solid var(--notif-border, var(--ag-line));
   border-radius: 16px;
-  background: var(--notif-surface, var(--ag-paper));
+  background: var(--ag-paper);
   box-shadow: var(--ag-shadow-sm);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
@@ -8873,7 +8935,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   bottom: 12px;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background: var(--notif-accent, var(--ag-purple));
+  background: var(--notif-accent, var(--ag-pulse));
 }
 
 .notification-card__icon-wrap {
@@ -8890,7 +8952,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 
 .notification-card__icon {
   font-size: 1.25rem;
-  color: var(--notif-accent, var(--ag-purple));
+  color: var(--notif-accent, var(--ag-pulse));
 }
 
 .notification-card__content {
@@ -8901,6 +8963,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 }
 
 .notification-card__top {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8914,20 +8977,21 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   border-radius: 999px;
   background: var(--notif-badge-bg, rgba(135, 70, 255, 0.12));
   color: var(--notif-badge-color, #5b21b6);
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 .notification-card__time {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ag-text-secondary);
   white-space: nowrap;
 }
 
 .notification-card__title {
+  overflow-wrap: anywhere;
   font-size: 0.9375rem;
   font-weight: 700;
   line-height: 1.35;
@@ -8961,7 +9025,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   max-width: 100%;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -9008,32 +9072,34 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--notif-accent, var(--ag-purple));
+  background: var(--notif-accent, var(--ag-pulse));
   margin-top: 0.35rem;
   flex-shrink: 0;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--notif-accent, var(--ag-purple)) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--notif-accent, var(--ag-pulse)) 18%, transparent);
 }
 
 
 .notification-card--unread {
   border-width: 1px;
   border-color: var(--notif-border, var(--ag-line));
-  box-shadow: 0 10px 24px rgba(10, 17, 40, 0.08);
+  box-shadow: var(--ag-shadow-sm);
 }
 
 .notification-card--unread .notification-card__icon-wrap {
-  background: color-mix(in srgb, var(--notif-accent, var(--ag-purple)) 12%, var(--ag-paper));
+  background: color-mix(in srgb, var(--notif-accent, var(--ag-pulse)) 12%, var(--ag-paper));
 }
 
 .notification-card--unread .notification-card__title {
+  overflow-wrap: anywhere;
   color: var(--ag-ink);
 }
 
 .notification-card--read {
-  opacity: 0.88;
+  opacity: 1;
 }
 
 .notification-card--read .notification-card__title {
+  overflow-wrap: anywhere;
   font-weight: 600;
   color: var(--ag-text-secondary);
 }
@@ -9114,8 +9180,8 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   display: grid;
   place-items: center;
   border-radius: 1.25rem;
-  color: var(--ag-purple);
-  background: color-mix(in srgb, var(--ag-purple) 12%, var(--ag-paper));
+  color: var(--ag-pulse);
+  background: color-mix(in srgb, var(--ag-pulse) 12%, var(--ag-paper));
   font-size: 2rem;
 }
 
@@ -9132,6 +9198,19 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 }
 
 .printing-status-card,
+.printing-page ion-button,
+.printing-page ion-toggle { min-height: 44px; }
+.printing-transport button span { min-width: 0; overflow-wrap: anywhere; }
+.printing-page button:focus-visible {
+  outline: 2px solid var(--ag-pulse);
+  outline-offset: 3px;
+}
+.printing-field:focus-within ion-input,
+.printing-field:focus-within ion-select {
+  border-color: var(--ag-pulse);
+  box-shadow: 0 0 0 3px var(--ag-pulse-soft);
+}
+
 .printing-card {
   border: 1px solid var(--ag-line);
   border-radius: 1.25rem;
@@ -9155,7 +9234,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   place-items: center;
   border-radius: 0.85rem;
   color: var(--ag-text-secondary);
-  background: var(--ag-soft);
+  background: var(--ag-mist);
   font-size: 1.35rem;
 }
 
@@ -9212,7 +9291,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   font-weight: 500;
   border: 1px solid var(--ag-line);
   border-radius: 0.9rem;
-  background: var(--ag-soft);
+  background: var(--ag-mist);
 }
 
 .printing-transport {
@@ -9230,15 +9309,15 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
   align-items: center;
   text-align: left;
   color: var(--ag-text-secondary);
-  background: var(--ag-soft);
+  background: var(--ag-mist);
   border: 1px solid var(--ag-line);
   border-radius: 1rem;
 }
 
 .printing-transport button.is-selected {
-  color: var(--ag-purple);
-  border-color: color-mix(in srgb, var(--ag-purple) 65%, var(--ag-line));
-  background: color-mix(in srgb, var(--ag-purple) 8%, var(--ag-paper));
+  color: var(--ag-pulse);
+  border-color: color-mix(in srgb, var(--ag-pulse) 65%, var(--ag-line));
+  background: color-mix(in srgb, var(--ag-pulse) 8%, var(--ag-paper));
 }
 
 .printing-transport ion-icon {
@@ -9253,7 +9332,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 
 .printing-transport small {
   margin-top: 0.15rem;
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: inherit;
 }
 
@@ -9292,8 +9371,8 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 
 .printing-advanced-toggle:active,
 .printing-advanced-toggle.is-open {
-  border-color: color-mix(in srgb, var(--ag-purple) 55%, var(--ag-line));
-  background: color-mix(in srgb, var(--ag-purple) 6%, var(--ag-paper));
+  border-color: color-mix(in srgb, var(--ag-pulse) 55%, var(--ag-line));
+  background: color-mix(in srgb, var(--ag-pulse) 6%, var(--ag-paper));
 }
 
 .printing-advanced-toggle span {
@@ -9314,7 +9393,7 @@ ion-page[data-ag-route="/app/chats"] .ag-header-trailing {
 .printing-advanced-toggle ion-icon {
   flex: 0 0 auto;
   font-size: 1.15rem;
-  color: var(--ag-purple);
+  color: var(--ag-pulse);
 }
 
 .printing-advanced-fields {

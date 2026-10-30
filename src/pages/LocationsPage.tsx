@@ -25,6 +25,8 @@ const LocationsPage: React.FC = () => {
   const brandId = brand?.id;
   const [locations, setLocations] = useState<BranchLocation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [locationToEdit, setLocationToEdit] = useState<BranchLocation | null>(null);
@@ -37,12 +39,13 @@ const LocationsPage: React.FC = () => {
     }
     let alive = true;
     setLoading(true);
+    setLoadError(false);
     void apiFacade.getLocations(brandId)
       .then((data) => {
         if (alive) setLocations(data);
       })
       .catch(() => {
-        if (alive) showToast('toast.locationLoadError');
+        if (alive) { setLoadError(true); showToast('toast.locationLoadError'); }
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -50,7 +53,7 @@ const LocationsPage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [brandId, showToast]);
+  }, [brandId, showToast, retry]);
 
   const handleCreateLocation = async (input: LocationFormInput) => {
     if (!brandId) return;
@@ -89,8 +92,14 @@ const LocationsPage: React.FC = () => {
         {t('locationsPage.brandDataLink')}
       </button>
 
-      {loading ? (
-        <div className="module-loading"><IonSpinner name="crescent" /></div>
+      {loadError ? (
+        <div className="clients-empty-state" role="alert">
+          <IonIcon icon={storefrontOutline} aria-hidden="true" />
+          <p>{t('toast.locationLoadError')}</p>
+          <button type="button" className="ag-btn" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button>
+        </div>
+      ) : loading ? (
+        <div className="module-loading" role="status" aria-label={t('app.loading')}><IonSpinner name="crescent" /></div>
       ) : locations.length === 0 ? (
         <div className="clients-empty-state" role="status">
           <IonIcon icon={storefrontOutline} aria-hidden="true" />
@@ -101,7 +110,7 @@ const LocationsPage: React.FC = () => {
           {locations.map((loc) => (
             <article key={loc.id} className="location-card">
               <div className="location-card__head">
-                <h3><IonIcon icon={storefrontOutline} />{locationName(loc, t)}</h3>
+                <h3><IonIcon icon={storefrontOutline} aria-hidden="true" /><span>{locationName(loc, t)}</span></h3>
                 <div className="location-card__header-actions">
                   <span className={`location-badge${loc.active ? '' : ' location-badge--closed'}`}>
                     {loc.active ? t('locationsPage.statusOpen') : t('locationsPage.statusClosed')}
@@ -109,20 +118,20 @@ const LocationsPage: React.FC = () => {
                   <button
                     type="button"
                     className="location-card__edit"
-                    aria-label={t('locationsPage.edit')}
+                    aria-label={`${t('locationsPage.edit')}: ${locationName(loc, t)}`}
                     onClick={() => setLocationToEdit({
                       ...loc,
                       name: locationName(loc, t),
                       address: locationAddress(loc, t),
                     })}
                   >
-                    <IonIcon icon={createOutline} />
+                    <IonIcon icon={createOutline} aria-hidden="true" />
                   </button>
                 </div>
               </div>
               <div className="location-card__meta">
-                <p><IonIcon icon={locationOutline} />{locationAddress(loc, t)}</p>
-                <p><IonIcon icon={callOutline} />{loc.phone}</p>
+                <p><IonIcon icon={locationOutline} aria-hidden="true" />{locationAddress(loc, t)}</p>
+                <p><IonIcon icon={callOutline} aria-hidden="true" />{loc.phone || '—'}</p>
               </div>
             </article>
           ))}

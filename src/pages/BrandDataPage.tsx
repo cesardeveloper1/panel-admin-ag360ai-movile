@@ -16,6 +16,8 @@ const BrandDataPage: React.FC = () => {
   const brandId = brand?.id;
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [form, setForm] = useState<BrandConfig | null>(null);
@@ -28,12 +30,14 @@ const BrandDataPage: React.FC = () => {
     }
     let active = true;
     setLoading(true);
+    setLoadError(false);
+    setForm(null);
     void apiFacade.getBrandConfig(brandId)
       .then((data) => {
         if (active) setForm(data);
       })
       .catch(() => {
-        if (active) showToast('toast.brandLoadError');
+        if (active) { setLoadError(true); showToast('toast.brandLoadError'); }
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -41,7 +45,7 @@ const BrandDataPage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [brandId, showToast]);
+  }, [brandId, showToast, retry]);
 
   const patch = (partial: Partial<BrandConfig>) => {
     setForm((previous) => previous ? { ...previous, ...partial } : previous);
@@ -82,12 +86,18 @@ const BrandDataPage: React.FC = () => {
 
   return (
     <StackLayout title={t('brandData.title')} showAlerts bodyClassName="ag-body brand-data-body">
-      {loading || !form ? (
-        <div className="module-loading"><IonSpinner name="crescent" /></div>
+      {loadError ? (
+        <div className="brand-feedback" role="alert">
+          <IonIcon icon={imageOutline} aria-hidden="true" />
+          <p>{t('toast.brandLoadError')}</p>
+          <button type="button" className="ag-btn" onClick={() => setRetry(value => value + 1)}>{t('ops.reliability.retry')}</button>
+        </div>
+      ) : loading || !form ? (
+        <div className="module-loading" role="status" aria-label={t('app.loading')}><IonSpinner name="crescent" /></div>
       ) : (
         <>
           <section className="brand-section">
-            <div className="brand-section__head"><h2>{t('brandData.logo')}</h2><IonIcon icon={imageOutline} /></div>
+            <div className="brand-section__head"><h2>{t('brandData.logo')}</h2><IonIcon icon={imageOutline} aria-hidden="true" /></div>
             <div className="brand-logo-box"><img src={form.logoUrl || LOGO_COLOR_LOCAL} alt={t('brandData.logo')} /></div>
             <input ref={inputRef} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void onLogoChange(event)} />
             <button type="button" className="ag-btn ag-btn--ghost brand-upload-btn" disabled={uploadingLogo} onClick={() => inputRef.current?.click()}>
@@ -97,14 +107,14 @@ const BrandDataPage: React.FC = () => {
           </section>
 
           <section className="brand-section">
-            <div className="brand-section__head"><h2>{t('brandData.social')}</h2><IonIcon icon={linkOutline} /></div>
+            <div className="brand-section__head"><h2>{t('brandData.social')}</h2><IonIcon icon={linkOutline} aria-hidden="true" /></div>
             <label className="brand-field brand-field--full">
               <span>Instagram</span>
-              <div className="brand-input-wrap"><span className="brand-input-prefix">@</span><input value={form.instagram} onChange={(event) => patch({ instagram: event.target.value })} placeholder={t('brandData.instagramPh')} /></div>
+              <div className="brand-input-wrap"><span className="brand-input-prefix">@</span><input autoCapitalize="none" autoCorrect="off" spellCheck={false} value={form.instagram} onChange={(event) => patch({ instagram: event.target.value })} placeholder={t('brandData.instagramPh')} /></div>
             </label>
             <label className="brand-field brand-field--full">
               <span>Facebook</span>
-              <div className="brand-input-wrap"><input value={form.facebook} onChange={(event) => patch({ facebook: event.target.value })} placeholder={t('brandData.facebookPh')} /></div>
+              <div className="brand-input-wrap"><input autoCapitalize="none" autoCorrect="off" spellCheck={false} value={form.facebook} onChange={(event) => patch({ facebook: event.target.value })} placeholder={t('brandData.facebookPh')} /></div>
             </label>
             <label className="brand-field brand-field--full">
               <span>WhatsApp</span>
@@ -113,7 +123,7 @@ const BrandDataPage: React.FC = () => {
           </section>
 
           <button type="button" className="brand-save-btn" disabled={saving || uploadingLogo} onClick={() => void onSave()}>
-            <IonIcon icon={saveOutline} />{saving ? t('brandData.saving') : t('brandData.save')}
+            <IonIcon icon={saveOutline} aria-hidden="true" />{saving ? t('brandData.saving') : t('brandData.save')}
           </button>
         </>
       )}

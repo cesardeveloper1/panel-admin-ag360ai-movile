@@ -162,9 +162,9 @@ const SettingsPage: React.FC = () => {
       }
     >
       <section className="profile-hero ag-enter">
-        <div className="profile-hero-avatar">{session?.initials ?? '?'}</div>
+        <div className="profile-hero-avatar" aria-hidden="true">{session?.initials ?? '?'}</div>
         <div className="profile-hero-copy">
-          <h2>{sessionDisplayName(session, t) || t('users.maria')}</h2>
+          <h2>{sessionDisplayName(session, t) || '—'}</h2>
           <p>{session?.email}</p>
           {brand && !isFleetPhoneRole(session?.role) ? (
             <span className="profile-hero-brand">
@@ -200,7 +200,7 @@ const SettingsPage: React.FC = () => {
             <h2>{t('settings.darkMode')}</h2>
             <p>{t('settings.darkModeHint')}</p>
           </IonLabel>
-          <IonToggle slot="end" checked={darkMode} onIonChange={(e) => setDarkMode(e.detail.checked)} />
+          <IonToggle slot="end" aria-label={t('settings.darkMode')} checked={darkMode} onIonChange={(e) => setDarkMode(e.detail.checked)} />
         </IonItem>
         {isFleetPhoneRole(session?.role) ? null : (
         <IonItem className="settings-item">
@@ -209,13 +209,13 @@ const SettingsPage: React.FC = () => {
             <h2>{t('settings.personalLanguage')}</h2>
             <p>{t('settings.personalLanguageHint')}</p>
           </IonLabel>
-          <IonToggle slot="end" checked={useOwnLanguage} disabled={languageBusy} onIonChange={(event) => void updateLanguage({ useOwnConfig: event.detail.checked })} />
+          <IonToggle slot="end" aria-label={t('settings.personalLanguage')} checked={useOwnLanguage} disabled={languageBusy} onIonChange={(event) => void updateLanguage({ useOwnConfig: event.detail.checked })} />
           </IonItem>
         )}
         {useOwnLanguage && !isFleetPhoneRole(session?.role) ? (
           <IonItem className="settings-item">
             <IonLabel>{t('settings.language')}</IonLabel>
-            <select className="settings-language-select" value={language} disabled={languageBusy} onChange={(event) => void updateLanguage({ language: event.target.value as SupportedAppLanguage })}>
+            <select aria-label={t('settings.language')} className="settings-language-select" value={language} disabled={languageBusy} onChange={(event) => void updateLanguage({ language: event.target.value as SupportedAppLanguage })}>
               <option value="es">{t('settings.spanish')}</option>
               <option value="en">{t('settings.english')}</option>
             </select>
@@ -252,15 +252,6 @@ const SettingsPage: React.FC = () => {
           </IonLabel>
         </IonItem>
         )}
-        {canRequestAccountDeletion ? (
-          <IonItem button className="settings-item settings-item--danger" onClick={() => setDeleteOpen(true)}>
-            <IonIcon icon={trashOutline} slot="start" className="settings-icon settings-icon--danger" />
-            <IonLabel color="danger">
-              <h2>{t('settings.deleteOwnAccount')}</h2>
-              <p>{t('settings.deleteOwnAccountHint')}</p>
-            </IonLabel>
-          </IonItem>
-        ) : null}
         <IonItem button className="settings-item settings-item--danger" onClick={() => setLogoutOpen(true)}>
           <IonIcon icon={logOutOutline} slot="start" className="settings-icon settings-icon--danger" />
           <IonLabel color="danger">{t('settings.logout')}</IonLabel>
@@ -276,15 +267,18 @@ const SettingsPage: React.FC = () => {
             <p>{t('settings.privacyHint')}</p>
           </IonLabel>
         </IonItem>
-        {isFleetPhoneRole(session?.role) ? null : (
-        <IonItem button className="settings-item" onClick={() => void openExternalUrl(ACCOUNT_DELETION_URL)}>
+        {canRequestAccountDeletion || !isFleetPhoneRole(session?.role) ? (
+        <IonItem button className="settings-item settings-item--danger" onClick={() => {
+          if (canRequestAccountDeletion) setDeleteOpen(true);
+          else void openExternalUrl(ACCOUNT_DELETION_URL);
+        }}>
           <IonIcon icon={trashOutline} slot="start" className="settings-icon" />
           <IonLabel>
             <h2>{t('settings.deleteAccount')}</h2>
-            <p>{t('settings.deleteAccountHint')}</p>
+            <p>{t(canRequestAccountDeletion ? 'settings.deleteOwnAccountHint' : 'settings.deleteAccountHint')}</p>
           </IonLabel>
         </IonItem>
-        )}
+        ) : null}
       </IonList>
     </StackLayout>
   );
