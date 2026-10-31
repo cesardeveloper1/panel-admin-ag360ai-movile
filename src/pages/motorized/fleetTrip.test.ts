@@ -34,7 +34,7 @@ it('separa por asignar, asignadas, en camino y entregados', () => {
     order({ id: 'c', status: 'on_the_way', riderId: 'rider' }),
     order({ id: 'd', status: 'delivered' }),
     order({ id: 'e', status: 'accepted' }),
-    order({ id: 'f', status: 'scheduled' }),
+    order({ id: 'f', status: 'pre_order', scheduledAt: '2026-10-30T17:00:00.000Z' }),
   ]);
   expect(board.unassigned.map((item) => item.id)).toEqual(['a']);
   expect(board.assigned.map((item) => item.id)).toEqual(['b']);

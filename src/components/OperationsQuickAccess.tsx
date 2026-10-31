@@ -20,7 +20,7 @@ function readPins(): Pin[] {
       return Array.isArray(stored) ? stored.filter(isPin) : ['date', 'reservationDate'];
     }
     const legacy: unknown = JSON.parse(localStorage.getItem('ag.operations.actions.v1') ?? 'null');
-    const pins = Array.isArray(legacy) ? legacy.filter(isPin) : ['date'];
+    const pins: Pin[] = Array.isArray(legacy) ? legacy.filter(isPin) : ['date'];
     if (!pins.includes('reservationDate')) pins.push('reservationDate');
     return pins;
   } catch { return ['date', 'reservationDate']; }
