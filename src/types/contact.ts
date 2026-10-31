@@ -4,6 +4,8 @@ export type FunnelStage = 'INICIAL' | 'PIDIENDO' | 'CON_PEDIDO' | 'HUMANO';
 
 export interface ContactInfo {
   _id: string;
+  /** Authoritative stage from the scoped Operations projection. */
+  stage?: 'iniciando' | 'pidiendo' | 'humano' | 'con_pedido';
   subDomain: string;
   clientPhone?: string;
   clientBsuid?: string;

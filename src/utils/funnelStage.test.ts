@@ -73,3 +73,7 @@ describe('groupContactsByFunnel', () => {
     expect(grouped.CON_PEDIDO).toHaveLength(0);
   });
 });
+
+it('uses the authoritative Operations stage before legacy session fields', () => {
+  expect(getFunnelStage(contact({_id:'projected',stage:'pidiendo',isActive:true,sessionData:{conversationState:'starting'}}))).toBe('PIDIENDO');
+});
