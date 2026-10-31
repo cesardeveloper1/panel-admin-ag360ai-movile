@@ -37,6 +37,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const token = useAuthToken();
   const socketRef = useRef<Socket | null>(null);
   const historyRoomRef = useRef<HistoryRoomOptions | null>(null);
+  const operationsListeners = useRef(new Set<() => void>());
   const messageListeners = useRef(new Set<MessageListener>());
   const contactListeners = useRef(new Set<ContactListener>());
   const chatSoundKeys = useRef(new Map<string, string>());
@@ -71,6 +72,10 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     const onConnect = () => {
       socket.emit('join', subDomain);
       socket.emit('joinAgentStatesRoom', { subDomain });
+      if (['OWNER', 'MANAGER', 'WORKER', 'SUPERADMIN'].includes(session.role.toUpperCase())) {
+        socket.emit('operations:subscribe', { resource: 'conversations', subDomain });
+      }
+      operationsListeners.current.forEach(fn => fn());
       const historyRoom = historyRoomRef.current;
       if (historyRoom?.subDomain === subDomain) {
         emitHistoryRoom(socket, historyRoom);
@@ -119,6 +124,12 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       contactListeners.current.forEach((fn) => fn(payload));
     };
 
+    const onOperationsChanged = (event?: { subDomain?: string }) => {
+      if (event?.subDomain && event.subDomain !== subDomain) return;
+      operationsListeners.current.forEach(fn => fn());
+    };
+    const operationsEvents = ['operations:wakeup', 'operations:resync', 'newMessage', 'contactInfoUpdated', 'conversationAttentionUpdated', 'incomingTurnRecoveryUpdated', 'conversationReset'];
+    operationsEvents.forEach(event => socket.on(event, onOperationsChanged));
     socket.on('connect', onConnect);
     socket.on('newMessage', onNewMessage);
     socket.on('contactInfoUpdated', onContactUpdated);
@@ -132,6 +143,7 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     if (socket.connected) onConnect();
 
     return () => {
+      operationsEvents.forEach(event => socket.off(event, onOperationsChanged));
       socket.off('connect', onConnect);
       socket.off('newMessage', onNewMessage);
       socket.off('contactInfoUpdated', onContactUpdated);
@@ -175,7 +187,13 @@ export const ChatSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     historyRoomRef.current = null;
   }, []);
 
+  const subscribeOperationsChanged = useCallback((listener: () => void) => {
+    operationsListeners.current.add(listener);
+    return () => {operationsListeners.current.delete(listener);};
+  }, []);
+
   const value: ChatSocketContextValue = {
+    subscribeOperationsChanged,
     subscribeNewMessage,
     subscribeContactUpdated,
     joinHistoryRoom,

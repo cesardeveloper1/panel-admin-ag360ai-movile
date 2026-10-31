@@ -35,6 +35,7 @@ export interface ContactInfoUpdatedPayload {
 }
 
 export interface ChatSocketContextValue {
+  subscribeOperationsChanged: (listener: () => void) => () => void;
   subscribeNewMessage: (listener: (payload: ChatNewMessagePayload) => void) => () => void;
   subscribeContactUpdated: (listener: (payload: ContactInfoUpdatedPayload) => void) => () => void;
   joinHistoryRoom: (opts: {

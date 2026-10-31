@@ -22,7 +22,7 @@ import { apiFacade } from '../services/apiFacade';
 import type { ContactInfo, FunnelStage } from '../types/contact';
 import type { KanbanGroup, KanbanSubState, Order } from '../types';
 import { getKanbanGroup, getKanbanSubState } from '../utils/orderKanban';
-import { groupContactsByFunnel } from '../utils/funnelStage';
+import { useOperationsConversations } from '../hooks/useOperationsConversations';
 import { sortOpsQueue } from '../utils/opsQueue';
 import { orderConversationPath } from '../utils/orderConversation';
 import { readOperationsView, writeOperationsView, operationsViewGeneration } from '../navigation/operationsViewState';
@@ -82,21 +82,14 @@ const OperationsPage: React.FC = () => {
   const detailReturnFocus = useRef<HTMLElement | null>(null);
   const searchBootstrapped = useRef(false);
 
-  const [contactResult, setContactResult] = useState<{ scope: string; data: ContactInfo[]; syncedAt?: number }>({ scope: '', data: [] });
-  const [contactsLoading, setContactsLoading] = useState(false);
-  const [contactsError, setContactsError] = useState(false);
-  const [contactsHasMore, setContactsHasMore] = useState(false);
-  const [contactsLoadingMore, setContactsLoadingMore] = useState(false);
   const previousBranch = useRef(ordersFilters.branchId);
-  const contactsPage = useRef(1);
-  const contactsRequestId = useRef(0);
-  const contactsBusy = useRef(false);
-  const contactsScope = `${authEpoch}|${brand?.id}|${brand?.subdomain}|${ordersFilters.branchId ?? ''}|${query.trim()}`;
-  const contactsScopeRef = useRef(contactsScope);
-  contactsScopeRef.current = contactsScope;
-  const contacts = useMemo(() => contactResult.scope === contactsScope ? contactResult.data : [], [contactResult, contactsScope]);
-  const contactsRef = useRef(contacts);
-  contactsRef.current = contacts;
+  const conversations = useOperationsConversations({subDomain: brand?.subdomain?.trim() ?? '', branchId: ordersFilters.branchId,
+    channel: funnelChannel === 'all' ? undefined : funnelChannel, search: query.trim() || undefined},
+    `${authEpoch}|${brand?.id}`, opsMode === 'funnel' && Boolean(brand?.subdomain) && Boolean(session && ['owner', 'manager', 'worker', 'superadmin'].includes(session.role)));
+  const loadContacts = useCallback((_search?: string, more = false) => {
+    if (more) conversations.loadMore(funnelFocus);
+    else conversations.refresh();
+  }, [conversations.loadMore, conversations.refresh, funnelFocus]);
   const [reservationStatus, setReservationStatus] = useState<ReservationStatusFilter>('all');
   const [reservationDateMode, setReservationDateMode] = useState<ReservationDateChoice>('week');
   const [reservationRange, setReservationRange] = useState(() => currentReservationWeek());
@@ -114,48 +107,6 @@ const OperationsPage: React.FC = () => {
   const reservations = useMemo(() => reservationResult.scope === reservationScope ? reservationResult.data : [], [reservationResult, reservationScope]);
   const reservationsRef = useRef(reservations);
   reservationsRef.current = reservations;
-
-  const loadContacts = useCallback(async (search?: string, more = false) => {
-    const subdomain = brand?.subdomain?.trim();
-    if (!subdomain || (more && contactsBusy.current)) return;
-    const scope = contactsScopeRef.current;
-    const requestId = ++contactsRequestId.current;
-    contactsBusy.current = true;
-    setContactsError(false);
-    if (more) setContactsLoadingMore(true);
-    else {
-      setContactsLoading(true);
-      setContactResult({ scope, data: [] });
-      setContactsHasMore(false);
-    }
-    try {
-      const page = more ? contactsPage.current + 1 : 1;
-      const result = await apiFacade.listContacts({ subDomain: subdomain, page, limit: 150,
-        branchId: ordersFilters.branchId, search: search?.trim() || undefined });
-      if (requestId !== contactsRequestId.current || scope !== contactsScopeRef.current) return;
-      const pagination = result.meta.pagination;
-      const hasMore = pagination?.hasNextPage ?? result.data.length >= 150;
-      if (more && result.data.length > 0 && !result.data.some(item => !contactsRef.current.some(old => old._id === item._id))) {
-        throw new Error('Pagination made no progress');
-      }
-      setContactResult(previous => ({ scope, syncedAt: Date.now(),
-        data: more ? appendPage(previous.data, result.data, item => item._id) : result.data }));
-      contactsPage.current = page;
-      setContactsHasMore(hasMore);
-    } catch {
-      if (requestId === contactsRequestId.current && scope === contactsScopeRef.current) {
-        setContactResult({ scope, data: [] });
-        setContactsHasMore(false);
-        setContactsError(true);
-      }
-    } finally {
-      if (requestId === contactsRequestId.current) {
-        contactsBusy.current = false;
-        setContactsLoading(false);
-        setContactsLoadingMore(false);
-      }
-    }
-  }, [brand?.subdomain, ordersFilters.branchId]);
 
   const loadReservations = useCallback(async (search?: string, more = false) => {
     const subdomain = brand?.subdomain?.trim();
@@ -209,15 +160,8 @@ const OperationsPage: React.FC = () => {
 
   // Invalidate requests/caches immediately when auth, brand or branch changes.
   useEffect(() => {
-    contactsRequestId.current += 1;
-    contactsBusy.current = false;
-    setContactResult({ scope: '', data: [] });
-    setContactsError(false);
-    setContactsHasMore(false);
-    setContactsLoadingMore(false);
     if (previousBranch.current !== ordersFilters.branchId) setSelectedOrder(null);
     previousBranch.current = ordersFilters.branchId;
-    return () => { contactsRequestId.current += 1; };
   }, [authEpoch, brand?.id, ordersFilters.branchId]);
 
   useEffect(() => {
@@ -231,12 +175,11 @@ const OperationsPage: React.FC = () => {
         void setOrdersFilters({ search: search || undefined });
       } else if (opsMode === 'reservations') {
         void loadReservations(search);
-      } else {
-        void loadContacts(search);
       }
+      // Funnel search/filter changes are handled by its scoped live query.
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [query, opsMode, setOrdersFilters, loadContacts, loadReservations, authEpoch, brand?.id]);
+  }, [query, opsMode, setOrdersFilters, loadReservations, authEpoch, brand?.id]);
 
   useEffect(() => {
     const reconnect = () => {
@@ -345,11 +288,7 @@ const OperationsPage: React.FC = () => {
     return sortOpsQueue(scoped);
   }, [inFocus, subFilter]);
 
-  const funnelContacts = useMemo(
-    () => funnelChannel === 'all' ? contacts : contacts.filter(contact => contact.channel === funnelChannel),
-    [contacts, funnelChannel],
-  );
-  const groupedContacts = useMemo(() => groupContactsByFunnel(funnelContacts), [funnelContacts]);
+  const groupedContacts = useMemo(() => Object.fromEntries(FUNNEL_FOCI.map(stage => [stage, conversations.columns[stage].items])) as Record<FunnelStage, ContactInfo[]>, [conversations.columns]);
 
   const funnelQueue = useMemo(
     () => groupedContacts[funnelFocus] ?? [],
@@ -406,17 +345,17 @@ const OperationsPage: React.FC = () => {
   };
 
   const listLoading = opsMode === 'funnel'
-    ? contactsLoading || contactResult.scope !== contactsScope
+    ? conversations.loading
     : opsMode === 'reservations'
       ? reservationsLoading || reservationResult.scope !== reservationScope
       : loading || query.trim() !== (ordersFilters.search ?? '');
   const listError = opsMode === 'funnel'
-    ? contactsError && contactResult.scope === contactsScope
+    ? conversations.error
     : opsMode === 'reservations'
       ? reservationsError && reservationResult.scope === reservationScope
       : ordersError && query.trim() === (ordersFilters.search ?? '');
-  const hasMore = opsMode === 'funnel' ? contactsHasMore : opsMode === 'reservations' ? reservationsHasMore : ordersHasMore;
-  const loadingMore = opsMode === 'funnel' ? contactsLoadingMore : opsMode === 'reservations' ? reservationsLoadingMore : ordersLoadingMore;
+  const hasMore = opsMode === 'funnel' ? conversations.columns[funnelFocus].hasMore : opsMode === 'reservations' ? reservationsHasMore : ordersHasMore;
+  const loadingMore = opsMode === 'funnel' ? conversations.loadingMore : opsMode === 'reservations' ? reservationsLoadingMore : ordersLoadingMore;
   const emptyKey = query.trim() ? 'ops.reliability.noMatches' : opsMode === 'funnel' ? 'ops.funnel.queueEmpty' : opsMode === 'reservations' ? 'ops.reservations.empty' : 'ops.queueEmpty';
   const queueLen = opsMode === 'funnel' ? funnelQueue.length : queueItems.length;
 
@@ -498,7 +437,7 @@ const OperationsPage: React.FC = () => {
                       className={`ops-summary-card ops-summary-card--funnel-${stage.toLowerCase()}${funnelFocus === stage ? ' active' : ''}`}
                       onClick={() => selectFunnelFocus(stage)}
                     >
-                      <strong>{listLoading ? '—' : groupedContacts[stage].length}</strong>
+                      <strong>{listLoading ? '—' : (conversations.columns[stage].total ?? '—')}</strong>
                       <span>{t(`ops.funnel.stages.${stage}`)}</span>
                     </button>
                   ))}
@@ -512,7 +451,7 @@ const OperationsPage: React.FC = () => {
                 >
                   <header className="ops-queue__head">
                     <h2>{t(`ops.funnel.stages.${funnelFocus}`)}</h2>
-                    <span className="kanban-count">{listLoading ? '—' : funnelQueue.length}</span>
+                    <span className="kanban-count">{listLoading ? '—' : (conversations.columns[funnelFocus].total ?? '—')}</span>
                   </header>
 
                   <div className="ops-queue__cards">

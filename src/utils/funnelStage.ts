@@ -30,6 +30,8 @@ function getPipelineStage(contact: Pick<ContactInfo, 'sessionData'>): PipelineSt
  * inactivo sin pedido → HUMANO; si no, pipeline por conversationState.
  */
 export function getFunnelStage(contact: ContactInfo): FunnelStage {
+  const stages = {iniciando: 'INICIAL', pidiendo: 'PIDIENDO', humano: 'HUMANO', con_pedido: 'CON_PEDIDO'} as const;
+  if (contact.stage && stages[contact.stage]) return stages[contact.stage];
   const conversationState = (contact.sessionData as Record<string, unknown> | undefined)
     ?.conversationState as string | undefined;
   const isOrderPlaced =

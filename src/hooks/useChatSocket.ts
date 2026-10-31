@@ -5,6 +5,7 @@ import {
 } from '../context/chatSocketContext';
 
 const EMPTY_CHAT_SOCKET_CONTEXT: ChatSocketContextValue = {
+  subscribeOperationsChanged: () => () => undefined,
   subscribeNewMessage: () => () => undefined,
   subscribeContactUpdated: () => () => undefined,
   joinHistoryRoom: () => undefined,
