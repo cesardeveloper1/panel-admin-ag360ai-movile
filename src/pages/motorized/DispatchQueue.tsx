@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
 import { checkmarkCircleOutline, mapOutline, peopleOutline, personOutline } from 'ionicons/icons';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ import {
   PARTNER_RIDERS_PATH,
   PARTNER_ZONES_PATH,
 } from '../../navigation/motorizedScreens';
-import { deliveryPartnerClient } from '../../services/deliveryPartnerClient';
+import { useFleetRiders } from './useFleetRiders';
 import { orderService } from '../../services/orderService';
 import type { Order } from '../../types';
 import { dispatchBoard } from './fleetTrip';
@@ -46,23 +46,13 @@ export function DispatchQueue() {
   const { go } = useAppNavigation();
   const { isTablet } = useViewport();
   const { orders, ordersError, loading, refreshOrders } = useApp();
-  const [riders, setRiders] = useState<Array<{ id: string; fullName: string; isActive?: boolean }>>([]);
-  const [ridersError, setRidersError] = useState(false);
-  const [ridersLoading, setRidersLoading] = useState(true);
+  const {riders: fleetRiders, error: ridersError, loading: ridersLoading} = useFleetRiders();
+  const riders = (fleetRiders ?? []).filter(rider => rider.isActive !== false);
   const [pendingId, setPendingId] = useState('');
   const [error, setError] = useState('');
   const board = dispatchBoard(orders);
   const workEmpty = board.unassigned.length + board.assigned.length + board.onTheWay.length === 0;
   const riderName = (riderId?: string) => riders.find((rider) => rider.id === riderId)?.fullName;
-
-  useEffect(() => {
-    let active = true;
-    void deliveryPartnerClient.listRiders()
-      .then((rows) => { if (active) setRiders(rows.filter((row) => row.isActive !== false)); })
-      .catch(() => { if (active) setRidersError(true); })
-      .finally(() => { if (active) setRidersLoading(false); });
-    return () => { active = false; };
-  }, []);
 
   const assign = async (orderId: string, riderId: string) => {
     if (pendingId) return;
