@@ -1,0 +1,51 @@
+import { notifyFleetRidersChanged } from '../../services/fleetRiderEvents';
+import { act, cleanup, renderHook } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+import { useFleetRiders } from './useFleetRiders';
+import { deliveryPartnerClient } from '../../services/deliveryPartnerClient';
+const state=vi.hoisted(()=>({authEpoch:1,session:{id:'fleet1',email:'demo@example.invalid',role:'motorized'}}));
+vi.mock('../../hooks/useApp',()=>({useApp:()=>state}));
+vi.mock('../../services/deliveryPartnerClient',()=>({deliveryPartnerClient:{listRiders:vi.fn()}}));
+afterEach(()=>{cleanup();vi.useRealTimers();vi.restoreAllMocks();vi.clearAllMocks();state.authEpoch=1;state.session.id='fleet1';});
+it('refreshes on fleet events and recovery, without periodic polling',async()=>{
+ vi.useFakeTimers();vi.spyOn(document,'visibilityState','get').mockReturnValue('visible');
+ vi.mocked(deliveryPartnerClient.listRiders).mockResolvedValue([{id:'r',fullName:'Rider Demo',presence:'online'}]);
+ const view=renderHook(()=>useFleetRiders());
+ await act(async()=>{});
+ expect(view.result.current.riders?.[0]?.fullName).toBe('Rider Demo');
+ vi.mocked(deliveryPartnerClient.listRiders).mockResolvedValue([{id:'r',fullName:'Updated',isActive:false,presence:'tracking'}]);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(30_000);
+ expect(deliveryPartnerClient.listRiders).toHaveBeenCalledOnce();
+ notifyFleetRidersChanged();notifyFleetRidersChanged();
+ await vi.advanceTimersByTimeAsync(100);});
+ expect(view.result.current.riders?.[0]?.isActive).toBe(false);
+ expect(view.result.current.riders?.[0]?.presence).toBe('tracking');
+ await act(async()=>window.dispatchEvent(new Event('focus')));
+ await act(async()=>window.dispatchEvent(new Event('online')));
+ expect(deliveryPartnerClient.listRiders).toHaveBeenCalledTimes(4);
+});
+it('clears stale riders after a failed refresh and recovers on retry',async()=>{
+ vi.mocked(deliveryPartnerClient.listRiders).mockResolvedValueOnce([{id:'r',fullName:'Demo'}]).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce([]);
+ const view=renderHook(()=>useFleetRiders());await act(async()=>{});
+ await act(async()=>view.result.current.refresh());
+ expect(view.result.current.error).toBe(true);expect(view.result.current.riders).toEqual([]);
+ await act(async()=>view.result.current.refresh());
+ expect(view.result.current.error).toBe(false);
+});
+it('ignores late responses from another session',async()=>{
+ let release!: (value:Awaited<ReturnType<typeof deliveryPartnerClient.listRiders>>) => void;
+ vi.mocked(deliveryPartnerClient.listRiders).mockImplementationOnce(()=>new Promise<Awaited<ReturnType<typeof deliveryPartnerClient.listRiders>>>(resolve=>{release=resolve;})).mockResolvedValue([]);
+ const view=renderHook(()=>useFleetRiders());
+ state.authEpoch=2;state.session.id='fleet2';view.rerender();
+ await act(async()=>{release([{id:'old',fullName:'Old account'}]);});
+ expect(view.result.current.riders).toEqual([]);
+});
+it('does not overlap reads and removes polling on unmount',async()=>{
+ vi.useFakeTimers();vi.spyOn(document,'visibilityState','get').mockReturnValue('visible');
+ vi.mocked(deliveryPartnerClient.listRiders).mockImplementation(()=>new Promise<Awaited<ReturnType<typeof deliveryPartnerClient.listRiders>>>(()=>{}));
+ const view=renderHook(()=>useFleetRiders());
+ await act(async()=>{await vi.advanceTimersByTimeAsync(30_000);window.dispatchEvent(new Event('online'));});
+ expect(deliveryPartnerClient.listRiders).toHaveBeenCalledOnce();
+ view.unmount();await vi.advanceTimersByTimeAsync(30_000);window.dispatchEvent(new Event('online'));
+ expect(deliveryPartnerClient.listRiders).toHaveBeenCalledOnce();
+});

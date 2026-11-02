@@ -1,3 +1,4 @@
+import { notifyFleetRidersChanged } from '../services/fleetRiderEvents';
 import React, { useEffect, useRef } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
@@ -197,6 +198,9 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     };
 
+    const fleetChanged = () => {if (fleetPhone) notifyFleetRidersChanged();};
+    ordersSocket.on('fleet:riders-changed', fleetChanged);
+    ordersSocket.on('connect', fleetChanged);
     ordersSocket.on('event', handleOrdersEvent);
     eventsSocket?.on('event', handleEventsEvent);
     reservationsSocket?.on('event', handleReservationsEvent);
@@ -223,6 +227,8 @@ export const OrdersSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         window.clearTimeout(refreshTimer.current);
         refreshTimer.current = null;
       }
+      ordersSocket.off('fleet:riders-changed', fleetChanged);
+      ordersSocket.off('connect', fleetChanged);
       ordersSocket.off('event', handleOrdersEvent);
       eventsSocket?.off('event', handleEventsEvent);
       reservationsSocket?.off('event', handleReservationsEvent);
