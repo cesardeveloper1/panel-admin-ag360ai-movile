@@ -10013,3 +10013,24 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
 .new-product-modal .new-product-empty { padding: 12px; background: var(--ag-mist); border-radius: 12px; color: var(--ag-muted); font-size: 14px; }
 .new-product-modal button:focus-visible,
 .new-product-modal select:focus-visible { outline: 2px solid var(--ag-pulse); outline-offset: 2px; }
+
+.agilito-proposal {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ion-color-step-200);
+}
+
+.agilito-proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.agilito-proposal-actions ion-button,
+.agilito-msg-body > ion-button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
