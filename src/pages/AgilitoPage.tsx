@@ -18,6 +18,7 @@ import { canNavigate } from '../navigation/navigationAccess';
 
 import { getRoute } from '../navigation/appRouteRegistry';
 import { api } from '../services/api';
+import { readAgilitoSession, saveAgilitoSession } from '../utils/agilitoSession';
 
 interface PriceProposal {
   id: string;
@@ -55,21 +56,33 @@ function unwrap(response: Awaited<ReturnType<typeof api.post>>) {
   return response.data;
 }
 
-function AgilitoChat() {
+interface SavedChat {
+  threadId: string;
+  messages: Message[];
+  conversationId?: string;
+  proposalResults: Record<string, ProposalResult>;
+}
+
+function AgilitoChat({ scope }: { scope: string }) {
+  const [saved] = useState(() => readAgilitoSession<SavedChat>(scope));
+  const [threadId, setThreadId] = useState(() => saved?.threadId ?? crypto.randomUUID());
   const { t } = useTranslation();
   const { go } = useAppNavigation();
   const { notifications, showToast, session, brand } = useApp();
   const [agentOpen, setAgentOpen] = useState(false);
   const agentRef = useRef<HTMLDivElement>(null);
   const agentMenuId = useId();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(saved?.messages ?? []);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
-  const [failedMessage, setFailedMessage] = useState<{ id: string; text: string }>();
-  const [proposalResults, setProposalResults] = useState<Record<string, ProposalResult>>({});
+  const [failedMessage, setFailedMessage] = useState<{ id: string; text: string } | undefined>(() => {
+    const last = saved?.messages.at(-1);
+    return last?.role === 'user' ? last : undefined;
+  });
+  const [proposalResults, setProposalResults] = useState<Record<string, ProposalResult>>(saved?.proposalResults ?? {});
   const listRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
-  const conversationRef = useRef<string | undefined>(undefined);
+  const conversationRef = useRef<string | undefined>(saved?.conversationId);
   const unread = notifications.filter((n) => n.unread).length;
 
   const scrollToBottom = () => {
@@ -79,6 +92,19 @@ function AgilitoChat() {
   };
 
   useEffect(() => () => requestRef.current?.abort(), []);
+  useEffect(() => {
+    saveAgilitoSession(scope, { threadId, messages, conversationId: conversationRef.current, proposalResults });
+  }, [scope, threadId, messages, proposalResults]);
+
+  function clearChat() {
+    if (requestRef.current) return;
+    conversationRef.current = undefined;
+    setThreadId(crypto.randomUUID());
+    setMessages([]);
+    setInput('');
+    setFailedMessage(undefined);
+    setProposalResults({});
+  }
 
   async function runRequest(work: (signal: AbortSignal) => Promise<void>) {
     if (requestRef.current) return;
@@ -103,6 +129,7 @@ function AgilitoChat() {
         const reply = unwrap(await api.post(endpoint + '/messages', {
           clientMessageId: message.id,
           conversationId: conversationRef.current,
+          threadId,
           text: message.text,
           surface: 'mobile',
           routeKey: 'agilito',
@@ -185,6 +212,11 @@ function AgilitoChat() {
             <header className="agilito-top">
               <div className="agilito-top-row">
                 <div className="agilito-top-trailing">
+                  {messages.length > 0 && (
+                    <IonButton fill="clear" disabled={thinking} onClick={clearChat}>
+                      {t('agilito.clearChat')}
+                    </IonButton>
+                  )}
                   <div className="agilito-agent" ref={agentRef}>
                     <AgentToggle
                       appearance="icon"
@@ -250,14 +282,14 @@ function AgilitoChat() {
                       </span>
                     ) : null}
                     <div className="agilito-msg-body">
-                      <p>{msg.text}</p>
+                      <p>{msg.role === 'assistant' ? msg.text.replace(/\*\*([^*]+)\*\*/g, '$1') : msg.text}</p>
                       {msg.role === 'assistant' && msg.links.map(({ routeKey, label }) => {
                         const path = BUSINESS_MODULES.find((module) => module.id === routeKey)?.path;
                         return path && getRoute(path) && canNavigate(session, path, { locations: brand?.locations }) ? (
-                          <IonButton key={routeKey} fill="clear" onClick={() => {
+                          <IonButton key={routeKey} className="agilito-navigation-link" onClick={() => {
                             setModuleNavFrom(AGILITO_PATH);
                             go(path);
-                          }}>{label}</IonButton>
+                          }}>{t('agilito.goTo', { label })}</IonButton>
                         ) : null;
                       })}
                       {msg.role === 'assistant' && msg.proposal?.type === 'product.price.update' && (
@@ -369,6 +401,6 @@ function ProposalCard({ proposal, result, busy, onResolve }: {
 
 export default function AgilitoPage() {
   const { session, brand } = useApp();
-  const scope = JSON.stringify([session?.id ?? session?.email, session?.role, session?.permissions, brand?.id]);
-  return <AgilitoChat key={scope} />;
+  const scope = JSON.stringify([session?.id ?? session?.email, brand?.id]);
+  return <AgilitoChat key={scope} scope={scope} />;
 }

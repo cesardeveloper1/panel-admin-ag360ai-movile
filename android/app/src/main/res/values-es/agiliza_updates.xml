@@ -1,0 +1,6 @@
+<resources>
+    <string name="update_available_title">Actualización disponible</string>
+    <string name="update_available_message">Hay una nueva versión de Agiliza360 lista para instalar.</string>
+    <string name="update_ignore">Ignorar</string>
+    <string name="update_open_store">Abrir Google Play</string>
+</resources>
