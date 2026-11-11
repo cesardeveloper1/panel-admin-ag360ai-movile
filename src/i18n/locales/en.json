@@ -899,6 +899,8 @@
     "brandDesc": "Logo, colors and social"
   },
   "agilito": {
+    "clearChat": "Clear conversation",
+    "goTo": "Go to {{label}}",
     "sendFailed": "Agilito couldn't respond. You can retry sending your message.",
     "retry": "Retry",
     "priceProposal": "Price change proposal",

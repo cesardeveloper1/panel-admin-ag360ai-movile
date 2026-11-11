@@ -1,3 +1,4 @@
+import { clearAgilitoSessions } from '../utils/agilitoSession';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +48,7 @@ function readAgentEnabled() {
 }
 
 function resetAuthStorage() {
+  clearAgilitoSessions();
   nextNavigationIntent();
   clearOperationsViews();
   clearChatInboxCache();
@@ -153,6 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     return onSessionExpired(() => {
+      clearAgilitoSessions();
       nextNavigationIntent();
       clearOperationsViews();
       clearChatInboxCache();

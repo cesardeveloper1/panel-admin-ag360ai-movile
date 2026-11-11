@@ -944,6 +944,8 @@
     "brandDesc": "Logo, colores y redes"
   },
   "agilito": {
+    "clearChat": "Borrar conversación",
+    "goTo": "Ir a {{label}}",
     "sendFailed": "Agilito no pudo responder. Puedes volver a intentar el envío.",
     "retry": "Reintentar",
     "priceProposal": "Propuesta de cambio de precio",

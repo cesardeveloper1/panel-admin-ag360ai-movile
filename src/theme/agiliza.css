@@ -10034,3 +10034,9 @@ body.ag-primary-nav-visible .ag-app-shell-main { padding-bottom:var(--ag-navigat
   max-width: 100%;
   white-space: normal;
 }
+
+.agilito-navigation-link {
+  --background: #1d4ed8;
+  --background-hover: #1e40af;
+  --color: #fff;
+}
