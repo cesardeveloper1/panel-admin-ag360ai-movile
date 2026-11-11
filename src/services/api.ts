@@ -142,6 +142,7 @@ async function fetchWithAuth(url: string, options: RequestOptions = {}, canRetry
       message:
         (typeof responseData?.message === 'string' && responseData.message) ||
         `Error del servidor: ${response.status}`,
+      code: responseData?.code,
       type: responseData?.type,
       statusCode: response.status,
       data: responseData?.data,
