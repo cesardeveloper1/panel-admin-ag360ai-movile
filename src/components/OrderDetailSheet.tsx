@@ -15,6 +15,14 @@ export function OrderDetailContent({ current, brand }: { current: Order; brand: 
   const money = (amount: number) => orderAmount(amount, brand, i18n.language);
   const branchName = current.branchName || (current.branchId ? brand?.branchNames?.[current.branchId] : undefined);
   const channel = current.messagingChannel && ['whatsapp', 'instagram', 'messenger'].includes(current.messagingChannel) ? current.messagingChannel : current.channel;
+  const billing = current.billingInformation;
+  const billingFields = [
+    [t('orderDetail.billing.receipt'), billing?.documentLabel],
+    [billing?.numberLabel || t('orderDetail.billing.document'), billing?.dniOrRuc],
+    [t('orderDetail.billing.name'), billing?.billingName],
+    [t('orderDetail.billing.address'), billing?.billingAddress],
+    ...Object.entries(billing?.extraFieldValues ?? {}),
+  ].filter(([, value]) => typeof value === 'string' && value.trim());
   return <div className="order-sheet-detail">
       <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.channel')}</span><span>{t(`orders.channel.${channel}`)}</span></div>
       <div className="order-sheet-row"><span className="order-sheet-label">{t('orderDetail.location')}</span><span>{branchName || t(current.locationKey)}</span></div>
@@ -27,6 +35,15 @@ export function OrderDetailContent({ current, brand }: { current: Order; brand: 
           {item.modifiers?.map((modifier, index) => <p key={index}>{modifier.qty}× {modifier.name} · {money(modifier.price)}</p>)}
         </div><span>{money(item.qty * item.price)}</span>
       </li>)}</ul> : <p>{t('ops.actions.noItems')}</p>}
+      {billingFields.length > 0 && <section>
+        <h3 className="order-sheet-section">{t('orderDetail.billing.title')}</h3>
+        {billingFields.map(([label, value], index) => (
+          <div className="order-sheet-row" key={index}>
+            <span className="order-sheet-label">{label}</span>
+            <span style={{ overflowWrap: 'anywhere', minWidth: 0 }}>{value}</span>
+          </div>
+        ))}
+      </section>}
       {current.notes ? <section className="order-sheet-notes"><h3 className="order-sheet-section">{t('ops.actions.notes')}</h3><p>{current.notes}</p></section> : null}
   </div>;
 }

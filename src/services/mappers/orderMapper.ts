@@ -123,6 +123,7 @@ export function mapOrdersFromApi(list: ApiOrderListItem[], brandId: string): Ord
 }
 
 export interface ApiOrderDetail extends ApiOrderListItem {
+  billingInformation?: Order['billingInformation'];
   brandId?: string;
   customer?: { firstName?: string; lastName?: string; phone?: string };
   deliveryInfo?: {
@@ -147,6 +148,7 @@ export function mapOrderDetail(raw: ApiOrderDetail, brandId: string): Order | nu
   const latitude = Number(raw.deliveryInfo?.latitude);
   const longitude = Number(raw.deliveryInfo?.longitude);
   return { ...order, detailLoaded: true,
+    billingInformation: raw.billingInformation,
     address: raw.deliveryInfo?.address || order.address,
     addressReference: raw.deliveryInfo?.addressRef || order.addressReference,
     branchName: raw.branchName?.trim() || order.branchName,

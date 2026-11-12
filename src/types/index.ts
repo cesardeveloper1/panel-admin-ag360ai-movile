@@ -46,7 +46,17 @@ export interface OrderItem {
   modifiers?: Array<{ name: string; qty: number; price: number }>;
 }
 
+export interface OrderBillingInformation {
+  documentLabel?: string;
+  numberLabel?: string;
+  dniOrRuc?: string;
+  billingName?: string;
+  billingAddress?: string;
+  extraFieldValues?: Record<string, string>;
+}
+
 export interface Order {
+  billingInformation?: OrderBillingInformation;
   id: string;
   /** orderNumber del backend (orquestación / detalle). */
   orderNumber?: string;

@@ -677,6 +677,7 @@
     "agilitoHint": "Consulta y accede a las herramientas de tu negocio desde Agilito."
   },
   "orderDetail": {
+    "billing": {"title": "Facturación", "receipt": "Comprobante", "document": "Documento", "name": "Nombre / razón social", "address": "Dirección fiscal"},
     "buyer": "Nombre del comprador",
     "cart": "Carrito de compras",
     "paymentMethod": "Método de pago",
