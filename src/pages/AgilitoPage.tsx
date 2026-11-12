@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { openExternalUrl } from '../utils/openExternalUrl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { IonButton, IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
 import {
@@ -32,6 +34,7 @@ interface PriceProposal {
 
 interface Reply {
   conversationId: string;
+  source?: 'mcp';
   messageId: string;
   text: string;
   links: { routeKey: string; label: string }[];
@@ -102,7 +105,7 @@ function AgilitoChat({ scope }: { scope: string }) {
   const [threadId, setThreadId] = useState(() => saved?.threadId ?? crypto.randomUUID());
   const { t } = useTranslation();
   const { go } = useAppNavigation();
-  const { notifications, showToast, session, brand } = useApp();
+  const { notifications, showToast, session, brand, ordersFilters } = useApp();
   const [agentOpen, setAgentOpen] = useState(false);
   const agentRef = useRef<HTMLDivElement>(null);
   const agentMenuId = useId();
@@ -166,13 +169,14 @@ function AgilitoChat({ scope }: { scope: string }) {
           threadId,
           text: message.text,
           surface: 'mobile',
+          branchId: ordersFilters.branchId || undefined,
           routeKey: 'agilito',
         }, { signal, headers: { 'X-Agilito-Brand-Id': brand?.id ?? '' } })) as Reply;
         if (signal.aborted) return;
         if (typeof reply.text !== 'string' || !reply.messageId || !reply.conversationId || !Array.isArray(reply.links)) {
           throw new Error('Incomplete Agilito reply');
         }
-        conversationRef.current = reply.conversationId;
+        if (reply.source !== 'mcp') conversationRef.current = reply.conversationId;
         setMessages((previous) => [...previous, { ...reply, id: reply.messageId, role: 'assistant' }]);
       } catch {
         if (!signal.aborted) setFailedMessage(message);
@@ -188,38 +192,6 @@ function AgilitoChat({ scope }: { scope: string }) {
     setInput('');
     scrollToBottom();
     sendMessage(message);
-  }
-
-  function resolveProposal(proposal: PriceProposal, action: ProposalAction) {
-    void runRequest(async (signal) => {
-      let result: ProposalResult;
-      try {
-        const response = unwrap(await api.post(
-          endpoint + '/proposals/' + encodeURIComponent(proposal.id) + '/' + action,
-          undefined,
-          { signal, headers: {
-            'X-Agilito-Brand-Id': brand?.id ?? '',
-            ...(action === 'confirm' ? { 'Idempotency-Key': proposal.id } : {}),
-          } },
-        )) as { status?: string; savedPrice?: string };
-        if (action === 'confirm' && response.status === 'applied' && typeof response.savedPrice === 'string') {
-          result = { status: 'applied', price: response.savedPrice };
-        } else if (action === 'cancel' && response.status === 'cancelled') {
-          result = { status: 'cancelled' };
-        } else {
-          throw new Error('Unexpected Agilito proposal status');
-        }
-      } catch (error) {
-        const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
-        switch (code) {
-          case 'PROPOSAL_EXPIRED': result = { status: 'error', key: 'proposalExpired' }; break;
-          case 'PRICE_CONFLICT': result = { status: 'error', key: 'priceConflict' }; break;
-          case 'FORBIDDEN': result = { status: 'error', key: 'proposalForbidden' }; break;
-          default: result = { status: 'error', key: 'proposalRetry', retry: action };
-        }
-      }
-      if (!signal.aborted) setProposalResults((previous) => ({ ...previous, [proposal.id]: result }));
-    });
   }
 
   useEffect(() => {
@@ -238,6 +210,51 @@ function AgilitoChat({ scope }: { scope: string }) {
     };
   }, [agentOpen]);
 
+  const [connection, setConnection] = useState<{ available: boolean; linked: boolean }>();
+  const [connectionBusy, setConnectionBusy] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const refresh = () => {
+      void api.get('/owner-mcp/agilito/status', { signal: controller.signal }).then(response => {
+        if (!controller.signal.aborted) setConnection(unwrap(response));
+      }).catch(() => {});
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
+    window.addEventListener('agilito-connection-return', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      controller.abort();
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('agilito-connection-return', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
+  async function toggleConnection() {
+    if (!connection || connectionBusy) return;
+    setConnectionBusy(true);
+    setConnectionError(false);
+    try {
+      if (connection.linked) {
+        await api.delete('/owner-mcp/agilito/connection');
+        setConnection({ available: true, linked: false });
+      } else {
+        const result = unwrap(await api.post('/owner-mcp/agilito/start', { platform: Capacitor.isNativePlatform() ? 'mobile' : 'web' }));
+        const url = new URL(result.authorizationUrl);
+        if (url.protocol !== 'https:') throw new Error('Invalid authorization URL');
+        await openExternalUrl(url.href);
+      }
+    } catch {
+      setConnectionError(true);
+    } finally {
+      setConnectionBusy(false);
+    }
+  }
+
+
   return (
     <IonPage data-ag-route="/app/agilito">
       <IonContent className="ag-screen agilito-screen welcome-screen">
@@ -246,6 +263,12 @@ function AgilitoChat({ scope }: { scope: string }) {
             <header className="agilito-top">
               <div className="agilito-top-row">
                 <div className="agilito-top-trailing">
+                {connection?.available && (
+                  <IonButton disabled={connectionBusy} onClick={() => void toggleConnection()}>
+                    {connection.linked ? 'Desvincular cuenta' : 'Vincular cuenta'}
+                  </IonButton>
+                )}
+                {connectionError && <p role="alert">No se pudo actualizar la conexión con Agilito.</p>}
                   {messages.length > 0 && (
                     <IonButton fill="clear" disabled={thinking} onClick={clearChat}>
                       {t('agilito.clearChat')}
@@ -328,8 +351,7 @@ function AgilitoChat({ scope }: { scope: string }) {
                         ) : null;
                       })}
                       {msg.role === 'assistant' && msg.proposal?.type === 'product.price.update' && (
-                        <ProposalCard proposal={msg.proposal} result={proposalResults[msg.proposal.id]}
-                          busy={thinking} onResolve={resolveProposal} />
+                        <ProposalCard proposal={msg.proposal} result={proposalResults[msg.proposal.id]} />
                       )}
                     </div>
                   </article>
@@ -406,15 +428,11 @@ function AgilitoVoiceLines() {
   );
 }
 
-function ProposalCard({ proposal, result, busy, onResolve }: {
+function ProposalCard({ proposal, result }: {
   proposal: PriceProposal;
   result?: ProposalResult;
-  busy: boolean;
-  onResolve: (proposal: PriceProposal, action: ProposalAction) => void;
 }) {
   const { t } = useTranslation();
-  const canChoose = !result || (result.status === 'error' && Boolean(result.retry));
-  const retry = result?.status === 'error' ? result.retry : undefined;
   return (
     <section className="agilito-proposal" aria-label={t('agilito.priceProposal')}>
       <strong>{proposal.productName}</strong>
@@ -424,18 +442,12 @@ function ProposalCard({ proposal, result, busy, onResolve }: {
       {result && <p role="status">{result.status === 'applied'
         ? t('agilito.priceSaved', { currency: proposal.currency, price: result.price })
         : result.status === 'cancelled' ? t('agilito.proposalCancelled') : t('agilito.' + result.key)}</p>}
-      {canChoose && (
-        <div className="agilito-proposal-actions">
-          {retry !== 'cancel' && <IonButton disabled={busy} onClick={() => onResolve(proposal, 'confirm')}>{t('agilito.confirmPrice')}</IonButton>}
-          {retry !== 'confirm' && <IonButton fill="outline" disabled={busy} onClick={() => onResolve(proposal, 'cancel')}>{t('agilito.cancelProposal')}</IonButton>}
-        </div>
-      )}
     </section>
   );
 }
 
 export default function AgilitoPage() {
-  const { session, brand } = useApp();
-  const scope = JSON.stringify([session?.id ?? session?.email, brand?.id]);
+  const { session, brand, ordersFilters } = useApp();
+  const scope = JSON.stringify([session?.id ?? session?.email, brand?.id, ordersFilters.branchId ?? null]);
   return <AgilitoChat key={scope} scope={scope} />;
 }
