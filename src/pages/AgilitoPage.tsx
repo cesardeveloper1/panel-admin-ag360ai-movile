@@ -49,6 +49,40 @@ type ProposalResult =
 
 const endpoint = '/support/agilito';
 
+const destinations = new Map([
+  ['categories', '/app/menu/categories'],
+  ['modifiers', '/app/menu/modifiers'],
+  ['groups', '/app/menu/groups'],
+  ['reservations', '/app/reservations/config'],
+  ['zones', '/app/locations/zones'],
+  ['gallery', '/app/locations/gallery'],
+  ['operations', '/app/operations'],
+  ['chats', '/app/chats'],
+  ['quick_messages', '/app/quick-messages'],
+  ['templates', '/app/marketing/templates'],
+  ['campaigns', '/app/marketing/campaigns'],
+  ['orders_report', '/app/reports/orders'],
+  ['integration_sales', '/app/reports/integration-sales'],
+  ['order_map', '/app/reports/order-map'],
+  ['cash_close', '/app/reports/cash-close'],
+  ['cancelled_orders', '/app/reports/cancelled'],
+  ['digital_menu', '/app/menu/digital'],
+  ['branch_integrations', '/app/locations/integrations'],
+  ['local_config', '/app/menu/local'],
+  ['agilink', '/app/agilink'],
+  ['profile', '/app/profile'],
+  ['tutorials', '/app/help'],
+  ['reports', '/app/reports'],
+  ['payments', '/app/payments'],
+  ['printing', '/app/printing'],
+  ['payment_capture', '/app/payment-capture'],
+  ['business', '/app/business'],
+  ['notifications', '/app/notifications'],
+  ['menu_integrations', '/app/menu/integrations'],
+  ['complaints', '/app/marketing/complaints'],
+  ['branch_survey', '/app/marketing/branch-survey'],
+]);
+
 function unwrap(response: Awaited<ReturnType<typeof api.post>>) {
   if (response?.success !== true || !response.data || typeof response.data !== 'object') {
     throw response ?? new Error('Empty Agilito response');
@@ -284,7 +318,8 @@ function AgilitoChat({ scope }: { scope: string }) {
                     <div className="agilito-msg-body">
                       <p>{msg.role === 'assistant' ? msg.text.replace(/\*\*([^*]+)\*\*/g, '$1') : msg.text}</p>
                       {msg.role === 'assistant' && msg.links.map(({ routeKey, label }) => {
-                        const path = BUSINESS_MODULES.find((module) => module.id === routeKey)?.path;
+                        const path = BUSINESS_MODULES.find((module) => module.id === routeKey)?.path
+                          ?? destinations.get(routeKey);
                         return path && getRoute(path) && canNavigate(session, path, { locations: brand?.locations }) ? (
                           <IonButton key={routeKey} className="agilito-navigation-link" onClick={() => {
                             setModuleNavFrom(AGILITO_PATH);
