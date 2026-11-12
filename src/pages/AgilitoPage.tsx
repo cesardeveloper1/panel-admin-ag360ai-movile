@@ -35,6 +35,7 @@ interface PriceProposal {
 interface Reply {
   conversationId: string;
   source?: 'mcp';
+  confirmationUrl?: string;
   messageId: string;
   text: string;
   links: { routeKey: string; label: string }[];
@@ -340,6 +341,9 @@ function AgilitoChat({ scope }: { scope: string }) {
                     ) : null}
                     <div className="agilito-msg-body">
                       <p>{msg.role === 'assistant' ? msg.text.replace(/\*\*([^*]+)\*\*/g, '$1') : msg.text}</p>
+                      {msg.role === 'assistant' && msg.source === 'mcp' && msg.confirmationUrl?.startsWith('https://') && (
+                        <IonButton onClick={() => void openExternalUrl(msg.confirmationUrl!)}>Revisar cambio</IonButton>
+                      )}
                       {msg.role === 'assistant' && msg.links.map(({ routeKey, label }) => {
                         const path = BUSINESS_MODULES.find((module) => module.id === routeKey)?.path
                           ?? destinations.get(routeKey);
