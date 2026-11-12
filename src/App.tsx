@@ -1,3 +1,8 @@
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { useEffect as useAgilitoEffect } from 'react';
+import { useHistory as useAgilitoHistory } from 'react-router-dom';
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
@@ -139,6 +144,27 @@ const AppRoutes: React.FC = () => {
   );
 };
 
+function AgilitoConnectionReturn() {
+  const history = useAgilitoHistory();
+  useAgilitoEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let active = true;
+    const handle = ({ url }: { url: string }) => {
+      if (!active || !/^com\.agiliza360\.mobile:\/\/agilito\/connection\?agilitoConnection=(linked|cancelled)$/.test(url)) return;
+      history.replace('/app/agilito');
+      window.dispatchEvent(new Event('agilito-connection-return'));
+      void Browser.close().catch(() => {});
+    };
+    const listener = CapacitorApp.addListener('appUrlOpen', handle);
+    void CapacitorApp.getLaunchUrl().then(result => { if (result) handle(result); }).catch(() => {});
+    return () => {
+      active = false;
+      void listener.then(value => value.remove()).catch(() => {});
+    };
+  }, [history]);
+  return null;
+}
+
 const App: React.FC = () => (
   <IonApp>
     <AppLaunchSplash />
@@ -146,6 +172,7 @@ const App: React.FC = () => (
       <OrdersSocketProvider>
         <ChatSocketProvider>
           <IonReactRouter>
+            <AgilitoConnectionReturn />
             <AppRoutes />
             <BrandTransitionOverlay />
             <ToastUx />
