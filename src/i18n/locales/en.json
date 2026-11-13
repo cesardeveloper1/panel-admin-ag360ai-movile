@@ -643,6 +643,7 @@
     "agilitoHint": "Ask questions and access your business tools from Agilito."
   },
   "orderDetail": {
+    "billing": {"title": "Billing", "receipt": "Receipt", "document": "Document", "name": "Name / company name", "address": "Billing address"},
     "title": "Order {{id}}",
     "close": "Close",
     "customer": "Customer",
