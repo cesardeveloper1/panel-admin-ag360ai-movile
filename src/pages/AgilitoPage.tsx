@@ -219,7 +219,14 @@ function AgilitoChat({ scope }: { scope: string }) {
     const controller = new AbortController();
     const refresh = () => {
       void api.get('/owner-mcp/agilito/status', { signal: controller.signal }).then(response => {
-        if (!controller.signal.aborted) setConnection(unwrap(response));
+        const status = unwrap(response);
+        if (
+          !controller.signal.aborted && status &&
+          'available' in status && typeof status.available === 'boolean' &&
+          'linked' in status && typeof status.linked === 'boolean'
+        ) {
+          setConnection({ available: status.available, linked: status.linked });
+        }
       }).catch(() => {});
     };
     refresh();
@@ -244,6 +251,9 @@ function AgilitoChat({ scope }: { scope: string }) {
         setConnection({ available: true, linked: false });
       } else {
         const result = unwrap(await api.post('/owner-mcp/agilito/start', { platform: Capacitor.isNativePlatform() ? 'mobile' : 'web' }));
+        if (!result || !('authorizationUrl' in result) || typeof result.authorizationUrl !== 'string') {
+          throw new Error('Missing authorization URL');
+        }
         const url = new URL(result.authorizationUrl);
         if (url.protocol !== 'https:') throw new Error('Invalid authorization URL');
         await openExternalUrl(url.href);
