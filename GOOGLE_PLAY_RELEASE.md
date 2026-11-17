@@ -27,11 +27,11 @@ Set-Location android
 ./gradlew.bat bundleRelease
 ```
 
-La compilación actual usa el `.env` existente, que apunta a `https://ssgg-develop.up.railway.app`. El servicio público de ssgg en Railway es `https://ssgg-production.up.railway.app`. El AAB de la ficha debe compilarse contra ese servicio. No subir la compilación actual: también apunta el seguimiento de pagos al emulador `10.0.2.2:5000`, y ese tracker no tiene dominio en el proyecto Railway Agiliza360AI.
+La compilación actual usa el `.env` existente, que apunta a `https://ssgg.dev.agiliza360.ai`. El servicio público de ssgg en Railway es `https://api.agiliza360.ai`. El AAB de la ficha debe compilarse contra ese servicio. No subir la compilación actual: también apunta el seguimiento de pagos al emulador `10.0.2.2:5000`, y ese tracker no tiene dominio en el proyecto Railway Agiliza360AI.
 
 ## Pendientes para publicar
 
-- Recompilar el AAB contra `https://ssgg-production.up.railway.app` e incluir `@capacitor/browser`. No subir la compilación actual.
+- Recompilar el AAB contra `https://api.agiliza360.ai` e incluir `@capacitor/browser`. No subir la compilación actual.
 - Publicar la landing para que existan las URLs de privacidad y de eliminación. El código ya las tiene; el sitio en producción todavía no.
 - La cuenta de revisión ya está en la base `ssgg-prod`, la misma que usan el panel y la app cuando apuntan a producción.
 - Responsable confirmado: CARTA AI SAC, Cal. Los Ceibos Nro. 271, Urb. Miraflores, Castilla, Piura, Piura. Contacto: `soporte@agiliza360.ai`.

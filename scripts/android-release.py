@@ -11,12 +11,12 @@ REQUIRED = (
     'GOOGLE_PLAY_WORKLOAD_IDENTITY_PROVIDER', 'GOOGLE_PLAY_SERVICE_ACCOUNT',
 )
 PUBLIC_URLS = (
-    'https://ssgg-production.up.railway.app/api/v3',
+    'https://api.agiliza360.ai/api/v3',
     'https://tradingtracker-back-prod-production.up.railway.app',
     'https://www.agiliza360.ai/privacidad',
     'https://www.agiliza360.ai/eliminar-cuenta',
 )
-FORBIDDEN_URLS = ('ssgg-develop.up.railway.app', '10.0.2.2:5000')
+FORBIDDEN_URLS = ('ssgg.dev.agiliza360.ai', '10.0.2.2:5000')
 
 
 def property_value(value):
